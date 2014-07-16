@@ -40,11 +40,11 @@ CONFIG_XLCOMPILER := $(if $(findstring IBM XL,$(shell $(HPGMG_CC) -qversion 2>/d
 	$(call quiet,RANLIB) $@
 
 # gcc/gfortran style dependency flags; these are set in petscvariables starting with petsc-3.5
-C_DEPFLAGS ?= $(if $(CONFIG_XLCOMPILER),-qmakedep=gcc,-MMD -MP)
+#C_DEPFLAGS ?= $(if $(CONFIG_XLCOMPILER),-qmakedep=gcc,-MMD -MP)
 
 # GCC-style syntax for C99.  Use "make C99FLAGS=-qlanglvl=extc99" or similar
 # on systems that use different syntax to specify C99.
-C99FLAGS := $(if $(findstring c99,$(PCC_FLAGS) $(HPGMG_CFLAGS) $(CFLAGS)),,$(if $(CONFIG_XLCOMPILER),-qlanglvl=extc99,-std=c99))
+# C99FLAGS := $(if $(findstring c99,$(PCC_FLAGS) $(HPGMG_CFLAGS) $(CFLAGS)),,$(if $(CONFIG_XLCOMPILER),-qlanglvl=extc99,-std=c99))
 
 HPGMG_COMPILE.c = $(call quiet,CC) -c $(C99FLAGS) $(HPGMG_CPPFLAGS) $(CPPFLAGS) $(HPGMG_CFLAGS) $(CFLAGS) $(C_DEPFLAGS)
 HPGMG_LINK = $(call quiet,CCLD) $(HPGMG_CFLAGS) $(CFLAGS) $(HPGMG_LDFLAGS) $(LDFLAGS) -o $@
@@ -84,7 +84,7 @@ test-fe : $(hpgmg-fe)
 .PHONY: all clean print hpgmg-fe hpgmg-fv test test-fe
 
 clean:
-	rm -rf $(OBJDIR) $(LIBDIR) $(BINDIR)
+	rm -rf $(OBJDIR) $(LIBDIR) 
 
 # make print VAR=the-variable
 print:

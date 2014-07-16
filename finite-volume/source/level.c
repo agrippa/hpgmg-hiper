@@ -351,6 +351,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   int _rank;
   int ghost,numGhosts,numGhostsRemote;
 
+  int flag = 0;
+  if (justFaces && level->my_rank == 6) flag = 1;
+
+  cout << "point 0 for " << level->my_rank << " flag " << flag << endl;
+
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // traverse my list of boxes and create a lists of neighboring boxes and neighboring ranks
   GZ_type *ghostsToSend = (GZ_type*)malloc(26*level->num_my_boxes*sizeof(GZ_type)); // There are at most 26 neighbors per box.
@@ -361,6 +366,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   }
   numGhosts       = 0;
   numGhostsRemote = 0;
+
   for(sendBox=0;sendBox<level->num_my_boxes;sendBox++){
     int di,dj,dk;
     for(dk=-1;dk<=1;dk++){
@@ -375,6 +381,9 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       int neighborBox_j = (  myBox_j + dj + level->boxes_in.j) % level->boxes_in.j;
       int neighborBox_k = (  myBox_k + dk + level->boxes_in.k) % level->boxes_in.k;
       int neighborBoxID =  neighborBox_i + neighborBox_j*level->boxes_in.i + neighborBox_k*level->boxes_in.i*level->boxes_in.j;
+
+if (flag) cout << " TT 2 " << dir << " mybox " << myBoxID << " ngrb " << neighborBoxID << endl;
+
       if( level->rank_of_box[neighborBoxID] != -1 ){
         ghostsToSend[numGhosts].sendRank  = level->my_rank;
         ghostsToSend[numGhosts].sendBoxID = myBoxID;
@@ -391,12 +400,16 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       }
     }}}}
   }
+
+if (flag) cout << " TT 3 " << numGhosts << endl;
   // sort boxes by sendRank(==my rank) then by sendBoxID... ensures the sends and receive buffers are always sorted by sendBoxID...
   qsort(ghostsToSend,numGhosts      ,sizeof(GZ_type),qsortGZ );
   // sort the lists of neighboring ranks and remove duplicates...
   qsort(sendRanks   ,numGhostsRemote,sizeof(    int),qsortInt);
   int numSendRanks=0;_rank=-1;for(ghost=0;ghost<numGhostsRemote;ghost++)if(sendRanks[ghost] != _rank){_rank=sendRanks[ghost];sendRanks[numSendRanks++]=sendRanks[ghost];}
 
+
+  cout << "point 1 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // in a two-stage process, traverse the list of ghosts and allocate the pack/local lists as well as the MPI buffers, and then populate the pack/local lists
@@ -406,6 +419,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].send_buffers  = (double**)malloc(numSendRanks*sizeof(double*));
 #ifdef USE_UPCXX
   level->exchange_ghosts[justFaces].global_send_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
+  level->exchange_ghosts[justFaces].global_match_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
 #endif
   if(numSendRanks>0){
   if(level->exchange_ghosts[justFaces].send_ranks  ==NULL){printf("malloc failed - exchange_ghosts[%d].send_ranks\n",justFaces);fflush(stdout);exit(0);}
@@ -530,6 +544,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   free(ghostsToSend);
   free(sendRanks);
 
+  cout << "point 2 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // traverse my list of boxes and create a lists of neighboring boxes and neighboring ranks
@@ -574,6 +589,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   qsort(recvRanks   ,numGhostsRemote,sizeof(    int),qsortInt);
   int numRecvRanks=0;_rank=-1;for(ghost=0;ghost<numGhostsRemote;ghost++)if(recvRanks[ghost] != _rank){_rank=recvRanks[ghost];recvRanks[numRecvRanks++]=recvRanks[ghost];}
 
+
+  cout << "point 3 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // in a two-stage process, traverse the list of ghosts and allocate the unpack lists as well as the MPI buffers, and then populate the unpack list
@@ -672,30 +689,40 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   free(ghostsToRecv);
   free(recvRanks);
 
+  cout << "point 4 for " << level->my_rank << endl;
+
 #ifdef USE_UPCXX
+  upcxx::barrier();
   // compute the global_match_buffers for upcxx::async_copy()
+  int neighbor;
+  global_ptr<double> p, p1, p2;
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_recvs; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].recv_ranks[neighbor];
-    upc_buf_info(MYTHREAD * THREADS + nid) = level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
+    upc_buf_info[MYTHREAD * THREADS + nid] = level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
+    p = upc_buf_info[MYTHREAD * THREADS + nid];
+    cout << "SETTING by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
   }
   upcxx::barrier();
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_sends; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].send_ranks[neighbor];
-    level->exchange_ghosts[justFaces].global_match_buffers[neighbor] = upc_buf_info(THREADS*nid + MYTHREAD);
+    level->exchange_ghosts[justFaces].global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
+    p = level->exchange_ghosts[justFaces].global_match_buffers[neighbor];
+    cout << "MATCHI by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
   }
   upcxx::barrier();  
-#endif
+
+  cout << "point 5 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // malloc MPI requests/status arrays
-  #ifdef USE_MPI
+#elif USE_MPI
   level->exchange_ghosts[justFaces].requests = (MPI_Request*)malloc((level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs)*sizeof(MPI_Request));
   level->exchange_ghosts[justFaces].status   = (MPI_Status *)malloc((level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs)*sizeof(MPI_Status ));
   if((level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs)>0){
   if(level->exchange_ghosts[justFaces].requests==NULL){printf("malloc failed - exchange_ghosts[%d].requests\n",justFaces);fflush(stdout);exit(0);}
   if(level->exchange_ghosts[justFaces].status  ==NULL){printf("malloc failed - exchange_ghosts[%d].status\n",justFaces);fflush(stdout);exit(0);}
   }
-  #endif
+#endif
 
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

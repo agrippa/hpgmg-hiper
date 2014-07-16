@@ -56,18 +56,16 @@ typedef struct {
 #ifdef USE_UPCXX
     global_ptr<double>        *global_recv_buffers;
     global_ptr<double>        *global_send_buffers;
-    global+ptr<double>        *global_match_buffers;
+    global_ptr<double>        *global_match_buffers;
 #endif
     double ** __restrict__     recv_buffers;	//   MPI recv buffer for each neighbor...  recv_buffers[neighbor][ recv_sizes[neighbor] ]
     double ** __restrict__     send_buffers;	//   MPI send buffer for each neighbor...  send_buffers[neighbor][ send_sizes[neighbor] ]
     int                 allocated_blocks[3];	//   number of blocks allocated (not necessarily used) each list...
     int                       num_blocks[3];	//   number of blocks in each list...        num_blocks[pack,local,unpack]
     blockCopy_type *              blocks[3];	//   list of block copies...                     blocks[pack,local,unpack]
-#ifndef USE_UPCXX
 #ifdef USE_MPI
     MPI_Request * __restrict__     requests;
     MPI_Status  * __restrict__       status;
-#endif
 #endif
 } communicator_type;
 

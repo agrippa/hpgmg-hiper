@@ -59,49 +59,49 @@ void MGPrintTiming(mg_type *all_grids){
   #endif
 
   if(all_grids->my_rank!=0)return;
-  double this,total;
+  double lthis,total;
           printf("                          ");for(level=0;level<(num_levels  );level++){printf("%12d ",level);}printf("\n");
         //printf("v-cycles initiated        ");for(level=0;level<(num_levels  );level++){printf("%12d ",all_grids->levels[level]->vcycles_from_this_level/all_grids->MGSolves_performed);}printf("\n");
           printf("box dimension             ");for(level=0;level<(num_levels  );level++){printf("%10d^3 ",all_grids->levels[level]->box_dim);}printf("       total\n");
   total=0;printf("------------------        ");for(level=0;level<(num_levels+1);level++){printf("------------ ");}printf("\n");
-  total=0;printf("smooth                    ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.smooth;               total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("residual                  ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.residual;             total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("applyOp                   ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.apply_op;             total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("BLAS1                     ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.blas1;                total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("BLAS3                     ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.blas3;                total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("Boundary Conditions       ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.boundary_conditions;  total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("Restriction               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_total;    total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  local restriction       ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_local;    total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("smooth                    ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.smooth;               total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("residual                  ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.residual;             total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("applyOp                   ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.apply_op;             total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("BLAS1                     ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.blas1;                total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("BLAS3                     ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.blas3;                total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("Boundary Conditions       ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.boundary_conditions;  total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("Restriction               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_total;    total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  local restriction       ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_local;    total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #ifdef USE_MPI
-  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_pack;     total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_unpack;   total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_send;     total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_recv;     total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.restriction_wait;     total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_pack;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_unpack;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_send;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_recv;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_wait;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #endif
-  total=0;printf("Interpolation             ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_total;  total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  local interpolation     ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_local;  total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("Interpolation             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_total;  total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  local interpolation     ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_local;  total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #ifdef USE_MPI
-  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_pack;   total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_unpack; total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_send;   total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_recv;   total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.interpolation_wait;   total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_pack;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_unpack; total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_send;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_recv;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_wait;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #endif
-  total=0;printf("Ghost Zone Exchange       ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_total;      total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  local exchange          ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_local;      total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("Ghost Zone Exchange       ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_total;      total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  local exchange          ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_local;      total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #ifdef USE_MPI
-  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_pack;       total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_unpack;     total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_send;       total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_recv;       total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.ghostZone_wait;       total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_pack;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_unpack;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_send;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_recv;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_wait;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #endif
   #ifdef USE_MPI
-  total=0;printf("MPI_collectives           ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.collectives;          total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("MPI_collectives           ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.collectives;          total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
   #endif
   total=0;printf("------------------        ");for(level=0;level<(num_levels+1);level++){printf("------------ ");}printf("\n");
-  total=0;printf("Total by level            ");for(level=0;level<(num_levels  );level++){this=scale*(double)all_grids->levels[level]->cycles.Total;                total+=this;printf("%12.6f ",this);}printf("%12.6f\n",total);
+  total=0;printf("Total by level            ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.Total;                total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
 
   printf("\n");
   printf( "   Total time in MGBuild  %12.6f seconds\n",SecondsPerCycle*(double)all_grids->cycles.MGBuild);
@@ -829,6 +829,8 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   build_interpolation(all_grids);
 
 
+  cout << "Starting to build subcomm " << endl;
+
   // build subcommunicators...
   #ifdef USE_MPI
   #ifdef USE_SUBCOMM
@@ -840,6 +842,10 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     int ll;for(ll=level;ll<all_grids->num_levels;ll++)if(all_grids->levels[ll]->num_my_boxes>0)all_grids->levels[level]->active=1;
     if(all_grids->levels[level]->active)MPI_Comm_split(MPI_COMM_WORLD,0                                  ,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE);
                                    else MPI_Comm_split(MPI_COMM_WORLD,all_grids->levels[level]->my_rank+1,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE); // = MPI_COMM_SELF
+
+    int SIZE;
+    MPI_Comm_size(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &SIZE);
+    cout << "WORLD SIZE IS " << SIZE << " in level " << level << endl;
     double comm_split_end = MPI_Wtime();
     double comm_split_time_send = comm_split_end-comm_split_start;
     double comm_split_time = 0;
@@ -850,6 +856,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   #endif
   #endif
 
+  cout << "Ending build subcomm" << endl;
 
   // rebuild various coefficients for the operator... must occur after build_restriction !!!
   for(level=1;level<all_grids->num_levels;level++){

@@ -1,0 +1,24 @@
+
+UPCXX_INSTALL_DIR = /global/u2/h/hshan/edison/upcxx_install
+include $(UPCXX_INSTALL_DIR)/include/upcxx.mak
+
+VPATH=$(UPCXX_INSTALL_DIR)/include
+
+LIBS += -L $(UPCXX_INSTALL_DIR)/lib -lupcxx
+
+CXXFLAGS += -I$(VPATH)
+
+HPGMG_ARCH = build
+HPGMG_CC = CC -g -std=c++0x
+HPGMG_CFLAGS = -openmp
+HPGMG_CPPFLAGS = $(UPCXX_CXXFLAGS) $(CXXFLAGS)
+HPGMG_LDFLAGS =   $(UPCXX_LDFLAGS)
+HPGMG_LDLIBS =  $(UPCXX_LDLIBS)
+PETSC_DIR =
+
+PETSC_ARCH = 
+PYTHON = /usr/bin/python
+SRCDIR = /global/u2/h/hshan/edison/myhpgmg
+CONFIG_FV = y
+CONFIG_FV_CPPFLAGS = -DUSE_UPCXX=1 -DUSE_MPI=1 -DUSE_BICGSTAB=1 -DUSE_SUBCOMM=1 -DUSE_FCYCLES=1 -DUSE_GSRB=1 -DSTENCIL_FUSE_DINV=1 -DSTENCIL_FUSE_BC=1
+include $(SRCDIR)/base.mk

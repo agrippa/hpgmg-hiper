@@ -57,10 +57,10 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
     global_ptr<double> p1, p2;
     p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
-    p2 = level->exchange_ghosts[justFaces].global_match_buffers[n]
+    p2 = level->exchange_ghosts[justFaces].global_match_buffers[n];
       upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
   }
-#elif
+#elif USE_MPI
 #ifdef USE_MPI_THREAD_MULTIPLE
 #pragma omp parallel for schedule(dynamic,1)
 #endif
