@@ -354,8 +354,6 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   int flag = 0;
   if (justFaces && level->my_rank == 6) flag = 1;
 
-  cout << "point 0 for " << level->my_rank << " flag " << flag << endl;
-
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // traverse my list of boxes and create a lists of neighboring boxes and neighboring ranks
   GZ_type *ghostsToSend = (GZ_type*)malloc(26*level->num_my_boxes*sizeof(GZ_type)); // There are at most 26 neighbors per box.
@@ -382,8 +380,6 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       int neighborBox_k = (  myBox_k + dk + level->boxes_in.k) % level->boxes_in.k;
       int neighborBoxID =  neighborBox_i + neighborBox_j*level->boxes_in.i + neighborBox_k*level->boxes_in.i*level->boxes_in.j;
 
-if (flag) cout << " TT 2 " << dir << " mybox " << myBoxID << " ngrb " << neighborBoxID << endl;
-
       if( level->rank_of_box[neighborBoxID] != -1 ){
         ghostsToSend[numGhosts].sendRank  = level->my_rank;
         ghostsToSend[numGhosts].sendBoxID = myBoxID;
@@ -401,15 +397,12 @@ if (flag) cout << " TT 2 " << dir << " mybox " << myBoxID << " ngrb " << neighbo
     }}}}
   }
 
-if (flag) cout << " TT 3 " << numGhosts << endl;
   // sort boxes by sendRank(==my rank) then by sendBoxID... ensures the sends and receive buffers are always sorted by sendBoxID...
   qsort(ghostsToSend,numGhosts      ,sizeof(GZ_type),qsortGZ );
   // sort the lists of neighboring ranks and remove duplicates...
   qsort(sendRanks   ,numGhostsRemote,sizeof(    int),qsortInt);
   int numSendRanks=0;_rank=-1;for(ghost=0;ghost<numGhostsRemote;ghost++)if(sendRanks[ghost] != _rank){_rank=sendRanks[ghost];sendRanks[numSendRanks++]=sendRanks[ghost];}
 
-
-  cout << "point 1 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // in a two-stage process, traverse the list of ghosts and allocate the pack/local lists as well as the MPI buffers, and then populate the pack/local lists
@@ -544,8 +537,6 @@ if (flag) cout << " TT 3 " << numGhosts << endl;
   free(ghostsToSend);
   free(sendRanks);
 
-  cout << "point 2 for " << level->my_rank << endl;
-
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // traverse my list of boxes and create a lists of neighboring boxes and neighboring ranks
   GZ_type *ghostsToRecv = (GZ_type*)malloc(26*level->num_my_boxes*sizeof(GZ_type)); // There are at most 26 neighbors per box.
@@ -589,8 +580,6 @@ if (flag) cout << " TT 3 " << numGhosts << endl;
   qsort(recvRanks   ,numGhostsRemote,sizeof(    int),qsortInt);
   int numRecvRanks=0;_rank=-1;for(ghost=0;ghost<numGhostsRemote;ghost++)if(recvRanks[ghost] != _rank){_rank=recvRanks[ghost];recvRanks[numRecvRanks++]=recvRanks[ghost];}
 
-
-  cout << "point 3 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // in a two-stage process, traverse the list of ghosts and allocate the unpack lists as well as the MPI buffers, and then populate the unpack list
@@ -689,8 +678,6 @@ if (flag) cout << " TT 3 " << numGhosts << endl;
   free(ghostsToRecv);
   free(recvRanks);
 
-  cout << "point 4 for " << level->my_rank << endl;
-
 #ifdef USE_UPCXX
   upcxx::barrier();
   // compute the global_match_buffers for upcxx::async_copy()
@@ -710,8 +697,6 @@ if (flag) cout << " TT 3 " << numGhosts << endl;
     cout << "MATCHI by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
   }
   upcxx::barrier();  
-
-  cout << "point 5 for " << level->my_rank << endl;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // malloc MPI requests/status arrays

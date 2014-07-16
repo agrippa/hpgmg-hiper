@@ -829,7 +829,6 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   build_interpolation(all_grids);
 
 
-  cout << "Starting to build subcomm " << endl;
 
   // build subcommunicators...
   #ifdef USE_MPI
@@ -855,8 +854,6 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   if(all_grids->my_rank==0){printf("\n");}
   #endif
   #endif
-
-  cout << "Ending build subcomm" << endl;
 
   // rebuild various coefficients for the operator... must occur after build_restriction !!!
   for(level=1;level<all_grids->num_levels;level++){

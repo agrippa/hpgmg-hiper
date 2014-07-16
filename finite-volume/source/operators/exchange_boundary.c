@@ -94,6 +94,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
 #ifdef USE_UPCXX
   async_copy_fence();
+  upcxx::barrier();
 #elif USE_MPI 
   if(nMessages)MPI_Waitall(nMessages,level->exchange_ghosts[justFaces].requests,level->exchange_ghosts[justFaces].status);
   //if(level->exchange_ghosts[justFaces].num_sends)MPI_Waitall(level->exchange_ghosts[justFaces].num_sends,level->exchange_ghosts[justFaces].requests+level->exchange_ghosts[justFaces].num_recvs,level->exchange_ghosts[justFaces].status+level->exchange_ghosts[justFaces].num_recvs);
