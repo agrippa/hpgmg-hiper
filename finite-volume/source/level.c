@@ -1,4 +1,6 @@
 //------------------------------------------------------------------------------------------------------------------------------
+// 1. support of non-even distribution ?
+//
 // Samuel Williams
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
@@ -105,18 +107,18 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
   box->numVectors = numVectors;
   box->dim = dim;
   box->ghosts = ghosts;
-  #ifndef BOX_SIMD_ALIGNMENT
+#ifndef BOX_SIMD_ALIGNMENT
   #define BOX_SIMD_ALIGNMENT 1 // allignment requirement for j+/-1
-  #endif
+#endif
   box->jStride = (dim+2*ghosts);while(box->jStride % BOX_SIMD_ALIGNMENT)box->jStride++; // pencil
-  #ifndef BOX_PLANE_PADDING
-  #define BOX_PLANE_PADDING  8 // scratch space to avoid unrolled loop cleanup
-  #endif
+#ifndef BOX_PLANE_PADDING
+#define BOX_PLANE_PADDING  8 // scratch space to avoid unrolled loop cleanup
+#endif
   box->kStride = box->jStride*(dim+2*ghosts); // plane
   if(box->jStride<BOX_PLANE_PADDING)box->kStride += (BOX_PLANE_PADDING-box->jStride); // allow the ghost zone to be clobbered...
   while(box->kStride % BOX_SIMD_ALIGNMENT)box->kStride++;
 
-  #if 0
+#if 0
   // pad each plane such that 
   //   1. it is greater than a multiple of the maximum unrolling (or vector length)
   //   2. it carries the same alignement as the plane above/below.   i.e.  if ijk is aligned, ijkk+/-plane is aligned
@@ -129,7 +131,7 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
   box->kStride  =( ((dim+2*ghosts)*box->jStride)+paddingToAvoidStencilCleanup+0x7) & ~0x7; // multiple of   64 bytes (required for MIC)
 //box->kStride  =( ((dim+2*ghosts)*box->jStride)+paddingToAvoidStencilCleanup+0x3) & ~0x3; // multiple of   32 bytes (required for AVX/QPX)
 //box->kStride  =( ((dim+2*ghosts)*box->jStride)+paddingToAvoidStencilCleanup+0x1) & ~0x1; // multiple of   16 bytes (required for SSE)
-  #endif
+#endif
   box->volume = (dim+2*ghosts)*box->kStride;
 
 
@@ -314,7 +316,6 @@ void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *
   }}
 }
 
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // create a mini program that packs data into MPI recv buffers, exchanges local data, and unpacks the MPI send buffers
 //   broadly speaking... 
@@ -334,6 +335,7 @@ void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *
 //   5. waitall
 //   6. traverse the unpack list
 void build_exchange_ghosts(level_type *level, int justFaces){
+
   level->exchange_ghosts[justFaces].num_recvs     = 0;
   level->exchange_ghosts[justFaces].num_sends     = 0;
   level->exchange_ghosts[justFaces].num_blocks[0] = 0;
@@ -341,7 +343,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].num_blocks[2] = 0;
 
   int CommunicateThisDir[27];
-         int n;for(n=0;n<27;n++)CommunicateThisDir[n]=1;CommunicateThisDir[13]=0;
+  int n;for(n=0;n<27;n++)CommunicateThisDir[n]=1;CommunicateThisDir[13]=0;
   if(justFaces)for(n=0;n<27;n++)CommunicateThisDir[n]=faces[n];
 
   int sendBox,recvBox;
@@ -402,10 +404,16 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].send_ranks    =     (int*)malloc(numSendRanks*sizeof(int));
   level->exchange_ghosts[justFaces].send_sizes    =     (int*)malloc(numSendRanks*sizeof(int));
   level->exchange_ghosts[justFaces].send_buffers  = (double**)malloc(numSendRanks*sizeof(double*));
+#ifdef USE_UPCXX
+  level->exchange_ghosts[justFaces].global_send_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
+#endif
   if(numSendRanks>0){
   if(level->exchange_ghosts[justFaces].send_ranks  ==NULL){printf("malloc failed - exchange_ghosts[%d].send_ranks\n",justFaces);fflush(stdout);exit(0);}
   if(level->exchange_ghosts[justFaces].send_sizes  ==NULL){printf("malloc failed - exchange_ghosts[%d].send_sizes\n",justFaces);fflush(stdout);exit(0);}
   if(level->exchange_ghosts[justFaces].send_buffers==NULL){printf("malloc failed - exchange_ghosts[%d].send_buffers\n",justFaces);fflush(stdout);exit(0);}
+#ifdef USE_UPCXX
+  if(level->exchange_ghosts[justFaces].global_send_buffers==NULL){printf("malloc failed - exchange_ghosts[%d].global_send_buffers\n",justFaces);fflush(stdout);exit(0);}
+#endif
   }
   level->exchange_ghosts[justFaces].blocks[0] = NULL;
   level->exchange_ghosts[justFaces].blocks[1] = NULL;
@@ -419,10 +427,15 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     int neighbor;
     for(neighbor=0;neighbor<numSendRanks;neighbor++){
       if(stage==1){
-             level->exchange_ghosts[justFaces].send_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
-          if(level->exchange_ghosts[justFaces].send_sizes[neighbor]>0)
+#ifdef USE_UPCXX
+	level->exchange_ghosts[justFaces].global_send_buffers[neighbor] = allocate<double>(MYTHREAD,level->exchange_ghosts[justFaces].send_sizes[neighbor]); 
+	level->exchange_ghosts[justFaces].send_buffers[neighbor] = (double *)level->exchange_ghosts[justFaces].global_send_buffers[neighbor];
+#else
+	level->exchange_ghosts[justFaces].send_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
+	if(level->exchange_ghosts[justFaces].send_sizes[neighbor]>0)
           if(level->exchange_ghosts[justFaces].send_buffers[neighbor]==NULL){printf("malloc failed - exchange_ghosts[%d].send_buffers[neighbor]\n",justFaces);fflush(stdout);exit(0);}
-      memset(level->exchange_ghosts[justFaces].send_buffers[neighbor],                0,level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
+#endif
+	memset(level->exchange_ghosts[justFaces].send_buffers[neighbor],                0,level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
       }
       level->exchange_ghosts[justFaces].send_ranks[neighbor]=sendRanks[neighbor];
       level->exchange_ghosts[justFaces].send_sizes[neighbor]=0;
@@ -568,10 +581,16 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].recv_ranks    =     (int*)malloc(numRecvRanks*sizeof(int));
   level->exchange_ghosts[justFaces].recv_sizes    =     (int*)malloc(numRecvRanks*sizeof(int));
   level->exchange_ghosts[justFaces].recv_buffers  = (double**)malloc(numRecvRanks*sizeof(double*));
+#ifdef USE_UPCXX
+  level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
+#endif
   if(numRecvRanks>0){
   if(level->exchange_ghosts[justFaces].recv_ranks  ==NULL){printf("malloc failed - exchange_ghosts[%d].recv_ranks\n",justFaces);fflush(stdout);exit(0);}
   if(level->exchange_ghosts[justFaces].recv_sizes  ==NULL){printf("malloc failed - exchange_ghosts[%d].recv_sizes\n",justFaces);fflush(stdout);exit(0);}
   if(level->exchange_ghosts[justFaces].recv_buffers==NULL){printf("malloc failed - exchange_ghosts[%d].recv_buffers\n",justFaces);fflush(stdout);exit(0);}
+#ifdef USE_UPCXX
+  if(level->exchange_ghosts[justFaces].global_recv_buffers==NULL){printf("malloc failed - exchange_ghosts[%d].global_recv_buffers\n",justFaces);fflush(stdout);exit(0);}
+#endif
   }
   level->exchange_ghosts[justFaces].blocks[2] = NULL;
   level->exchange_ghosts[justFaces].num_blocks[2] = 0;
@@ -582,9 +601,14 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     int neighbor;
     for(neighbor=0;neighbor<numRecvRanks;neighbor++){
       if(stage==1){
+#ifdef USE_UPCXX
+	level->exchange_ghosts[justFaces].global_recv_buffers[neighbor] = allocate<double>(MYTHREAD, level->exchange_ghosts[justFaces].recv_sizes[neighbor]);
+	level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double *)level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
+#else
              level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
           if(level->exchange_ghosts[justFaces].recv_sizes[neighbor]>0)
           if(level->exchange_ghosts[justFaces].recv_buffers[neighbor]==NULL){printf("malloc failed - exchange_ghosts[%d].recv_buffers[neighbor]\n",justFaces);fflush(stdout);exit(0);}
+#endif
       memset(level->exchange_ghosts[justFaces].recv_buffers[neighbor],                0,level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
       }
       level->exchange_ghosts[justFaces].recv_ranks[neighbor]=recvRanks[neighbor];
@@ -648,6 +672,19 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   free(ghostsToRecv);
   free(recvRanks);
 
+#ifdef USE_UPCXX
+  // compute the global_match_buffers for upcxx::async_copy()
+  for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_recvs; neighbor++) {
+    int nid = level->exchange_ghosts[justFaces].recv_ranks[neighbor];
+    upc_buf_info(MYTHREAD * THREADS + nid) = level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
+  }
+  upcxx::barrier();
+  for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_sends; neighbor++) {
+    int nid = level->exchange_ghosts[justFaces].send_ranks[neighbor];
+    level->exchange_ghosts[justFaces].global_match_buffers[neighbor] = upc_buf_info(THREADS*nid + MYTHREAD);
+  }
+  upcxx::barrier();  
+#endif
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // malloc MPI requests/status arrays
@@ -677,16 +714,16 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   int omp_threads = 1;
   int omp_nested  = 0;
 
-  #ifdef _OPENMP
-  #pragma omp parallel 
+#ifdef _OPENMP
+#pragma omp parallel 
   {
-    #pragma omp master
+#pragma omp master
     {
       omp_threads = omp_get_num_threads();
       omp_nested  = omp_get_nested();
     }
   }
-  #endif
+#endif
 
   level->memory_allocated = 0;
   level->box_dim        = box_dim;
@@ -712,7 +749,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   //level->concurrent_boxes = omp_threads;
 
   // allocate 3D array of integers to hold the MPI rank of the corresponding box
-     level->rank_of_box = (int*)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
+  level->rank_of_box = (int*)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
   if(level->rank_of_box==NULL){printf("malloc of level->rank_of_box failed\n");fflush(stdout);exit(0);}
   level->memory_allocated +=       (level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
   for(box=0;box<level->boxes_in.i*level->boxes_in.j*level->boxes_in.k;box++){level->rank_of_box[box]=-1;}  // -1 denotes that there is no actual box assigned to this region
@@ -720,7 +757,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   // parallelize the grid...
   decompose_level_kd_tree(level->rank_of_box,level->boxes_in.i,level->boxes_in.i*level->boxes_in.j,0,0,0,level->boxes_in.i,level->boxes_in.j,level->boxes_in.k,0,num_ranks);
   //print_decomposition(level);// for debug purposes only
-
+  
 
   // build my list of boxes...
   level->num_my_boxes=0;
@@ -748,10 +785,10 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
 
   // Tune the OpenMP style of parallelism...
   if(omp_nested){
-    #ifndef OMP_STENCILS_PER_THREAD
-    #define OMP_STENCILS_PER_THREAD 64
-    #endif
-                                             level->concurrent_boxes = level->num_my_boxes;
+#ifndef OMP_STENCILS_PER_THREAD
+#define OMP_STENCILS_PER_THREAD 64
+#endif
+    level->concurrent_boxes = level->num_my_boxes;
     if(level->concurrent_boxes > omp_threads)level->concurrent_boxes = omp_threads;
     if(level->concurrent_boxes <           1)level->concurrent_boxes = 1;
     level->threads_per_box = omp_threads / level->concurrent_boxes;
@@ -781,8 +818,8 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
     //posix_memalign((void**)&(level->RedBlack_FP[0]  ),64,kStride*sizeof(double  )); // even planes
     //posix_memalign((void**)&(level->RedBlack_FP[1]  ),64,kStride*sizeof(double  ));
     // FIX... align RedBlack_FP the same as elements within a plane (i.e. BOX_SIMD_ALIGNMENT)
-           level->RedBlack_FP[0] = (double*)malloc(kStride*sizeof(double));
-           level->RedBlack_FP[1] = (double*)malloc(kStride*sizeof(double));
+    level->RedBlack_FP[0] = (double*)malloc(kStride*sizeof(double));
+    level->RedBlack_FP[1] = (double*)malloc(kStride*sizeof(double));
     memset(level->RedBlack_FP[0],0,kStride*sizeof(double));
     memset(level->RedBlack_FP[1],0,kStride*sizeof(double));
             level->memory_allocated += kStride*sizeof(double);
@@ -797,9 +834,6 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
     }}
   }
 
-
-
-
   // create mini programs that affect ghost zone exchanges
   for(i=0;i<2;i++){
     level->exchange_ghosts[i].num_recvs    =0;
@@ -813,7 +847,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
 
 
   // duplicate MPI_COMM_WORLD to be the communicator for each level
-  #ifdef USE_MPI
+#ifdef USE_MPI
   if(my_rank==0){printf("  Duplicating MPI_COMM_WORLD...");fflush(stdout);}
   double time_start = MPI_Wtime();
   MPI_Comm_dup(MPI_COMM_WORLD,&level->MPI_COMM_ALLREDUCE);
@@ -822,14 +856,14 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   double time_in_comm_dup_send = time_end-time_start;
   MPI_Allreduce(&time_in_comm_dup_send,&time_in_comm_dup,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
   if(my_rank==0){printf("done (%0.6f seconds)\n",time_in_comm_dup);fflush(stdout);}
-  #endif
+#endif
     
   // report on potential load imbalance
   uint64_t BoxesPerProcess = level->num_my_boxes;
-  #ifdef USE_MPI
+#ifdef USE_MPI
   uint64_t BoxesPerProcessSend = level->num_my_boxes;
   MPI_Allreduce(&BoxesPerProcessSend,&BoxesPerProcess,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
-  #endif
+#endif
   if(my_rank==0){printf("  Calculating boxes per process... target=%0.3f, max=%ld\n\n",(double)TotalBoxes/(double)num_ranks,BoxesPerProcess);fflush(stdout);}
 }
 

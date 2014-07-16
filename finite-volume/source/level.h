@@ -11,6 +11,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+
+#ifdef USE_UPCXX
+#include <upcxx.h>
+using namespace upcxx;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------
 #ifdef USE_MPI
 #include <mpi.h>
@@ -35,6 +41,9 @@ typedef struct {
   // Thus, you can do grid->grid, grid->buf, buf->grid, or buf->buf
 } blockCopy_type;
 
+#ifdef USE_UPCXX
+extern shared_array< global_ptr<double>, 1 > upc_buf_info;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
@@ -44,15 +53,22 @@ typedef struct {
     int     * __restrict__       send_ranks;	//   MPI rank of each neighbor...          send_ranks[neighbor]
     int     * __restrict__       recv_sizes;	//   size of each MPI recv buffer...       recv_sizes[neighbor]
     int     * __restrict__       send_sizes;	//   size of each MPI send buffer...       send_sizes[neighbor]
+#ifdef USE_UPCXX
+    global_ptr<double>        *global_recv_buffers;
+    global_ptr<double>        *global_send_buffers;
+    global+ptr<double>        *global_match_buffers;
+#endif
     double ** __restrict__     recv_buffers;	//   MPI recv buffer for each neighbor...  recv_buffers[neighbor][ recv_sizes[neighbor] ]
     double ** __restrict__     send_buffers;	//   MPI send buffer for each neighbor...  send_buffers[neighbor][ send_sizes[neighbor] ]
     int                 allocated_blocks[3];	//   number of blocks allocated (not necessarily used) each list...
     int                       num_blocks[3];	//   number of blocks in each list...        num_blocks[pack,local,unpack]
     blockCopy_type *              blocks[3];	//   list of block copies...                     blocks[pack,local,unpack]
-    #ifdef USE_MPI
+#ifndef USE_UPCXX
+#ifdef USE_MPI
     MPI_Request * __restrict__     requests;
     MPI_Status  * __restrict__       status;
-    #endif
+#endif
+#endif
 } communicator_type;
 
 
@@ -87,9 +103,9 @@ typedef struct {
   communicator_type exchange_ghosts[2];		// mini program that performs a neighbor ghost zone exchange for [0=all,1=justFaces]
   communicator_type restriction;		// mini program that performs restriction and agglomeration...
   communicator_type interpolation;		// mini program that performs interpolation and dissemination...
-  #ifdef USE_MPI
+#ifdef USE_MPI
   MPI_Comm MPI_COMM_ALLREDUCE;			// MPI sub communicator for just the ranks that have boxes on this level or any subsequent level... 
-  #endif
+#endif
   double dominant_eigenvalue_of_DinvA;		// estimate on the dominate eigenvalue of D^{-1}A
   int alpha_is_zero;				// useful for determining Poisson... (a==0) && (alpha_is_zero)
   double    * __restrict__ RedBlack_FP[2];	// Red/Black Mask (i.e. 0.0 or 1.0) for even/odd planes (dim_with_ghosts^2).  

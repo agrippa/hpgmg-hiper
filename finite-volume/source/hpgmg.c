@@ -44,87 +44,109 @@
 #include "operators.h"
 #include "solvers.h"
 //------------------------------------------------------------------------------------------------------------------------------
+
+#ifdef USE_UPCXX
+shared_array< global_ptr<double>, 1 > upc_buf_info;
+#endif
+
+
 int main(int argc, char **argv){
   int my_rank=0;
   int num_tasks=1;
   int OMP_Threads = 1;
   int OMP_Nested = 0;
 
-  #ifdef _OPENMP
-  #pragma omp parallel 
+#ifdef USE_UPCXX
+  upcxx::init(&argc, &argv);
+  num_tasks = THREADS;
+  my_rank = MYTHREAD;
+  if (my_rank == 0) printf("Using UPCXX: Total %d processes\n", num_tasks);
+#endif
+
+#ifdef _OPENMP
+#pragma omp parallel 
   {
-    #pragma omp master
+#pragma omp master
     {
       OMP_Threads = omp_get_num_threads();
       OMP_Nested  = omp_get_nested();
     }
   }
-  #endif
+#endif
     
 
-  #ifdef USE_MPI
+#ifdef USE_MPI
   int    actual_threading_model = -1;
   int requested_threading_model = MPI_THREAD_SINGLE;
-  #ifdef _OPENMP
-      requested_threading_model = MPI_THREAD_FUNNELED;
-    //requested_threading_model = MPI_THREAD_SERIALIZED;
-    //requested_threading_model = MPI_THREAD_MULTIPLE;
+#ifdef _OPENMP
+  requested_threading_model = MPI_THREAD_FUNNELED;
+  //requested_threading_model = MPI_THREAD_SERIALIZED;
+  //requested_threading_model = MPI_THREAD_MULTIPLE;
   MPI_Init_thread(&argc, &argv, requested_threading_model, &actual_threading_model);
-  #else
-         MPI_Init(&argc, &argv);
-  #endif
+#else
+  MPI_Init(&argc, &argv);
+#endif
   MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  #ifdef USE_HPM // IBM HPM counters for BGQ...
+#ifdef USE_HPM // IBM HPM counters for BGQ...
   HPM_Init();
-  #endif
-  #ifdef _OPENMP
+#endif
+#ifdef _OPENMP
   if(actual_threading_model>requested_threading_model)actual_threading_model=requested_threading_model;
   if(my_rank==0){
-       if(requested_threading_model == MPI_THREAD_MULTIPLE  )printf("Requested MPI_THREAD_MULTIPLE, ");
-  else if(requested_threading_model == MPI_THREAD_SINGLE    )printf("Requested MPI_THREAD_SINGLE, ");
-  else if(requested_threading_model == MPI_THREAD_FUNNELED  )printf("Requested MPI_THREAD_FUNNELED, ");
-  else if(requested_threading_model == MPI_THREAD_SERIALIZED)printf("Requested MPI_THREAD_SERIALIZED, ");
-  else if(requested_threading_model == MPI_THREAD_MULTIPLE  )printf("Requested MPI_THREAD_MULTIPLE, ");
-  else                                                       printf("Requested Unknown MPI Threading Model (%d), ",requested_threading_model);
-       if(actual_threading_model          == MPI_THREAD_MULTIPLE  )printf("got MPI_THREAD_MULTIPLE\n");
-  else if(actual_threading_model          == MPI_THREAD_SINGLE    )printf("got MPI_THREAD_SINGLE\n");
-  else if(actual_threading_model          == MPI_THREAD_FUNNELED  )printf("got MPI_THREAD_FUNNELED\n");
-  else if(actual_threading_model          == MPI_THREAD_SERIALIZED)printf("got MPI_THREAD_SERIALIZED\n");
-  else if(actual_threading_model          == MPI_THREAD_MULTIPLE  )printf("got MPI_THREAD_MULTIPLE\n");
-  else                                                             printf("got Unknown MPI Threading Model (%d)\n",actual_threading_model);
-  fflush(stdout);}
-  #endif // _OPENMP
-  #endif // USE_MPI
-
-
+    if(requested_threading_model == MPI_THREAD_MULTIPLE  )printf("Requested MPI_THREAD_MULTIPLE, ");
+    else if(requested_threading_model == MPI_THREAD_SINGLE    )printf("Requested MPI_THREAD_SINGLE, ");
+    else if(requested_threading_model == MPI_THREAD_FUNNELED  )printf("Requested MPI_THREAD_FUNNELED, ");
+    else if(requested_threading_model == MPI_THREAD_SERIALIZED)printf("Requested MPI_THREAD_SERIALIZED, ");
+    else if(requested_threading_model == MPI_THREAD_MULTIPLE  )printf("Requested MPI_THREAD_MULTIPLE, ");
+    else                                                       printf("Requested Unknown MPI Threading Model (%d), ",requested_threading_model);
+    if(actual_threading_model          == MPI_THREAD_MULTIPLE  )printf("got MPI_THREAD_MULTIPLE\n");
+    else if(actual_threading_model          == MPI_THREAD_SINGLE    )printf("got MPI_THREAD_SINGLE\n");
+    else if(actual_threading_model          == MPI_THREAD_FUNNELED  )printf("got MPI_THREAD_FUNNELED\n");
+    else if(actual_threading_model          == MPI_THREAD_SERIALIZED)printf("got MPI_THREAD_SERIALIZED\n");
+    else if(actual_threading_model          == MPI_THREAD_MULTIPLE  )printf("got MPI_THREAD_MULTIPLE\n");
+    else                                                             printf("got Unknown MPI Threading Model (%d)\n",actual_threading_model);
+    fflush(stdout);}
+#endif // _OPENMP
+#endif // USE_MPI
+  
+  
   int log2_box_dim = 6;
   int target_boxes_per_rank = 1;
 
   if(argc==3){
-           log2_box_dim=atoi(argv[1]);
-     target_boxes_per_rank=atoi(argv[2]);
+    log2_box_dim=atoi(argv[1]);
+    target_boxes_per_rank=atoi(argv[2]);
   }else{
     if(my_rank==0){printf("usage: ./a.out  [log2_box_dim]  [target_boxes_per_rank]\n");}
-    #ifdef USE_MPI
+#ifdef USE_MPI
     MPI_Finalize();
-    #endif
+#endif
+#ifdef USE_UPCXX
+    upcxx::finalize();
+#endif
     exit(0);
   }
 
   if(log2_box_dim<4){
     if(my_rank==0){printf("log2_box_dim must be at least 4\n");}
-    #ifdef USE_MPI
+#ifdef USE_MPI
     MPI_Finalize();
-    #endif
+#endif
+#ifdef USE_UPCXX
+    upcxx::finalize();
+#endif
     exit(0);
   }
-
+  
   if(target_boxes_per_rank<1){
     if(my_rank==0){printf("target_boxes_per_rank must be at least 1\n");}
-    #ifdef USE_MPI
+#ifdef USE_MPI
     MPI_Finalize();
-    #endif
+#endif
+#ifdef USE_UPCXX
+    upcxx::finalize();
+#endif
     exit(0);
   }
 
@@ -144,13 +166,18 @@ int main(int argc, char **argv){
   }
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#ifdef USE_UPCXX
+  upc_buf_info.init(THREADS*THREADS, THREADS);
+#endif
+
   // create the fine level...
   int ghosts=1;
   level_type fine_grid;
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Periodic
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=0.0;double b=1.0; //   Poisson w/Periodic
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_DIRICHLET,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Dirichlet
-    create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_DIRICHLET,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=0.0;double b=1.0; //   Poisson w/Dirichlet
+  create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_DIRICHLET,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=0.0;double b=1.0; //   Poisson w/Dirichlet
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   initialize_problem(&fine_grid,h0,a,b);
   rebuild_operator(&fine_grid,NULL,a,b); // i.e. calculate Dinv and lambda_max
