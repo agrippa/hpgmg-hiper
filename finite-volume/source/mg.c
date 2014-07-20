@@ -201,23 +201,39 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.send_ranks    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->interpolation.send_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->interpolation.send_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
+#ifdef USE_UPCXX
+    all_grids->levels[level]->interpolation.global_send_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));   
+    all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
+#endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->interpolation.send_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.send_sizes\n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->interpolation.send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.send_buffers\n",level);fflush(stdout);exit(0);}
+#ifdef USE_UPCXX
+    if(all_grids->levels[level]->interpolation.global_send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.global_send_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_match_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.global_match_buffers\n",level);fflush(stdout);exit(0);}
+#endif
     }
 
     int elementSize = all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim;
+#ifdef USE_UPCXX
+    global_ptr<double> my_send_buffers = allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
+    double * all_send_buffers = (double *) my_send_buffers;
+#else
     double * all_send_buffers = (double*)malloc(numFineBoxesRemote*elementSize*sizeof(double));
-          if(numFineBoxesRemote*elementSize>0)
-          if(all_send_buffers==NULL){printf("malloc failed - interpolation/all_send_buffers\n");fflush(stdout);exit(0);}
-                      memset(all_send_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
+#endif
+    if(numFineBoxesRemote*elementSize>0)
+      if(all_send_buffers==NULL){printf("malloc failed - interpolation/all_send_buffers\n");fflush(stdout);exit(0);}
+    memset(all_send_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, send_buffers=%6d\n",level,all_grids->my_rank,numFineBoxesRemote*elementSize*sizeof(double));
 
     // for each neighbor, construct the pack list and allocate the MPI send buffer... 
     for(neighbor=0;neighbor<numFineRanks;neighbor++){
       int fineBox;
       int offset = 0;
+#ifdef USE_UPCXX
+      all_grids->levels[level]->interpolation.global_send_buffers[neighbor] = my_send_buffers;
+#endif
       all_grids->levels[level]->interpolation.send_buffers[neighbor] = all_send_buffers;
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(fineBoxes[fineBox].recvRank==fineRanks[neighbor]){
         // pack the MPI send buffer...
@@ -247,6 +263,9 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.send_ranks[neighbor] = fineRanks[neighbor];
       all_grids->levels[level]->interpolation.send_sizes[neighbor] = offset;
       all_send_buffers+=offset;
+#ifdef USE_UPCXX
+      my_send_buffers += offset;
+#endif
     } // neighbor
     {
       int fineBox;
@@ -326,23 +345,37 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.recv_ranks    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->interpolation.recv_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->interpolation.recv_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
+#ifdef USE_UPCXX
+    all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
+#endif
     if(numCoarseRanks>0){
     if(all_grids->levels[level]->interpolation.recv_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.recv_ranks\n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->interpolation.recv_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.recv_sizes\n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->interpolation.recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.recv_buffers\n",level);fflush(stdout);exit(0);}
+#ifdef USE_UPCXX
+    if(all_grids->levels[level]->interpolation.global_recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.global_recv_buffers\n",level);fflush(stdout);exit(0);}
+#endif
     }
 
     int elementSize = all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim;
+#ifdef USE_UPCXX
+    global_ptr<double> my_recv_buffers = allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
+    double * all_recv_buffers = (double *) my_recv_buffers;
+#else
     double * all_recv_buffers = (double*)malloc(numCoarseBoxes*elementSize*sizeof(double)); 
-          if(numCoarseBoxes*elementSize>0)
-          if(all_recv_buffers==NULL){printf("malloc failed - interpolation/all_recv_buffers\n");fflush(stdout);exit(0);}
-                      memset(all_recv_buffers,0,numCoarseBoxes*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
+#endif
+    if(numCoarseBoxes*elementSize>0)
+      if(all_recv_buffers==NULL){printf("malloc failed - interpolation/all_recv_buffers\n");fflush(stdout);exit(0);}
+    memset(all_recv_buffers,0,numCoarseBoxes*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, recv_buffers=%6d\n",level,all_grids->my_rank,numCoarseBoxes*elementSize*sizeof(double));
 
     // for each neighbor, construct the unpack list and allocate the MPI recv buffer... 
     for(neighbor=0;neighbor<numCoarseRanks;neighbor++){
       int coarseBox;
       int offset = 0;
+#ifdef USE_UPCXX
+      all_grids->levels[level]->interpolation.global_recv_buffers[neighbor] = my_recv_buffers;
+#endif
       all_grids->levels[level]->interpolation.recv_buffers[neighbor] = all_recv_buffers;
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].sendRank==coarseRanks[neighbor]){
         // unpack MPI recv buffer...
@@ -372,6 +405,9 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.recv_ranks[neighbor] = coarseRanks[neighbor];
       all_grids->levels[level]->interpolation.recv_sizes[neighbor] = offset;
       all_recv_buffers+=offset;
+#ifdef USE_UPCXX
+      my_recv_buffers += offset;
+#endif
     } // neighbor
 
     // free temporary storage...
@@ -389,14 +425,45 @@ void build_interpolation(mg_type *all_grids){
   } // all levels
 
 
-  #ifdef USE_MPI
+#ifdef USE_UPCXX
+  upcxx::barrier();
+  // compute the global_match_buffers for upcxx::async_copy()
+  int neighbor;
+
+  for(level=0;level<all_grids->num_levels-1;level++){
+    // recv: level, send : level+1
+    global_ptr<double> p, p1, p2;
+
+    if (all_grids->levels[level]->num_my_boxes>0) {
+      communicator_type *ct = (communication_type *)&(all_grids->levels[level]->interpolation);
+      for (neighbor = 0; neighbor < ct->num_recvs; neighbor++) {
+	int nid = ct->recv_ranks[neighbor];
+	upc_buf_info[MYTHREAD * THREADS + nid] = ct->global_recv_buffers[neighbor];
+	p = upc_buf_info[MYTHREAD * THREADS + nid];
+	cout << "SETTING1 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+      }
+    }
+    upcxx::barrier();
+    if (all_grids->levels[level+1]->num_my_boxes>0){
+      communicator_type *ct1 = (communication_type *)&(all_grids->levels[level+1]->interpolation);
+      for (neighbor = 0; neighbor < ct1->num_sends; neighbor++) {
+	int nid = ct1->send_ranks[neighbor];
+	ct1->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
+	p = ct1->global_match_buffers[neighbor];
+	cout << "MATCHI1 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+      }
+    }
+    upcxx::barrier();
+  }
+
+#elif USE_MPI
   for(level=0;level<all_grids->num_levels;level++){
   // malloc MPI requests/status arrays
   // FIX, shouldn't it be the max of sends or recvs ???
   all_grids->levels[level]->interpolation.requests = (MPI_Request*)malloc((all_grids->levels[level]->interpolation.num_sends+all_grids->levels[level]->interpolation.num_recvs)*sizeof(MPI_Request));
   all_grids->levels[level]->interpolation.status   = (MPI_Status *)malloc((all_grids->levels[level]->interpolation.num_sends+all_grids->levels[level]->interpolation.num_recvs)*sizeof(MPI_Status ));
   }
-  #endif
+#endif
 }
 
 
@@ -473,22 +540,38 @@ void build_restriction(mg_type *all_grids){
     all_grids->levels[level]->restriction.send_ranks    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->restriction.send_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->restriction.send_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
+#ifdef USE_UPCXX
+    all_grids->levels[level]->restriction.global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
+    all_grids->levels[level]->restriction.global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
+#endif
     if(numCoarseRanks>0){
     if(all_grids->levels[level]->restriction.send_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.send_ranks\n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->restriction.send_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.send_sizes\n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->restriction.send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.send_buffers\n",level);fflush(stdout);exit(0);}
+#ifdef USE_UPCXX
+    if(all_grids->levels[level]->restriction.global_send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_send_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->restriction.global_match_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_match_buffers\n",level);fflush(stdout);exit(0);}
+#endif
     }
 
     int elementSize = all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim/8;
+#ifdef USE_UPCXX
+    global_ptr<double> my_send_buffers = allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
+    double * all_send_buffers = (double *) my_send_buffers; 
+#else    
     double * all_send_buffers = (double*)malloc(numCoarseBoxes*elementSize*sizeof(double));
-          if(numCoarseBoxes*elementSize>0)
-          if(all_send_buffers==NULL){printf("malloc failed - restriction/all_send_buffers\n");fflush(stdout);exit(0);}
-                      memset(all_send_buffers,0,numCoarseBoxes*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
+#endif
+    if(numCoarseBoxes*elementSize>0)
+      if(all_send_buffers==NULL){printf("malloc failed - restriction/all_send_buffers\n");fflush(stdout);exit(0);}
+    memset(all_send_buffers,0,numCoarseBoxes*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
 
     // for each neighbor, construct the pack list and allocate the MPI send buffer... 
     for(neighbor=0;neighbor<numCoarseRanks;neighbor++){
       int coarseBox;
       int offset = 0;
+#ifdef USE_UPCXX
+      all_grids->levels[level]->restriction.global_send_buffers[neighbor] = my_send_buffers;
+#endif
       all_grids->levels[level]->restriction.send_buffers[neighbor] = all_send_buffers;
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==coarseRanks[neighbor]){
         // restrict to MPI send buffer...
@@ -518,6 +601,9 @@ void build_restriction(mg_type *all_grids){
       all_grids->levels[level]->restriction.send_ranks[neighbor] = coarseRanks[neighbor];
       all_grids->levels[level]->restriction.send_sizes[neighbor] = offset;
       all_send_buffers+=offset;
+#ifdef USE_UPCXX
+      my_send_buffers += offset;
+#endif
     }
     // for construct the local restriction list... 
     {
@@ -609,23 +695,37 @@ void build_restriction(mg_type *all_grids){
     all_grids->levels[level]->restriction.recv_ranks    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->restriction.recv_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->restriction.recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
+#ifdef USE_UPCXX
+    all_grids->levels[level]->restriction.global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
+#endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->restriction.recv_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.recv_ranks  \n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->restriction.recv_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.recv_sizes  \n",level);fflush(stdout);exit(0);}
     if(all_grids->levels[level]->restriction.recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.recv_buffers\n",level);fflush(stdout);exit(0);}
+#ifdef USE_UPCXX
+    if(all_grids->levels[level]->restriction.global_recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_recv_buffers\n",level);fflush(stdout);exit(0);}
+#endif
     }
 
     int elementSize = all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim/8;
+#ifdef USE_UPCXX
+    global_ptr<double> my_recv_buffers = allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
+    double * all_recv_buffers = (double *) my_recv_buffers;
+#else
     double * all_recv_buffers = (double*)malloc(numFineBoxesRemote*elementSize*sizeof(double));
-          if(numFineBoxesRemote*elementSize>0)
-          if(all_recv_buffers==NULL){printf("malloc failed - restriction/all_recv_buffers\n");fflush(stdout);exit(0);}
-                      memset(all_recv_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
+#endif
+    if(numFineBoxesRemote*elementSize>0)
+      if(all_recv_buffers==NULL){printf("malloc failed - restriction/all_recv_buffers\n");fflush(stdout);exit(0);}
+    memset(all_recv_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, recv_buffers=%6d\n",level,all_grids->my_rank,numFineBoxesRemote*elementSize*sizeof(double));
 
     // for each neighbor, construct the unpack list and allocate the MPI recv buffer... 
     for(neighbor=0;neighbor<numFineRanks;neighbor++){
       int fineBox;
       int offset = 0;
+#ifdef USE_UPCXX
+      all_grids->levels[level]->restriction.global_recv_buffers[neighbor] = my_recv_buffers;
+#endif
       all_grids->levels[level]->restriction.recv_buffers[neighbor] = all_recv_buffers;
       for(fineBox=0;fineBox<numFineBoxesRemote;fineBox++)if(fineBoxes[fineBox].sendRank==fineRanks[neighbor]){
         // unpack MPI recv buffer...
@@ -655,6 +755,9 @@ void build_restriction(mg_type *all_grids){
       all_grids->levels[level]->restriction.recv_ranks[neighbor] = fineRanks[neighbor];
       all_grids->levels[level]->restriction.recv_sizes[neighbor] = offset;
       all_recv_buffers+=offset;
+#ifdef USE_UPCXX
+      my_recv_buffers += offset;
+#endif
     } // neighbor
 
     // free temporary storage...
@@ -672,15 +775,44 @@ void build_restriction(mg_type *all_grids){
   //MPI_Barrier(MPI_COMM_WORLD);
   } // level loop
 
+#ifdef USE_UPCXX
+  upcxx::barrier();
+  // compute the global_match_buffers for upcxx::async_copy()
+  int neighbor;
 
-  #ifdef USE_MPI
+  for(level=0;level<all_grids->num_levels-1;level++){
+    // recv: level + 1, send : level
+    global_ptr<double> p, p1, p2;
+
+    if (all_grids->levels[level+1]->num_my_boxes>0) {
+      communicator_type *ct1 = (communication_type *)&(all_grids->levels[level+1]->restriction);
+      for (neighbor = 0; neighbor < ct1->num_recvs; neighbor++) {
+	int nid = ct1->recv_ranks[neighbor];
+	upc_buf_info[MYTHREAD * THREADS + nid] = ct1->global_recv_buffers[neighbor];
+	p = upc_buf_info[MYTHREAD * THREADS + nid];
+	cout << "SETTING1 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+      }
+    }
+    upcxx::barrier();
+    if (all_grids->levels[level]->num_my_boxes>0){
+      communicator_type *ct = (communication_type *)&(all_grids->levels[level]->restriction);
+      for (neighbor = 0; neighbor < ct->num_sends; neighbor++) {
+	int nid = ct->send_ranks[neighbor];
+	ct->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
+	p = ct->global_match_buffers[neighbor];
+	cout << "MATCHI1 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+      }
+    }
+    upcxx::barrier();
+  }
+#elif USE_MPI
   for(level=0;level<all_grids->num_levels;level++){
   // malloc MPI requests/status arrays
   // FIX shouldn't it be max of sends or recvs
   all_grids->levels[level]->restriction.requests = (MPI_Request*)malloc((all_grids->levels[level]->restriction.num_sends+all_grids->levels[level]->restriction.num_recvs)*sizeof(MPI_Request));
   all_grids->levels[level]->restriction.status   = (MPI_Status *)malloc((all_grids->levels[level]->restriction.num_sends+all_grids->levels[level]->restriction.num_recvs)*sizeof(MPI_Status ));
   }
-  #endif
+#endif
 }
 
 

@@ -95,16 +95,18 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   int buffer=0;
   int n;
 
-
-
-
-  #ifdef USE_MPI
+#ifdef USE_UPCXX
+  _timeStart = CycleTime();
+  upcxx::barrier();
+  _timeEnd = CycleTime();
+  level_f->cycles.restriction_recv += (_timeEnd-_timeStart);
+#elif USE_MPI
 
   // loop through packed list of MPI receives and prepost Irecv's...
   _timeStart = CycleTime();
-  #ifdef USE_MPI_THREAD_MULTIPLE
-  #pragma omp parallel for schedule(dynamic,1)
-  #endif
+#ifdef USE_MPI_THREAD_MULTIPLE
+#pragma omp parallel for schedule(dynamic,1)
+#endif
   for(n=0;n<level_c->restriction.num_recvs;n++){
     MPI_Irecv(level_c->restriction.recv_buffers[n],
               level_c->restriction.recv_sizes[n],
@@ -118,7 +120,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   }
   _timeEnd = CycleTime();
   level_f->cycles.restriction_recv += (_timeEnd-_timeStart);
-
+#endif
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
@@ -130,6 +132,14 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
  
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
+#ifdef USE_UPCXX
+  for(n=0;n<level_f->restriction.num_sends;n++){
+    global_ptr<double> p1, p2;
+    p1 = level_f->restriction.global_send_buffers[n];
+    p2 = level_f->restriction.global_match_buffers[n];
+    upcxx::async_copy(p1, p2, level_f->restriction.send_sizes[n]);    
+  }
+#elif USE_MPI
   #ifdef USE_MPI_THREAD_MULTIPLE
   #pragma omp parallel for schedule(dynamic,1)
   #endif
@@ -144,6 +154,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
               &level_f->restriction.requests[n]
     );
   }
+#endif
   _timeEnd = CycleTime();
   level_f->cycles.restriction_send += (_timeEnd-_timeStart);
   #endif
@@ -158,10 +169,14 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
 
   // wait for MPI to finish...
-  #ifdef USE_MPI 
   _timeStart = CycleTime();
+#ifdef USE_UPCXX
+  async_copy_fence();
+  upcxx::barrier();
+#elif USE_MPI
   if(level_f->restriction.num_sends)MPI_Waitall(level_f->restriction.num_sends,level_f->restriction.requests,level_f->restriction.status);
   if(level_c->restriction.num_recvs)MPI_Waitall(level_c->restriction.num_recvs,level_c->restriction.requests,level_c->restriction.status);
+#endif
   _timeEnd = CycleTime();
   level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
 
@@ -172,7 +187,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   for(buffer=0;buffer<level_c->restriction.num_blocks[2];buffer++){CopyBlock(level_c,id_c,&level_c->restriction.blocks[2][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.restriction_unpack += (_timeEnd-_timeStart);
-  #endif
  
  
   level_f->cycles.restriction_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
