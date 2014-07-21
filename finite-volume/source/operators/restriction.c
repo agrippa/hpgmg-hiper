@@ -97,7 +97,12 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
 #ifdef USE_UPCXX
   _timeStart = CycleTime();
+#ifdef USE_SUBCOMM
+  // do we need barrier from both level ?
+  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
+#else
   upcxx::barrier();
+#endif
   _timeEnd = CycleTime();
   level_f->cycles.restriction_recv += (_timeEnd-_timeStart);
 #elif USE_MPI
@@ -171,7 +176,11 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
   async_copy_fence();
+#ifdef USE_SUBCOMM
+  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
+#else
   upcxx::barrier();
+#endif
 #elif USE_MPI
   if(level_f->restriction.num_sends)MPI_Waitall(level_f->restriction.num_sends,level_f->restriction.requests,level_f->restriction.status);
   if(level_c->restriction.num_recvs)MPI_Waitall(level_c->restriction.num_recvs,level_c->restriction.requests,level_c->restriction.status);

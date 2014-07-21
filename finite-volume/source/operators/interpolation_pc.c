@@ -57,7 +57,12 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
 #ifdef USE_UPCXX
   _timeStart = CycleTime();
+#ifdef USE_SUBCOMM
+  // barrier at both level ?
+  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
+#else
   upcxx::barrier();
+#endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 
@@ -132,7 +137,11 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
   async_copy_fence();
+#ifdef USE_SUBCOMM
+  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
+#else
   upcxx::barrier();
+#endif
 #elif USE_MPI
   if(level_c->interpolation.num_sends)MPI_Waitall(level_c->interpolation.num_sends,level_c->interpolation.requests,level_c->interpolation.status);
 //if(level_f->interpolation.num_recvs){int done=0;while(done){MPI_Testall(level_f->interpolation.num_recvs,level_f->interpolation.requests,&done,level_f->interpolation.status);}}

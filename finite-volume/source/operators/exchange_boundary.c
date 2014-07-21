@@ -19,7 +19,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
+#ifdef USE_SUBCOMM
+  MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+#else
   upcxx::barrier();
+#endif
 #elif USE_MPI
   int nMessages = level->exchange_ghosts[justFaces].num_recvs + level->exchange_ghosts[justFaces].num_sends;
 
@@ -94,7 +98,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
 #ifdef USE_UPCXX
   async_copy_fence();
+#ifdef USE_SUBCOMM
+  MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+#else
   upcxx::barrier();
+#endif
 #elif USE_MPI 
   if(nMessages)MPI_Waitall(nMessages,level->exchange_ghosts[justFaces].requests,level->exchange_ghosts[justFaces].status);
   //if(level->exchange_ghosts[justFaces].num_sends)MPI_Waitall(level->exchange_ghosts[justFaces].num_sends,level->exchange_ghosts[justFaces].requests+level->exchange_ghosts[justFaces].num_recvs,level->exchange_ghosts[justFaces].status+level->exchange_ghosts[justFaces].num_recvs);
