@@ -264,7 +264,7 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.send_sizes[neighbor] = offset;
       all_send_buffers+=offset;
 #ifdef USE_UPCXX
-      my_send_buffers += offset;
+      my_send_buffers = my_send_buffers+offset;
 #endif
     } // neighbor
     {
@@ -406,7 +406,7 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.recv_sizes[neighbor] = offset;
       all_recv_buffers+=offset;
 #ifdef USE_UPCXX
-      my_recv_buffers += offset;
+      my_recv_buffers = my_recv_buffers+offset;
 #endif
     } // neighbor
 
@@ -435,7 +435,7 @@ void build_interpolation(mg_type *all_grids){
     global_ptr<double> p, p1, p2;
 
     if (all_grids->levels[level]->num_my_boxes>0) {
-      communicator_type *ct = (communication_type *)&(all_grids->levels[level]->interpolation);
+      communicator_type *ct = (communicator_type *)&(all_grids->levels[level]->interpolation);
       for (neighbor = 0; neighbor < ct->num_recvs; neighbor++) {
 	int nid = ct->recv_ranks[neighbor];
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct->global_recv_buffers[neighbor];
@@ -445,7 +445,7 @@ void build_interpolation(mg_type *all_grids){
     }
     upcxx::barrier();
     if (all_grids->levels[level+1]->num_my_boxes>0){
-      communicator_type *ct1 = (communication_type *)&(all_grids->levels[level+1]->interpolation);
+      communicator_type *ct1 = (communicator_type *)&(all_grids->levels[level+1]->interpolation);
       for (neighbor = 0; neighbor < ct1->num_sends; neighbor++) {
 	int nid = ct1->send_ranks[neighbor];
 	ct1->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
@@ -602,7 +602,7 @@ void build_restriction(mg_type *all_grids){
       all_grids->levels[level]->restriction.send_sizes[neighbor] = offset;
       all_send_buffers+=offset;
 #ifdef USE_UPCXX
-      my_send_buffers += offset;
+      my_send_buffers = my_send_buffers+offset;
 #endif
     }
     // for construct the local restriction list... 
@@ -756,7 +756,7 @@ void build_restriction(mg_type *all_grids){
       all_grids->levels[level]->restriction.recv_sizes[neighbor] = offset;
       all_recv_buffers+=offset;
 #ifdef USE_UPCXX
-      my_recv_buffers += offset;
+      my_recv_buffers = my_recv_buffers+offset;
 #endif
     } // neighbor
 
@@ -785,7 +785,7 @@ void build_restriction(mg_type *all_grids){
     global_ptr<double> p, p1, p2;
 
     if (all_grids->levels[level+1]->num_my_boxes>0) {
-      communicator_type *ct1 = (communication_type *)&(all_grids->levels[level+1]->restriction);
+      communicator_type *ct1 = (communicator_type *)&(all_grids->levels[level+1]->restriction);
       for (neighbor = 0; neighbor < ct1->num_recvs; neighbor++) {
 	int nid = ct1->recv_ranks[neighbor];
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct1->global_recv_buffers[neighbor];
@@ -795,7 +795,7 @@ void build_restriction(mg_type *all_grids){
     }
     upcxx::barrier();
     if (all_grids->levels[level]->num_my_boxes>0){
-      communicator_type *ct = (communication_type *)&(all_grids->levels[level]->restriction);
+      communicator_type *ct = (communicator_type *)&(all_grids->levels[level]->restriction);
       for (neighbor = 0; neighbor < ct->num_sends; neighbor++) {
 	int nid = ct->send_ranks[neighbor];
 	ct->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];

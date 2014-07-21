@@ -157,7 +157,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 #endif
   _timeEnd = CycleTime();
   level_f->cycles.restriction_send += (_timeEnd-_timeStart);
-  #endif
 
 
   // perform local restriction... try and hide within Isend latency... 
