@@ -686,15 +686,15 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_recvs; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].recv_ranks[neighbor];
     upc_buf_info[MYTHREAD * THREADS + nid] = level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
-    p = upc_buf_info[MYTHREAD * THREADS + nid];
-    cout << "SETTING by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+//    p = upc_buf_info[MYTHREAD * THREADS + nid];
+//    cout << "SETTING by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
   }
   upcxx::barrier();
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_sends; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].send_ranks[neighbor];
     level->exchange_ghosts[justFaces].global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
-    p = level->exchange_ghosts[justFaces].global_match_buffers[neighbor];
-    cout << "MATCHI by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+//    p = level->exchange_ghosts[justFaces].global_match_buffers[neighbor];
+//    cout << "MATCHI by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
   }
   upcxx::barrier();  
 

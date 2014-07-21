@@ -439,8 +439,8 @@ void build_interpolation(mg_type *all_grids){
       for (neighbor = 0; neighbor < ct->num_recvs; neighbor++) {
 	int nid = ct->recv_ranks[neighbor];
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct->global_recv_buffers[neighbor];
-	p = upc_buf_info[MYTHREAD * THREADS + nid];
-	cout << "SETTING1 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+//	p = upc_buf_info[MYTHREAD * THREADS + nid];
+//	cout << "SETTING2 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
       }
     }
     upcxx::barrier();
@@ -449,8 +449,8 @@ void build_interpolation(mg_type *all_grids){
       for (neighbor = 0; neighbor < ct1->num_sends; neighbor++) {
 	int nid = ct1->send_ranks[neighbor];
 	ct1->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
-	p = ct1->global_match_buffers[neighbor];
-	cout << "MATCHI1 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+//	p = ct1->global_match_buffers[neighbor];
+//	cout << "MATCHI2 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
       }
     }
     upcxx::barrier();
@@ -789,8 +789,8 @@ void build_restriction(mg_type *all_grids){
       for (neighbor = 0; neighbor < ct1->num_recvs; neighbor++) {
 	int nid = ct1->recv_ranks[neighbor];
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct1->global_recv_buffers[neighbor];
-	p = upc_buf_info[MYTHREAD * THREADS + nid];
-	cout << "SETTING1 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+//	p = upc_buf_info[MYTHREAD * THREADS + nid];
+//	cout << "SETTING1 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
       }
     }
     upcxx::barrier();
@@ -799,8 +799,8 @@ void build_restriction(mg_type *all_grids){
       for (neighbor = 0; neighbor < ct->num_sends; neighbor++) {
 	int nid = ct->send_ranks[neighbor];
 	ct->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
-	p = ct->global_match_buffers[neighbor];
-	cout << "MATCHI1 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+//	p = ct->global_match_buffers[neighbor];
+//	cout << "MATCHI1 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
       }
     }
     upcxx::barrier();
