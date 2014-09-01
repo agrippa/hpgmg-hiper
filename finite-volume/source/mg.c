@@ -59,49 +59,49 @@ void MGPrintTiming(mg_type *all_grids){
   #endif
 
   if(all_grids->my_rank!=0)return;
-  double lthis,total;
-          printf("                          ");for(level=0;level<(num_levels  );level++){printf("%12d ",level);}printf("\n");
+  double thislev,total;
+  printf("                          ");for(level=0;level<(num_levels  );level++){printf("%12d ",level);}printf("\n");
         //printf("v-cycles initiated        ");for(level=0;level<(num_levels  );level++){printf("%12d ",all_grids->levels[level]->vcycles_from_this_level/all_grids->MGSolves_performed);}printf("\n");
           printf("box dimension             ");for(level=0;level<(num_levels  );level++){printf("%10d^3 ",all_grids->levels[level]->box_dim);}printf("       total\n");
   total=0;printf("------------------        ");for(level=0;level<(num_levels+1);level++){printf("------------ ");}printf("\n");
-  total=0;printf("smooth                    ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.smooth;               total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("residual                  ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.residual;             total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("applyOp                   ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.apply_op;             total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("BLAS1                     ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.blas1;                total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("BLAS3                     ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.blas3;                total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("Boundary Conditions       ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.boundary_conditions;  total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("Restriction               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_total;    total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  local restriction       ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_local;    total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("smooth                    ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.smooth;               total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("residual                  ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.residual;             total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("applyOp                   ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.apply_op;             total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("BLAS1                     ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.blas1;                total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("BLAS3                     ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.blas3;                total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("Boundary Conditions       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.boundary_conditions;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("Restriction               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_total;    total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  local restriction       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_local;    total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #ifdef USE_MPI
-  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_pack;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_unpack;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_send;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_recv;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.restriction_wait;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_pack;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_unpack;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_send;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_recv;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_wait;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #endif
-  total=0;printf("Interpolation             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_total;  total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  local interpolation     ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_local;  total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("Interpolation             ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_total;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  local interpolation     ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_local;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #ifdef USE_MPI
-  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_pack;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_unpack; total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_send;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_recv;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.interpolation_wait;   total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_pack;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_unpack; total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_send;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_recv;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_wait;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #endif
-  total=0;printf("Ghost Zone Exchange       ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_total;      total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  local exchange          ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_local;      total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("Ghost Zone Exchange       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_total;      total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  local exchange          ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_local;      total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #ifdef USE_MPI
-  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_pack;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_unpack;     total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_send;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_recv;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
-  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.ghostZone_wait;       total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_pack;       total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_unpack;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Isend               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_send;       total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Irecv               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_recv;       total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  MPI_Waitall             ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_wait;       total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #endif
   #ifdef USE_MPI
-  total=0;printf("MPI_collectives           ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.collectives;          total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("MPI_collectives           ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.collectives;          total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #endif
   total=0;printf("------------------        ");for(level=0;level<(num_levels+1);level++){printf("------------ ");}printf("\n");
-  total=0;printf("Total by level            ");for(level=0;level<(num_levels  );level++){lthis=scale*(double)all_grids->levels[level]->cycles.Total;                total+=lthis;printf("%12.6f ",lthis);}printf("%12.6f\n",total);
+  total=0;printf("Total by level            ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.Total;                total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
 
   printf("\n");
   printf( "   Total time in MGBuild  %12.6f seconds\n",SecondsPerCycle*(double)all_grids->cycles.MGBuild);
@@ -206,12 +206,12 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif
     if(numFineRanks>0){
-    if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->interpolation.send_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.send_sizes\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->interpolation.send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.send_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);exit(0);}
+    if(all_grids->levels[level]->interpolation.send_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_sizes\n",level);exit(0);}
+    if(all_grids->levels[level]->interpolation.send_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->interpolation.global_send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.global_send_buffers\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->interpolation.global_match_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.global_match_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_send_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_send_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_match_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_match_buffers\n",level);fflush(stdout);exit(0);}
 #endif
     }
 
@@ -223,8 +223,8 @@ void build_interpolation(mg_type *all_grids){
     double * all_send_buffers = (double*)malloc(numFineBoxesRemote*elementSize*sizeof(double));
 #endif
     if(numFineBoxesRemote*elementSize>0)
-      if(all_send_buffers==NULL){printf("malloc failed - interpolation/all_send_buffers\n");fflush(stdout);exit(0);}
-    memset(all_send_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
+      if(all_send_buffers==NULL){fprintf(stderr,"malloc failed - interpolation/all_send_buffers\n");exit(0);}
+                      memset(all_send_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, send_buffers=%6d\n",level,all_grids->my_rank,numFineBoxesRemote*elementSize*sizeof(double));
 
     // for each neighbor, construct the pack list and allocate the MPI send buffer... 
@@ -349,11 +349,11 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
     if(numCoarseRanks>0){
-    if(all_grids->levels[level]->interpolation.recv_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.recv_ranks\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->interpolation.recv_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.recv_sizes\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->interpolation.recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.recv_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.recv_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.recv_ranks\n",level);exit(0);}
+    if(all_grids->levels[level]->interpolation.recv_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.recv_sizes\n",level);exit(0);}
+    if(all_grids->levels[level]->interpolation.recv_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.recv_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->interpolation.global_recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->interpolation.global_recv_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_recv_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_recv_buffers\n",level);fflush(stdout);exit(0);}
 #endif
     }
 
@@ -365,7 +365,7 @@ void build_interpolation(mg_type *all_grids){
     double * all_recv_buffers = (double*)malloc(numCoarseBoxes*elementSize*sizeof(double)); 
 #endif
     if(numCoarseBoxes*elementSize>0)
-      if(all_recv_buffers==NULL){printf("malloc failed - interpolation/all_recv_buffers\n");fflush(stdout);exit(0);}
+      if(all_recv_buffers==NULL){fprintf(stderr,"malloc failed - interpolation/all_recv_buffers\n");exit(0);}
     memset(all_recv_buffers,0,numCoarseBoxes*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, recv_buffers=%6d\n",level,all_grids->my_rank,numCoarseBoxes*elementSize*sizeof(double));
 
@@ -458,33 +458,34 @@ void build_interpolation(mg_type *all_grids){
 
 #elif USE_MPI
   for(level=0;level<all_grids->num_levels;level++){
-  // malloc MPI requests/status arrays
-  // FIX, shouldn't it be the max of sends or recvs ???
-  all_grids->levels[level]->interpolation.requests = (MPI_Request*)malloc((all_grids->levels[level]->interpolation.num_sends+all_grids->levels[level]->interpolation.num_recvs)*sizeof(MPI_Request));
-  all_grids->levels[level]->interpolation.status   = (MPI_Status *)malloc((all_grids->levels[level]->interpolation.num_sends+all_grids->levels[level]->interpolation.num_recvs)*sizeof(MPI_Status ));
+    all_grids->levels[level]->interpolation.requests = NULL;
+    all_grids->levels[level]->interpolation.status   = NULL;
+    if(level<all_grids->num_levels-1){  // i.e. bottom never calls interpolation()
+    // by convention, level_f allocates a combined array of requests for both level_f recvs and level_c sends...
+    int nMessages = all_grids->levels[level+1]->interpolation.num_sends + all_grids->levels[level]->interpolation.num_recvs;
+    all_grids->levels[level]->interpolation.requests = (MPI_Request*)malloc(nMessages*sizeof(MPI_Request));
+    all_grids->levels[level]->interpolation.status   = (MPI_Status *)malloc(nMessages*sizeof(MPI_Status ));
+    }
   }
 #endif
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void build_restriction(mg_type *all_grids){
+void build_restriction(mg_type *all_grids, int restrictionType){
   int level;
   for(level=0;level<all_grids->num_levels;level++){
-  all_grids->levels[level]->restriction.num_recvs     = 0;
-  all_grids->levels[level]->restriction.num_sends     = 0;
-  all_grids->levels[level]->restriction.blocks[0]     = NULL;
-  all_grids->levels[level]->restriction.blocks[1]     = NULL;
-  all_grids->levels[level]->restriction.blocks[2]     = NULL;
-  all_grids->levels[level]->restriction.num_blocks[0] = 0;
-  all_grids->levels[level]->restriction.num_blocks[1] = 0;
-  all_grids->levels[level]->restriction.num_blocks[2] = 0;
-  all_grids->levels[level]->restriction.allocated_blocks[0] = 0;
-  all_grids->levels[level]->restriction.allocated_blocks[1] = 0;
-  all_grids->levels[level]->restriction.allocated_blocks[2] = 0;
-  // all_grids->levels[level]->restriction.num_blocks[0] = number of unpack/insert operations  = number of boxes on level+1 that I don't own and restrict to 
-  // all_grids->levels[level]->restriction.num_blocks[1] = number of unpack/insert operations  = number of boxes on level+1 that I own and restrict to
-  // all_grids->levels[level]->restriction.num_blocks[2] = number of unpack/insert operations  = number of boxes on level-1 that I don't own that restrict to me
+  all_grids->levels[level]->restriction[restrictionType].num_recvs           = 0;
+  all_grids->levels[level]->restriction[restrictionType].num_sends           = 0;
+  all_grids->levels[level]->restriction[restrictionType].blocks[0]           = NULL;
+  all_grids->levels[level]->restriction[restrictionType].blocks[1]           = NULL;
+  all_grids->levels[level]->restriction[restrictionType].blocks[2]           = NULL;
+  all_grids->levels[level]->restriction[restrictionType].allocated_blocks[0] = 0;
+  all_grids->levels[level]->restriction[restrictionType].allocated_blocks[1] = 0;
+  all_grids->levels[level]->restriction[restrictionType].allocated_blocks[2] = 0;
+  all_grids->levels[level]->restriction[restrictionType].num_blocks[0]       = 0; // number of unpack/insert operations  = number of boxes on level+1 that I don't own and restrict to 
+  all_grids->levels[level]->restriction[restrictionType].num_blocks[1]       = 0; // number of unpack/insert operations  = number of boxes on level+1 that I own and restrict to
+  all_grids->levels[level]->restriction[restrictionType].num_blocks[2]       = 0; // number of unpack/insert operations  = number of boxes on level-1 that I don't own that restrict to me
 
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -536,33 +537,51 @@ void build_restriction(mg_type *all_grids){
     for(neighbor=0;neighbor<numCoarseBoxesRemote;neighbor++)if(coarseRanks[neighbor] != _rank){_rank=coarseRanks[neighbor];coarseRanks[numCoarseRanks++]=coarseRanks[neighbor];}
 
     // allocate structures...
-    all_grids->levels[level]->restriction.num_sends     =                         numCoarseRanks;
-    all_grids->levels[level]->restriction.send_ranks    =            (int*)malloc(numCoarseRanks*sizeof(int));
-    all_grids->levels[level]->restriction.send_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
-    all_grids->levels[level]->restriction.send_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
+    all_grids->levels[level]->restriction[restrictionType].num_sends     =                         numCoarseRanks;
+    all_grids->levels[level]->restriction[restrictionType].send_ranks    =            (int*)malloc(numCoarseRanks*sizeof(int));
+    all_grids->levels[level]->restriction[restrictionType].send_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
+    all_grids->levels[level]->restriction[restrictionType].send_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
 #ifdef USE_UPCXX
-    all_grids->levels[level]->restriction.global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
-    all_grids->levels[level]->restriction.global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->restriction[restrictionType].global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
+    all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
+
     if(numCoarseRanks>0){
-    if(all_grids->levels[level]->restriction.send_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.send_ranks\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->restriction.send_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.send_sizes\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->restriction.send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.send_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].send_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].send_ranks\n",level);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].send_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].send_sizes\n",level);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].send_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].send_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->restriction.global_send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_send_buffers\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->restriction.global_match_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_match_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].global_send_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_send_buffers\n",level);;exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].global_match_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_match_buffers\n",level);exit(0);}
 #endif
     }
 
-    int elementSize = all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim/8;
+    int elementSize;
+    int restrict_dim_i,restrict_dim_j,restrict_dim_k;
+    switch(restrictionType){
+      case RESTRICT_CELL   : restrict_dim_i = (  all_grids->levels[level]->box_dim/2);
+                             restrict_dim_j = (  all_grids->levels[level]->box_dim/2);
+                             restrict_dim_k = (  all_grids->levels[level]->box_dim/2);break;
+      case RESTRICT_FACE_I : restrict_dim_i = (1+all_grids->levels[level]->box_dim/2);
+                             restrict_dim_j = (  all_grids->levels[level]->box_dim/2);
+                             restrict_dim_k = (  all_grids->levels[level]->box_dim/2);break;
+      case RESTRICT_FACE_J : restrict_dim_i = (  all_grids->levels[level]->box_dim/2);
+                             restrict_dim_j = (1+all_grids->levels[level]->box_dim/2);
+                             restrict_dim_k = (  all_grids->levels[level]->box_dim/2);break;
+      case RESTRICT_FACE_K : restrict_dim_i = (  all_grids->levels[level]->box_dim/2);
+                             restrict_dim_j = (  all_grids->levels[level]->box_dim/2);
+                             restrict_dim_k = (1+all_grids->levels[level]->box_dim/2);break;
+    }
+    elementSize = restrict_dim_i*restrict_dim_j*restrict_dim_k;
+
 #ifdef USE_UPCXX
     global_ptr<double> my_send_buffers = allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
     double * all_send_buffers = (double *) my_send_buffers; 
-#else    
+#else      
     double * all_send_buffers = (double*)malloc(numCoarseBoxes*elementSize*sizeof(double));
 #endif
     if(numCoarseBoxes*elementSize>0)
-      if(all_send_buffers==NULL){printf("malloc failed - restriction/all_send_buffers\n");fflush(stdout);exit(0);}
+      if(all_send_buffers==NULL){fprintf(stderr,"malloc failed - restriction/all_send_buffers\n");exit(0);}
     memset(all_send_buffers,0,numCoarseBoxes*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
 
     // for each neighbor, construct the pack list and allocate the MPI send buffer... 
@@ -570,15 +589,17 @@ void build_restriction(mg_type *all_grids){
       int coarseBox;
       int offset = 0;
 #ifdef USE_UPCXX
-      all_grids->levels[level]->restriction.global_send_buffers[neighbor] = my_send_buffers;
+      all_grids->levels[level]->restriction[restrictionType].global_send_buffers[neighbor] = my_send_buffers;
 #endif
-      all_grids->levels[level]->restriction.send_buffers[neighbor] = all_send_buffers;
+      all_grids->levels[level]->restriction[restrictionType].send_buffers[neighbor] = all_send_buffers;
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==coarseRanks[neighbor]){
         // restrict to MPI send buffer...
-        append_block_to_list(&(all_grids->levels[level]->restriction.blocks[0]),&(all_grids->levels[level]->restriction.allocated_blocks[0]),&(all_grids->levels[level]->restriction.num_blocks[0]),
-          /* dim.i         = */ all_grids->levels[level]->box_dim/2,
-          /* dim.j         = */ all_grids->levels[level]->box_dim/2,
-          /* dim.k         = */ all_grids->levels[level]->box_dim/2,
+        append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[0]),
+                              &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[0]),
+                              &(all_grids->levels[level]->restriction[restrictionType].num_blocks[0]),
+          /* dim.i         = */ restrict_dim_i, 
+          /* dim.j         = */ restrict_dim_j, 
+          /* dim.k         = */ restrict_dim_k, 
           /* read.box      = */ coarseBoxes[coarseBox].sendBox,
           /* read.ptr      = */ NULL,
           /* read.i        = */ 0,
@@ -588,18 +609,18 @@ void build_restriction(mg_type *all_grids){
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].kStride,
           /* read.scale    = */ 2,
           /* write.box     = */ -1,
-          /* write.ptr     = */ all_grids->levels[level]->restriction.send_buffers[neighbor],
+          /* write.ptr     = */ all_grids->levels[level]->restriction[restrictionType].send_buffers[neighbor],
           /* write.i       = */ offset,
           /* write.j       = */ 0,
           /* write.k       = */ 0,
-          /* write.jStride = */ all_grids->levels[level]->box_dim/2,
-          /* write.kStride = */ all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim/4,
+          /* write.jStride = */ restrict_dim_i,
+          /* write.kStride = */ restrict_dim_i*restrict_dim_j, 
           /* write.scale   = */ 1
         );
         offset+=elementSize;
       }
-      all_grids->levels[level]->restriction.send_ranks[neighbor] = coarseRanks[neighbor];
-      all_grids->levels[level]->restriction.send_sizes[neighbor] = offset;
+      all_grids->levels[level]->restriction[restrictionType].send_ranks[neighbor] = coarseRanks[neighbor];
+      all_grids->levels[level]->restriction[restrictionType].send_sizes[neighbor] = offset;
       all_send_buffers+=offset;
 #ifdef USE_UPCXX
       my_send_buffers = my_send_buffers+offset;
@@ -610,10 +631,12 @@ void build_restriction(mg_type *all_grids){
       int coarseBox;
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==all_grids->levels[level+1]->my_rank){
         // restrict to local...
-        append_block_to_list(&(all_grids->levels[level]->restriction.blocks[1]),&(all_grids->levels[level]->restriction.allocated_blocks[1]),&(all_grids->levels[level]->restriction.num_blocks[1]),
-          /* dim.i         = */ all_grids->levels[level]->box_dim/2,
-          /* dim.j         = */ all_grids->levels[level]->box_dim/2,
-          /* dim.k         = */ all_grids->levels[level]->box_dim/2,
+        append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[1]),
+                              &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[1]),
+                              &(all_grids->levels[level]->restriction[restrictionType].num_blocks[1]),
+          /* dim.i         = */ restrict_dim_i, 
+          /* dim.j         = */ restrict_dim_j, 
+          /* dim.k         = */ restrict_dim_k, 
           /* read.box      = */ coarseBoxes[coarseBox].sendBox,
           /* read.ptr      = */ NULL,
           /* read.i        = */ 0, 
@@ -691,23 +714,40 @@ void build_restriction(mg_type *all_grids){
     for(neighbor=0;neighbor<numFineBoxesRemote;neighbor++)if(fineRanks[neighbor] != _rank){_rank=fineRanks[neighbor];fineRanks[numFineRanks++]=fineRanks[neighbor];}
 
     // allocate structures...
-    all_grids->levels[level]->restriction.num_recvs     =                         numFineRanks;
-    all_grids->levels[level]->restriction.recv_ranks    =            (int*)malloc(numFineRanks*sizeof(int));
-    all_grids->levels[level]->restriction.recv_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
-    all_grids->levels[level]->restriction.recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
+    all_grids->levels[level]->restriction[restrictionType].num_recvs     =                         numFineRanks;
+    all_grids->levels[level]->restriction[restrictionType].recv_ranks    =            (int*)malloc(numFineRanks*sizeof(int));
+    all_grids->levels[level]->restriction[restrictionType].recv_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
+    all_grids->levels[level]->restriction[restrictionType].recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
 #ifdef USE_UPCXX
-    all_grids->levels[level]->restriction.global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif
     if(numFineRanks>0){
-    if(all_grids->levels[level]->restriction.recv_ranks  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.recv_ranks  \n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->restriction.recv_sizes  ==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.recv_sizes  \n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->restriction.recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.recv_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].recv_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].recv_ranks  \n",level);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].recv_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].recv_sizes  \n",level);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].recv_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].recv_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->restriction.global_recv_buffers==NULL){printf("malloc failed - all_grids->levels[%d]->restriction.global_recv_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].global_recv_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->restriction.global_recv_buffers\n",level);fflush(stdout);exit(0);}
 #endif
     }
 
-    int elementSize = all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim/8;
+    int elementSize;
+    int restrict_dim_i,restrict_dim_j,restrict_dim_k;
+    switch(restrictionType){
+      case RESTRICT_CELL   : restrict_dim_i = (  all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_j = (  all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_k = (  all_grids->levels[level-1]->box_dim/2);break;
+      case RESTRICT_FACE_I : restrict_dim_i = (1+all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_j = (  all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_k = (  all_grids->levels[level-1]->box_dim/2);break;
+      case RESTRICT_FACE_J : restrict_dim_i = (  all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_j = (1+all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_k = (  all_grids->levels[level-1]->box_dim/2);break;
+      case RESTRICT_FACE_K : restrict_dim_i = (  all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_j = (  all_grids->levels[level-1]->box_dim/2);
+                             restrict_dim_k = (1+all_grids->levels[level-1]->box_dim/2);break;
+    }
+    elementSize = restrict_dim_i*restrict_dim_j*restrict_dim_k;
+
 #ifdef USE_UPCXX
     global_ptr<double> my_recv_buffers = allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
     double * all_recv_buffers = (double *) my_recv_buffers;
@@ -715,7 +755,7 @@ void build_restriction(mg_type *all_grids){
     double * all_recv_buffers = (double*)malloc(numFineBoxesRemote*elementSize*sizeof(double));
 #endif
     if(numFineBoxesRemote*elementSize>0)
-      if(all_recv_buffers==NULL){printf("malloc failed - restriction/all_recv_buffers\n");fflush(stdout);exit(0);}
+      if(all_recv_buffers==NULL){fprintf(stderr,"malloc failed - restriction/all_recv_buffers\n");exit(0);}
     memset(all_recv_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, recv_buffers=%6d\n",level,all_grids->my_rank,numFineBoxesRemote*elementSize*sizeof(double));
 
@@ -723,23 +763,26 @@ void build_restriction(mg_type *all_grids){
     for(neighbor=0;neighbor<numFineRanks;neighbor++){
       int fineBox;
       int offset = 0;
+
 #ifdef USE_UPCXX
-      all_grids->levels[level]->restriction.global_recv_buffers[neighbor] = my_recv_buffers;
+      all_grids->levels[level]->restriction[restrictionType].global_recv_buffers[neighbor] = my_recv_buffers;
 #endif
-      all_grids->levels[level]->restriction.recv_buffers[neighbor] = all_recv_buffers;
+      all_grids->levels[level]->restriction[restrictionType].recv_buffers[neighbor] = all_recv_buffers;
       for(fineBox=0;fineBox<numFineBoxesRemote;fineBox++)if(fineBoxes[fineBox].sendRank==fineRanks[neighbor]){
         // unpack MPI recv buffer...
-        append_block_to_list(&(all_grids->levels[level]->restriction.blocks[2]),&(all_grids->levels[level]->restriction.allocated_blocks[2]),&(all_grids->levels[level]->restriction.num_blocks[2]),
-          /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
-          /* dim.j         = */ all_grids->levels[level-1]->box_dim/2,
-          /* dim.k         = */ all_grids->levels[level-1]->box_dim/2,
+        append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[2]),
+                              &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[2]),
+                              &(all_grids->levels[level]->restriction[restrictionType].num_blocks[2]),
+          /* dim.i         = */ restrict_dim_i, 
+          /* dim.j         = */ restrict_dim_j, 
+          /* dim.k         = */ restrict_dim_k, 
           /* read.box      = */ -1,
-          /* read.ptr      = */ all_grids->levels[level]->restriction.recv_buffers[neighbor],
+          /* read.ptr      = */ all_grids->levels[level]->restriction[restrictionType].recv_buffers[neighbor],
           /* read.i        = */ offset,
           /* read.j        = */ 0,
           /* read.k        = */ 0,
-          /* read.jStride  = */ all_grids->levels[level-1]->box_dim/2,
-          /* read.kStride  = */ all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim/4,
+          /* read.jStride  = */ restrict_dim_i,
+          /* read.kStride  = */ restrict_dim_i*restrict_dim_j, 
           /* read.scale    = */ 1,
           /* write.box     = */ fineBoxes[fineBox].recvBox,
           /* write.ptr     = */ NULL,
@@ -752,8 +795,8 @@ void build_restriction(mg_type *all_grids){
         );
         offset+=elementSize;
       }
-      all_grids->levels[level]->restriction.recv_ranks[neighbor] = fineRanks[neighbor];
-      all_grids->levels[level]->restriction.recv_sizes[neighbor] = offset;
+      all_grids->levels[level]->restriction[restrictionType].recv_ranks[neighbor] = fineRanks[neighbor];
+      all_grids->levels[level]->restriction[restrictionType].recv_sizes[neighbor] = offset;
       all_recv_buffers+=offset;
 #ifdef USE_UPCXX
       my_recv_buffers = my_recv_buffers+offset;
@@ -807,10 +850,14 @@ void build_restriction(mg_type *all_grids){
   }
 #elif USE_MPI
   for(level=0;level<all_grids->num_levels;level++){
-  // malloc MPI requests/status arrays
-  // FIX shouldn't it be max of sends or recvs
-  all_grids->levels[level]->restriction.requests = (MPI_Request*)malloc((all_grids->levels[level]->restriction.num_sends+all_grids->levels[level]->restriction.num_recvs)*sizeof(MPI_Request));
-  all_grids->levels[level]->restriction.status   = (MPI_Status *)malloc((all_grids->levels[level]->restriction.num_sends+all_grids->levels[level]->restriction.num_recvs)*sizeof(MPI_Status ));
+    all_grids->levels[level]->restriction[restrictionType].requests = NULL;
+    all_grids->levels[level]->restriction[restrictionType].status   = NULL;
+    if(level<all_grids->num_levels-1){ // bottom never calls restriction()
+    // by convention, level_f allocates a combined array of requests for both level_f sends and level_c recvs...
+    int nMessages = all_grids->levels[level+1]->restriction[restrictionType].num_recvs + all_grids->levels[level]->restriction[restrictionType].num_sends;
+    all_grids->levels[level]->restriction[restrictionType].requests = (MPI_Request*)malloc(nMessages*sizeof(MPI_Request));
+    all_grids->levels[level]->restriction[restrictionType].status   = (MPI_Status *)malloc(nMessages*sizeof(MPI_Status ));
+    }
   }
 #endif
 }
@@ -846,7 +893,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
 
   // build the list of levels...
   all_grids->levels = (level_type**)malloc(maxLevels*sizeof(level_type*));
-  if(all_grids->levels == NULL){printf("malloc failed - MGBuild/all_grids->levels\n");fflush(stdout);exit(0);}
+  if(all_grids->levels == NULL){fprintf(stderr,"malloc failed - MGBuild/all_grids->levels\n");exit(0);}
   all_grids->num_levels=1;
   all_grids->levels[0] = fine_grid;
 
@@ -931,13 +978,13 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   #endif
   //if(all_grids->my_rank==0){for(level=0;level<all_grids->num_levels;level++){
   //  printf("level %2d: %4d^3 using %4d^3.%4d^3 spread over %4d processes\n",level,dim_i[level],boxes_in_i[level],box_dim[level],nProcs[level]);
-  //}fflush(stdout);}
+  //}}
 
 
   // now build all the coarsened levels...
   for(level=1;level<all_grids->num_levels;level++){
     all_grids->levels[level] = (level_type*)malloc(sizeof(level_type));
-    if(all_grids->levels[level] == NULL){printf("malloc failed - MGBuild/doRestrict\n");fflush(stdout);exit(0);}
+    if(all_grids->levels[level] == NULL){fprintf(stderr,"malloc failed - MGBuild/doRestrict\n");exit(0);}
     create_level(all_grids->levels[level],boxes_in_i[level],box_dim[level],box_ghosts[level],all_grids->levels[level-1]->box_vectors,all_grids->levels[level-1]->domain_boundary_condition,all_grids->levels[level-1]->my_rank,nProcs[level]);
     all_grids->levels[level]->h = 2.0*all_grids->levels[level-1]->h;
   }
@@ -957,7 +1004,10 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
 
 
   // build the restriction and interpolation communicators...
-  build_restriction(all_grids);
+  build_restriction(all_grids,RESTRICT_CELL  ); // cell-centered
+  build_restriction(all_grids,RESTRICT_FACE_I); // face-centered, normal to i
+  build_restriction(all_grids,RESTRICT_FACE_J); // face-centered, normal to j
+  build_restriction(all_grids,RESTRICT_FACE_K); // face-centered, normal to k
   build_interpolation(all_grids);
 
 
@@ -965,10 +1015,9 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   // build subcommunicators...
   #ifdef USE_MPI
   #ifdef USE_SUBCOMM
-  if(all_grids->my_rank==0){printf("Building MPI subcommunicators...\n");fflush(stdout);}
   for(level=1;level<all_grids->num_levels;level++){
     double comm_split_start = MPI_Wtime();
-    if(all_grids->my_rank==0){printf("  level %d...",level);fflush(stdout);}
+    if(all_grids->my_rank==0){fprintf(stdout,"  Building MPI subcommunicator for level %d...",level);fflush(stdout);}
     all_grids->levels[level]->active=0;
     int ll;for(ll=level;ll<all_grids->num_levels;ll++)if(all_grids->levels[ll]->num_my_boxes>0)all_grids->levels[level]->active=1;
     if(all_grids->levels[level]->active)MPI_Comm_split(MPI_COMM_WORLD,0                                  ,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE);
@@ -981,9 +1030,8 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     double comm_split_time_send = comm_split_end-comm_split_start;
     double comm_split_time = 0;
     MPI_Allreduce(&comm_split_time_send,&comm_split_time,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
-    if(all_grids->my_rank==0){printf("done (%0.6f seconds)\n",comm_split_time);fflush(stdout);}
+    if(all_grids->my_rank==0){fprintf(stdout,"done (%0.6f seconds)\n",comm_split_time);fflush(stdout);}
   }
-  if(all_grids->my_rank==0){printf("\n");}
   #endif
   #endif
 
@@ -991,7 +1039,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   for(level=1;level<all_grids->num_levels;level++){
     rebuild_operator(all_grids->levels[level],(level>0)?all_grids->levels[level-1]:NULL,a,b);
   }
-  if(all_grids->my_rank==0){printf("\n");}
+  if(all_grids->my_rank==0){fprintf(stdout,"\n");}
 
 
   // used for quick test for poisson
@@ -1047,7 +1095,10 @@ void MGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double 
   int maxVCycles = 20;
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  if(all_grids->levels[0]->my_rank==0){printf("MGSolve...\n");fflush(stdout);}
+  #ifdef USE_MPI
+  double MG_Start_Time = MPI_Wtime();
+  #endif
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"MGSolve...\n");}
   uint64_t _timeStartMGSolve = CycleTime();
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -1084,13 +1135,17 @@ void MGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double 
     //norm_of_residual = norm_of_residual / norm_of_r0;
     uint64_t _timeNorm = CycleTime();
     all_grids->levels[level]->cycles.Total += (uint64_t)(_timeNorm-_timeStart);
-    if(all_grids->levels[level]->my_rank==0){printf("v-cycle=%2d, norm=%22.20f (%1.15e)\n",v+1,norm_of_residual,norm_of_residual);fflush(stdout);}
+    if(all_grids->levels[level]->my_rank==0){fprintf(stdout,"v-cycle=%2d, norm=%22.20f (%1.15e)\n",v+1,norm_of_residual,norm_of_residual);}
     if(norm_of_residual<desired_mg_norm)break;
   } // maxVCycles
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   all_grids->cycles.MGSolve += (uint64_t)(CycleTime()-_timeStartMGSolve);
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  if(all_grids->levels[0]->my_rank==0){printf("done\n");fflush(stdout);}
+  #ifdef USE_MPI
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",MPI_Wtime()-MG_Start_Time);} // used to monitor variability in individual solve times
+  #else
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done\n");}
+  #endif
 }
 
 
@@ -1105,7 +1160,10 @@ void FMGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double
   int e_id = u_id;
   int R_id = VECTOR_F_MINUS_AV;
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  if(all_grids->levels[0]->my_rank==0){printf("FMGSolve...\n");/*fflush(stdout);*/}
+  #ifdef USE_MPI
+  double FMG_Start_Time = MPI_Wtime();
+  #endif
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"FMGSolve...\n");}
   uint64_t _timeStartMGSolve = CycleTime();
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   //double norm_of_r0 = norm(all_grids->levels[0],F_id);
@@ -1171,8 +1229,8 @@ void FMGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double
     //norm_of_residual = norm_of_residual / norm_of_r0;
     uint64_t _timeNorm = CycleTime();
     all_grids->levels[level]->cycles.Total += (uint64_t)(_timeNorm-_timeStart);
-    if(all_grids->levels[level]->my_rank==0){if(v>=0)printf("v-cycle=%2d, norm=%22.20f (%1.15e)\n",v+1,norm_of_residual,norm_of_residual);else
-                                                     printf("f-cycle,    norm=%22.20f (%1.15e)\n",norm_of_residual,norm_of_residual);/*fflush(stdout);*/}
+    if(all_grids->levels[level]->my_rank==0){if(v>=0)fprintf(stdout,"v-cycle=%2d, norm=%22.20f (%1.15e)\n",v+1,norm_of_residual,norm_of_residual);else
+                                                     fprintf(stdout,"f-cycle,    norm=%22.20f (%1.15e)\n",norm_of_residual,norm_of_residual);}
     if(norm_of_residual<desired_mg_norm)break;
   }
 
@@ -1181,6 +1239,10 @@ void FMGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   all_grids->cycles.MGSolve += (uint64_t)(CycleTime()-_timeStartMGSolve);
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  if(all_grids->levels[0]->my_rank==0){printf("done\n");/*fflush(stdout);*/}
+  #ifdef USE_MPI
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",MPI_Wtime()-FMG_Start_Time);} // used to monitor variability in individual solve times
+  #else
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done\n");}
+  #endif
 }
 //------------------------------------------------------------------------------------------------------------------------------

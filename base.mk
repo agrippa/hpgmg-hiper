@@ -44,7 +44,8 @@ CONFIG_XLCOMPILER := $(if $(findstring IBM XL,$(shell $(HPGMG_CC) -qversion 2>/d
 
 # GCC-style syntax for C99.  Use "make C99FLAGS=-qlanglvl=extc99" or similar
 # on systems that use different syntax to specify C99.
-# C99FLAGS := $(if $(findstring c99,$(PCC_FLAGS) $(HPGMG_CFLAGS) $(CFLAGS)),,$(if $(CONFIG_XLCOMPILER),-qlanglvl=extc99,-std=c99))
+
+#C99FLAGS := $(if $(findstring c99,$(PCC_FLAGS) $(HPGMG_CFLAGS) $(CFLAGS)),,$(if $(CONFIG_XLCOMPILER),-qlanglvl=extc99,-std=c99))
 
 HPGMG_COMPILE.c = $(call quiet,CC) -c $(C99FLAGS) $(HPGMG_CPPFLAGS) $(CPPFLAGS) $(HPGMG_CFLAGS) $(CFLAGS) $(C_DEPFLAGS)
 HPGMG_LINK = $(call quiet,CCLD) $(HPGMG_CFLAGS) $(CFLAGS) $(HPGMG_LDFLAGS) $(LDFLAGS) -o $@
@@ -71,9 +72,13 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $$(@D)/.DIR
 	$(HPGMG_COMPILE.c) $< -o $@
 
 test: test-fe
+prove: prove-fe
 
 test-fe : $(hpgmg-fe)
 	make -C "$(SRCDIR)/finite-element/test" PETSC_DIR="$(PETSC_DIR)" PETSC_ARCH="$(PETSC_ARCH)" HPGMG_BINDIR="$(abspath $(BINDIR))" all
+
+prove-fe : $(hpgmg-fe)
+	make -C "$(SRCDIR)/finite-element/test" PETSC_DIR="$(PETSC_DIR)" PETSC_ARCH="$(PETSC_ARCH)" HPGMG_BINDIR="$(abspath $(BINDIR))" prove
 
 %/.DIR :
 	@mkdir -p $(@D)

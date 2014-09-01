@@ -67,6 +67,10 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 
 #elif USE_MPI
+  // by convention, level_f allocates a combined array of requests for both level_f recvs and level_c sends...
+  int nMessages = level_c->interpolation.num_sends + level_f->interpolation.num_recvs;
+  MPI_Request *recv_requests = level_f->interpolation.requests;
+  MPI_Request *send_requests = level_f->interpolation.requests + level_f->interpolation.num_recvs;
 
   // loop through packed list of MPI receives and prepost Irecv's...
   _timeStart = CycleTime();
@@ -78,10 +82,9 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
               level_f->interpolation.recv_sizes[n],
               MPI_DOUBLE,
               level_f->interpolation.recv_ranks[n],
-              level_f->interpolation.recv_ranks[n], // messages are tagged with sender's rank
-              //0, // only one message should be received from each neighboring process
+              6, // by convention, piecewise constant interpolation uses tag=6
               MPI_COMM_WORLD,
-              &level_f->interpolation.requests[n]
+              &recv_requests[n]
     );
   }
   _timeEnd = CycleTime();
@@ -114,10 +117,9 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
               level_c->interpolation.send_sizes[n],
               MPI_DOUBLE,
               level_c->interpolation.send_ranks[n],
-              level_c->my_rank, // tag messages with sender's rank
-              //0, // only one message should be sent to each neighboring process
+              6, // by convention, piecewise constant interpolation uses tag=6
               MPI_COMM_WORLD,
-              &level_c->interpolation.requests[n]
+              &send_requests[n]
     );
   }
 #endif
@@ -135,6 +137,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   // wait for MPI to finish...
   _timeStart = CycleTime();
+
 #ifdef USE_UPCXX
   async_copy_fence();
 #ifdef USE_SUBCOMM
@@ -143,9 +146,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   upcxx::barrier();
 #endif
 #elif USE_MPI
-  if(level_c->interpolation.num_sends)MPI_Waitall(level_c->interpolation.num_sends,level_c->interpolation.requests,level_c->interpolation.status);
-//if(level_f->interpolation.num_recvs){int done=0;while(done){MPI_Testall(level_f->interpolation.num_recvs,level_f->interpolation.requests,&done,level_f->interpolation.status);}}
-  if(level_f->interpolation.num_recvs)MPI_Waitall(level_f->interpolation.num_recvs,level_f->interpolation.requests,level_f->interpolation.status);
+  if(nMessages)MPI_Waitall(nMessages,level_f->interpolation.requests,level_f->interpolation.status);
 #endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
@@ -156,7 +157,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
- 
  
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }

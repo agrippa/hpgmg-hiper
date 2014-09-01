@@ -81,11 +81,13 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
     int jStride = level->my_boxes[box].jStride;
     int kStride = level->my_boxes[box].kStride;
     int  ghosts = level->my_boxes[box].ghosts;
-    int     dim = level->my_boxes[box].dim;
+    int   dim_i = level->my_boxes[box].dim;
+    int   dim_j = level->my_boxes[box].dim;
+    int   dim_k = level->my_boxes[box].dim;
     #pragma omp parallel for private(k,j,i) collapse(2)
-    for(k=0;k<dim;k++){
-    for(j=0;j<dim;j++){
-    for(i=0;i<dim;i++){
+    for(k=0;k<=dim_k;k++){ // include high face
+    for(j=0;j<=dim_j;j++){ // include high face
+    for(i=0;i<=dim_i;i++){ // include high face
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
       // FIX... move to quadrature version to initialize the problem.  
       // i.e. the value of an array element is the average value of the function over the cell (finite volume)
@@ -115,12 +117,12 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
       evaluateU(x,y,z,&U,&Ux,&Uy,&Uz,&Uxx,&Uyy,&Uzz, (level->domain_boundary_condition == BC_PERIODIC) );
       double F = a*A*U - b*( (Bx*Ux + By*Uy + Bz*Uz)  +  B*(Uxx + Uyy + Uzz) );
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      level->my_boxes[box].vectors[VECTOR_ALPHA ][ijk] = A;
       level->my_boxes[box].vectors[VECTOR_BETA_I][ijk] = Bi;
       level->my_boxes[box].vectors[VECTOR_BETA_J][ijk] = Bj;
       level->my_boxes[box].vectors[VECTOR_BETA_K][ijk] = Bk;
-      level->my_boxes[box].vectors[VECTOR_UTRUE][ijk] = U;
-      level->my_boxes[box].vectors[VECTOR_F    ][ijk] = F;
+      level->my_boxes[box].vectors[VECTOR_ALPHA ][ijk] = A;
+      level->my_boxes[box].vectors[VECTOR_UTRUE ][ijk] = U;
+      level->my_boxes[box].vectors[VECTOR_F     ][ijk] = F;
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     }}}
   }
@@ -132,25 +134,25 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
   // FIX... Periodic Boundary Conditions...
   if(level->domain_boundary_condition == BC_PERIODIC){
     double average_value_of_f = mean(level,VECTOR_F);
-    if(average_value_of_f!=0.0)if(level->my_rank==0){printf("\n  WARNING... Periodic boundary conditions, but f does not sum to zero... mean(f)=%e\n",average_value_of_f);}
+    if(average_value_of_f!=0.0)if(level->my_rank==0){fprintf(stderr,"\n  WARNING... Periodic boundary conditions, but f does not sum to zero... mean(f)=%e\n",average_value_of_f);}
    
     if((a==0.0) || (level->alpha_is_zero==1) ){ // poisson... by convention, we assume u sums to zero...
       double average_value_of_u = mean(level,VECTOR_UTRUE);
-      if(level->my_rank==0){printf("\n  average value of u = %20.12e... shifting u to ensure it sums to zero...\n",average_value_of_u);fflush(stdout);}
+      if(level->my_rank==0){fprintf(stdout,"\n  average value of u = %20.12e... shifting u to ensure it sums to zero...\n",average_value_of_u);}
       shift_vector(level,VECTOR_UTRUE,VECTOR_UTRUE,-average_value_of_u);
       shift_vector(level,VECTOR_F,VECTOR_F,-average_value_of_f);
     }
     //}else{ // helmholtz...
     // FIX... for helmoltz, does the fine grid RHS have to sum to zero ???
     //double average_value_of_f = mean(level,VECTOR_F);
-    //if(level->my_rank==0){printf("\n");}
-    //if(level->my_rank==0){printf("  average value of f = %20.12e... shifting to ensure f sums to zero...\n",average_value_of_f);fflush(stdout);}
+    //if(level->my_rank==0){fprintf(stdout,"\n");}
+    //if(level->my_rank==0){fprintf(stdout,"  average value of f = %20.12e... shifting to ensure f sums to zero...\n",average_value_of_f);}
     //if(a!=0){
     //  shift_vector(level,VECTOR_F      ,VECTOR_F      ,-average_value_of_f);
     //  shift_vector(level,VECTOR_UTRUE,VECTOR_UTRUE,-average_value_of_f/a);
     //}
     //average_value_of_f = mean(level,VECTOR_F);
-    //if(level->my_rank==0){printf("  average value of f = %20.12e after shifting\n",average_value_of_f);fflush(stdout);}
+    //if(level->my_rank==0){fprintf(stdout,"  average value of f = %20.12e after shifting\n",average_value_of_f);}
     //}
   }
 }
