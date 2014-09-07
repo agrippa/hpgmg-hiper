@@ -448,7 +448,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   if(level->exchange_ghosts[justFaces].send_sizes  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].send_sizes\n",justFaces);exit(0);}
   if(level->exchange_ghosts[justFaces].send_buffers==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].send_buffers\n",justFaces);exit(0);}
 #ifdef USE_UPCXX
-  if(level->exchange_ghosts[justFaces].global_send_buffers==NULL){printf(stderr,"malloc failed - exchange_ghosts[%d].global_send_buffers\n",justFaces);fflush(stdout);exit(0);}
+  if(level->exchange_ghosts[justFaces].global_send_buffers==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].global_send_buffers\n",justFaces);exit(0);}
 #endif
   }
   level->exchange_ghosts[justFaces].blocks[0] = NULL;
@@ -638,7 +638,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   if(level->exchange_ghosts[justFaces].recv_sizes  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].recv_sizes\n",justFaces);exit(0);}
   if(level->exchange_ghosts[justFaces].recv_buffers==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].recv_buffers\n",justFaces);exit(0);}
 #ifdef USE_UPCXX
-  if(level->exchange_ghosts[justFaces].global_recv_buffers==NULL){printf(stderr,"malloc failed - exchange_ghosts[%d].global_recv_buffers\n",justFaces);fflush(stdout);exit(0);}
+  if(level->exchange_ghosts[justFaces].global_recv_buffers==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].global_recv_buffers\n",justFaces);exit(0);}
 #endif
   }
   level->exchange_ghosts[justFaces].blocks[2] = NULL;
@@ -903,7 +903,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
 
   // duplicate MPI_COMM_WORLD to be the communicator for each level
 #ifdef USE_MPI
-  if(my_rank==0){printf(stdout,"  Duplicating MPI_COMM_WORLD...");fflush(stdout);}
+  if(my_rank==0){fprintf(stdout,"  Duplicating MPI_COMM_WORLD...");fflush(stdout);}
   double time_start = MPI_Wtime();
   MPI_Comm_dup(MPI_COMM_WORLD,&level->MPI_COMM_ALLREDUCE);
   double time_end = MPI_Wtime();

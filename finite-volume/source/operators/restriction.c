@@ -152,11 +152,11 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
-  for(n=0;n<level_f->restriction.num_sends;n++){
+  for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
     global_ptr<double> p1, p2;
-    p1 = level_f->restriction.global_send_buffers[n];
-    p2 = level_f->restriction.global_match_buffers[n];
-    upcxx::async_copy(p1, p2, level_f->restriction.send_sizes[n]);    
+    p1 = level_f->restriction[restrictionType].global_send_buffers[n];
+    p2 = level_f->restriction[restrictionType].global_match_buffers[n];
+    upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n]);    
   }
 #elif USE_MPI
   #ifdef USE_MPI_THREAD_MULTIPLE

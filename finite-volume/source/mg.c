@@ -210,8 +210,8 @@ void build_interpolation(mg_type *all_grids){
     if(all_grids->levels[level]->interpolation.send_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_sizes\n",level);exit(0);}
     if(all_grids->levels[level]->interpolation.send_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->interpolation.global_send_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_send_buffers\n",level);fflush(stdout);exit(0);}
-    if(all_grids->levels[level]->interpolation.global_match_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_match_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_send_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_send_buffers\n",level);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_match_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_match_buffers\n",level);exit(0);}
 #endif
     }
 
@@ -353,7 +353,7 @@ void build_interpolation(mg_type *all_grids){
     if(all_grids->levels[level]->interpolation.recv_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.recv_sizes\n",level);exit(0);}
     if(all_grids->levels[level]->interpolation.recv_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.recv_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->interpolation.global_recv_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_recv_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->interpolation.global_recv_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.global_recv_buffers\n",level);exit(0);}
 #endif
     }
 
@@ -726,7 +726,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     if(all_grids->levels[level]->restriction[restrictionType].recv_sizes  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].recv_sizes  \n",level);exit(0);}
     if(all_grids->levels[level]->restriction[restrictionType].recv_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].recv_buffers\n",level);exit(0);}
 #ifdef USE_UPCXX
-    if(all_grids->levels[level]->restriction[restrictionType].global_recv_buffers==NULL){printf(stderr,"malloc failed - all_grids->levels[%d]->restriction.global_recv_buffers\n",level);fflush(stdout);exit(0);}
+    if(all_grids->levels[level]->restriction[restrictionType].global_recv_buffers==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction.global_recv_buffers\n",level);exit(0);}
 #endif
     }
 
