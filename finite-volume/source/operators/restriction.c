@@ -108,15 +108,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   level_f->cycles.restriction_recv += (_timeEnd-_timeStart);
 #elif USE_MPI
 
-  // loop through packed list of MPI receives and prepost Irecv's...
-  _timeStart = CycleTime();
-#ifdef USE_MPI_THREAD_MULTIPLE
-#pragma omp parallel for schedule(dynamic,1)
-#endif
-  for(n=0;n<level_c->restriction.num_recvs;n++){
-    MPI_Irecv(level_c->restriction.recv_buffers[n],
-              level_c->restriction.recv_sizes[n],
-
   // by convention, level_f allocates a combined array of requests for both level_f sends and level_c recvs...
   int nMessages = level_c->restriction[restrictionType].num_recvs + level_f->restriction[restrictionType].num_sends;
   MPI_Request *recv_requests = level_f->restriction[restrictionType].requests;
