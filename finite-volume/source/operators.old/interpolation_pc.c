@@ -52,26 +52,16 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
 void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_type *level_c, int id_c){
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
-  int my_tag = (level_f->tag<<4) | 0x6;
   int buffer=0;
   int n;
 
-#ifdef USE_UPCXX
-  _timeStart = CycleTime();
-#ifdef USE_SUBCOMM
-  // barrier at both level ?
-  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 
-#elif USE_MPI
+  #ifdef USE_MPI
   // by convention, level_f allocates a combined array of requests for both level_f recvs and level_c sends...
   int nMessages = level_c->interpolation.num_sends + level_f->interpolation.num_recvs;
   MPI_Request *recv_requests = level_f->interpolation.requests;
   MPI_Request *send_requests = level_f->interpolation.requests + level_f->interpolation.num_recvs;
+
 
   // loop through packed list of MPI receives and prepost Irecv's...
   _timeStart = CycleTime();
@@ -83,18 +73,18 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
               level_f->interpolation.recv_sizes[n],
               MPI_DOUBLE,
               level_f->interpolation.recv_ranks[n],
-              my_tag,
+              6, // by convention, piecewise constant interpolation uses tag=6
               MPI_COMM_WORLD,
               &recv_requests[n]
     );
   }
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
-#endif
+
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[0])
+  #pragma omp parallel for private(buffer) if(level_c->interpolation.num_blocks[0]>1) schedule(static,1)
   for(buffer=0;buffer<level_c->interpolation.num_blocks[0];buffer++){InterpolateBlock_PC(level_f,id_f,0.0,level_c,id_c,&level_c->interpolation.blocks[0][buffer]);} // !!! prescale==0 because you don't want to increment the MPI buffer
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_pack += (_timeEnd-_timeStart);
@@ -102,62 +92,48 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
  
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
-#ifdef USE_UPCXX
-  for(n=0;n<level_c->interpolation.num_sends;n++){
-    global_ptr<double> p1, p2;
-    p1 = level_c->interpolation.global_send_buffers[n];
-    p2 = level_c->interpolation.global_match_buffers[n];
-    upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
-  }
-#elif USE_MPI
-#ifdef USE_MPI_THREAD_MULTIPLE
-#pragma omp parallel for schedule(dynamic,1)
-#endif
+  #ifdef USE_MPI_THREAD_MULTIPLE
+  #pragma omp parallel for schedule(dynamic,1)
+  #endif
   for(n=0;n<level_c->interpolation.num_sends;n++){
     MPI_Isend(level_c->interpolation.send_buffers[n],
               level_c->interpolation.send_sizes[n],
               MPI_DOUBLE,
               level_c->interpolation.send_ranks[n],
-              my_tag,
+              6, // by convention, piecewise constant interpolation uses tag=6
               MPI_COMM_WORLD,
               &send_requests[n]
     );
   }
-#endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_send += (_timeEnd-_timeStart);
+  #endif
 
 
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
+  #pragma omp parallel for private(buffer) if(level_c->interpolation.num_blocks[1]>1) schedule(static,1)
   for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
 
 
   // wait for MPI to finish...
+  #ifdef USE_MPI 
   _timeStart = CycleTime();
-
-#ifdef USE_UPCXX
-  async_copy_fence();
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#elif USE_MPI
   if(nMessages)MPI_Waitall(nMessages,level_f->interpolation.requests,level_f->interpolation.status);
-#endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
 
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
+  #pragma omp parallel for private(buffer) if(level_f->interpolation.num_blocks[2]>1) schedule(static,1)
   for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
+
+  #endif 
+ 
  
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }
