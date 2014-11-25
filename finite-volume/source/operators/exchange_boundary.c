@@ -33,11 +33,16 @@ void cb_copy(double *buf, int n) {
   int justFaces = para_justFaces;
   level_type *level = para_level;
 
+  int buffer;
+
   _timeStart = CycleTime();
+/****
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
+****/
+  printf("Proc %d In copy to handle buf %p len %d\n", MYTHREAD, buf, n); 
   for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
     // should make this more efficient, no need to go through all blocks
-    if (level->exchange_ghosts[justFaces].blocks[2][buffer].read_ptr == buf)
+    if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
   }
   _timeEnd = CycleTime();
@@ -61,10 +66,11 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
 
 }
 
-void syncNeighbor(int nbgr) {
+void syncNeighbor(int nbgr, int iter) {
 
+    cout << "Iter " << iter << " In sync " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << " need " << nbgr << endl;
     GASNET_BLOCKUNTIL(upcxx::p2p_flag == nbgr);
-    cout << "P2p_FLAG is " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << endl;
+    cout << "Iter " << iter << " P2p_FLAG is " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << endl;
     upcxx::p2p_flag = 0;
 }
 
@@ -78,6 +84,9 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   int my_tag = (level->tag<<4) | justFaces;
   int buffer=0;
   int n;
+
+  static int iters = 0;
+  iters++;
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
 
@@ -186,7 +195,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   upcxx::barrier();
 #endif
 #else
-  syncNeighbor(level->exchange_ghosts[justFaces].num_sends);
+  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, iters);
 #endif
 
 #elif USE_MPI 

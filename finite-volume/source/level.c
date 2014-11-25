@@ -711,6 +711,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef USE_UPCXX
 	level->exchange_ghosts[justFaces].global_recv_buffers[neighbor] = allocate<double>(MYTHREAD, level->exchange_ghosts[justFaces].recv_sizes[neighbor]);
 	level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double *)level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
+        printf("Proc %d Recv buffer nbr %d is %d buf %p\n", MYTHREAD, neighbor, level->exchange_ghosts[justFaces].recv_ranks[neighbor], level->exchange_ghosts[justFaces].recv_buffers[neighbor]); 
 #else
              level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
           if(level->exchange_ghosts[justFaces].recv_sizes[neighbor]>0)
