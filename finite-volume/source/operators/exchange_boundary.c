@@ -6,6 +6,8 @@
 
 //Functions for AM 
 
+static int iters = 0;
+
 #define GASNET_Safe(fncall) do {                                     \
   int _retval;                                                     \
     if ((_retval = fncall) != GASNET_OK) {                           \
@@ -39,7 +41,7 @@ void cb_copy(double *buf, int n) {
 /****
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
 ****/
-  printf("Proc %d In copy to handle buf %p len %d\n", MYTHREAD, buf, n); 
+  printf("Iter %d Proc %d In copy to handle buf %p len %d\n", iters, MYTHREAD, buf, n); 
   for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
     // should make this more efficient, no need to go through all blocks
     if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
@@ -55,7 +57,7 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
   int myid = gasnet_mynode(); 
   double * lsrc = (double *)src.raw_ptr();
   double * ldst = (double *)dest.raw_ptr();
-  cout << "Proc " << gasnet_mynode() << " sending request to " << rid << " for " << nelem << 
+  cout << "Iter " << iters << " Proc " << gasnet_mynode() << " sending request to " << rid << " for " << nelem << 
     " elements from src " << src << " ( " << lsrc << ") to dest " << dest << " ( " << ldst << ")" << endl;
   
   GASNET_Safe(gasnet_AMRequestLong1(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, myid));
@@ -85,7 +87,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   int buffer=0;
   int n;
 
-  static int iters = 0;
   iters++;
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
