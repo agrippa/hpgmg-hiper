@@ -1005,6 +1005,9 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   for(level=1;level<all_grids->num_levels;level++){
     all_grids->levels[level] = (level_type*)malloc(sizeof(level_type));
     if(all_grids->levels[level] == NULL){fprintf(stderr,"malloc failed - MGBuild/doRestrict\n");exit(0);}
+#ifdef USE_UPCXX
+    all_grids->levels[level]->depth = level;
+#endif    
     create_level(all_grids->levels[level],boxes_in_i[level],box_dim[level],box_ghosts[level],all_grids->levels[level-1]->box_vectors,all_grids->levels[level-1]->domain_boundary_condition,all_grids->levels[level-1]->my_rank,nProcs[level]);
     all_grids->levels[level]->h = 2.0*all_grids->levels[level-1]->h;
   }

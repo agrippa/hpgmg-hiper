@@ -1,3 +1,6 @@
+// shan
+// 1. add depth in level_type
+//
 //------------------------------------------------------------------------------------------------------------------------------
 // Copyright Notice 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -51,6 +54,7 @@
 shared_array< global_ptr<double>, 1 > upc_buf_info;
 #endif
 
+mg_type all_grids;
 
 int main(int argc, char **argv){
   int my_rank=0;
@@ -197,6 +201,9 @@ int main(int argc, char **argv){
   #endif
   level_type fine_grid;
   int ghosts=stencil_get_radius();
+#ifdef USE_UPCXX
+  fine_grid.depth = 0;
+#endif
   create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,bc,my_rank,num_tasks);
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Periodic
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=0.0;double b=1.0; //   Poisson w/Periodic
@@ -214,7 +221,9 @@ int main(int argc, char **argv){
   initialize_problem(&fine_grid,h0,a,b);
   rebuild_operator(&fine_grid,NULL,a,b); // i.e. calculate Dinv and lambda_max
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  mg_type all_grids;
+  // shan: move to global
+  // mg_type all_grids;
+
   int minCoarseDim = 1;
   MGBuild(&all_grids,&fine_grid,a,b,minCoarseDim); // build the Multigrid Hierarchy 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

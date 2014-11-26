@@ -689,6 +689,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].recv_sizes    =     (int*)malloc(numRecvRanks*sizeof(int));
   level->exchange_ghosts[justFaces].recv_buffers  = (double**)malloc(numRecvRanks*sizeof(double*));
 #ifdef USE_UPCXX
+  for (int i = 0; i < 400; i++) {
+    level->exchange_ghosts[justFaces].flag_data[i] = (volatile int *) malloc(numRecvRanks * sizeof(int));
+    memset((void *)level->exchange_ghosts[justFaces].flag_data[i], 0, numRecvRanks * sizeof(int));
+  }
+
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif
   if(numRecvRanks>0){
@@ -814,6 +819,16 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   }
 #endif
 
+  printf("SUM Proc %d level %d faces %d boxes %d nsend %d nrecv %d\n", MYTHREAD, level->depth, justFaces, level->num_my_boxes,
+          level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs); 
+  for (int i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
+    printf("Proc %d level %d faces %d nrecv %d pos %d rank %d\n", MYTHREAD, level->depth, justFaces, level->exchange_ghosts[justFaces].num_recvs,
+	    i, level->exchange_ghosts[justFaces].recv_ranks[i]);
+  }
+  for (int i = 0; i < level->exchange_ghosts[justFaces].num_sends; i++) {
+    printf("Proc %d level %d faces %d nsend %d pos %d rank %d\n", MYTHREAD, level->depth, justFaces, level->exchange_ghosts[justFaces].num_sends,
+            i, level->exchange_ghosts[justFaces].send_ranks[i]);
+  }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   //print_communicator(4,level->my_rank,0,&level->exchange_ghosts[justFaces]);
@@ -877,6 +892,8 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   level->allocated_blocks = 0;
   level->tag              = log2(level->dim.i);
 
+printf("concurrent is %d at point 1\n", level->concurrent_boxes);
+
   // allocate 3D array of integers to hold the MPI rank of the corresponding box and initialize to -1 (unassigned)
      level->rank_of_box = (int*)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
   if(level->rank_of_box==NULL){fprintf(stderr,"malloc of level->rank_of_box failed\n");exit(0);}
@@ -915,6 +932,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
       box++;
   }}}}
 
+printf("concurrent is %d at point 2 and box num %d \n", level->concurrent_boxes, level->num_my_boxes);
 
   // Build and auxilarlly data structure that flattens boxes into blocks...
   for(box=0;box<level->num_my_boxes;box++){
@@ -943,6 +961,8 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
       /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
     );
   }
+
+printf("concurrent is %d at point 3 and box num %d \n", level->concurrent_boxes, level->num_my_boxes);
 
   // Tune the OpenMP style of parallelism...
   if(omp_nested){

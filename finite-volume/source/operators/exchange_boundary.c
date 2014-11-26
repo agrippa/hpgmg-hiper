@@ -7,6 +7,7 @@
 //Functions for AM 
 
 static int iters = 0;
+extern mg_type all_grids;
 
 #define GASNET_Safe(fncall) do {                                     \
   int _retval;                                                     \
@@ -24,9 +25,9 @@ static int iters = 0;
 // can use a function to pass these parameters
 static int para_id, para_justFaces;
 static level_type *para_level;
-typedef void (*CB_INSIDE_FUNC)(double *, int);
+typedef void (*CB_INSIDE_FUNC)(double *, int, int, int, int, int, int);
 
-void cb_copy(double *buf, int n) {
+void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -41,7 +42,43 @@ void cb_copy(double *buf, int n) {
 /****
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
 ****/
-  printf("Iter %d Proc %d In copy to handle buf %p len %d\n", iters, MYTHREAD, buf, n); 
+  if (vid != id || depth != para_level->depth || faces != justFaces) {
+  printf("Warning Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d vid %d depth %d faces %d iter %d\n", 
+          iters, MYTHREAD, para_level->depth, justFaces, id,             buf, n, srcid, vid, depth, faces, it); 
+  if (all_grids.levels != NULL) {
+        printf("Warning depth %d all_grids %pi level %p %d\n", depth, &all_grids, all_grids.levels[depth], all_grids.levels[depth]->depth);
+	level = all_grids.levels[depth];
+  }
+  justFaces = faces;
+  id = vid;
+  }
+  else {
+  printf("Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d iter %d\n", 
+          iters, MYTHREAD, para_level->depth, justFaces, id,             buf, n, srcid, it);
+  }
+
+  int i;
+  int nth = level->depth * 20 + id;
+  for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
+     if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
+        if (level->exchange_ghosts[justFaces].flag_data[nth][i] != 0) {
+	  printf("Wrong in Ping Handler Proc %d recv msg from %d for vid %d iter %d val %d\n", MYTHREAD, srcid, vid, it, 
+	  level->exchange_ghosts[justFaces].flag_data[nth][i]);
+	}
+	else {
+	  level->exchange_ghosts[justFaces].flag_data[nth][i] =1;
+          printf("Iter %d proc %d set single for nth %d pos %d\n", iters, MYTHREAD, nth, i);
+	}
+	break;
+     }
+  }
+  if (i >= level->exchange_ghosts[justFaces].num_recvs) {
+	printf("Wrong again Proc %d not found %d from recv ranks level %d faces %d\n", MYTHREAD, srcid, level->depth, justFaces);
+        for (int j = 0; j < level->exchange_ghosts[justFaces].num_recvs; j++) {
+          printf("Level %d Proc %d recv pos %d is %d\n", level->depth, MYTHREAD, j, level->exchange_ghosts[justFaces].recv_ranks[j]);
+        }
+  }
+  
   for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
     // should make this more efficient, no need to go through all blocks
     if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
@@ -60,7 +97,7 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
   cout << "Iter " << iters << " Proc " << gasnet_mynode() << " sending request to " << rid << " for " << nelem << 
     " elements from src " << src << " ( " << lsrc << ") to dest " << dest << " ( " << ldst << ")" << endl;
   
-  GASNET_Safe(gasnet_AMRequestLong1(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, myid));
+  GASNET_Safe(gasnet_AMRequestLong4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
 
 /*
   GASNET_Safe(gasnet_AMRequestMedium1(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), myid));
@@ -68,12 +105,12 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
 
 }
 
-void syncNeighbor(int nbgr, int iter) {
+void syncNeighbor(int nbgr, int vid, int iter) {
 
-    cout << "Iter " << iter << " In sync " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << " need " << nbgr << endl;
-    GASNET_BLOCKUNTIL(upcxx::p2p_flag == nbgr);
-    cout << "Iter " << iter << " P2p_FLAG is " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << endl;
-    upcxx::p2p_flag = 0;
+    cout << "Iter " << iter << " In sync " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << " need " << nbgr << " vid " << vid << endl;
+    GASNET_BLOCKUNTIL(upcxx::p2p_flag[vid] == nbgr);
+    cout << "Iter " << iter << " P2p_FLAG is " << upcxx::p2p_flag[vid] << " for proc " << gasnet_mynode() << " vid " << vid << endl;
+    upcxx::p2p_flag[vid] = 0;
 }
 
 // perform a (intra-level) ghost zone exchange
@@ -87,9 +124,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   int buffer=0;
   int n;
 
-  iters++;
-
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
+
+  iters++;
+  printf("EXCHANGE Proc %d for id %d level %d Iter %d justFaces %d nsend %d nrecv %d\n", MYTHREAD, id, level->depth, iters, justFaces,
+         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs);
 
 #ifdef UPCXX_P2P
   // For cb_copy function: this can be set as AM parameters
@@ -102,13 +141,17 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
-#ifndef UPCXX_P2P
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#endif
+  #ifndef UPCXX_P2P
+    #ifdef USE_SUBCOMM
+      MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+    #else
+      upcxx::barrier();
+    #endif
+  #else
+    #ifdef USE_SUBCOMM
+      if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+    #endif
+  #endif
 
 #elif USE_MPI
   int nMessages = level->exchange_ghosts[justFaces].num_recvs + level->exchange_ghosts[justFaces].num_sends;
@@ -152,6 +195,10 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #ifndef UPCXX_P2P
     upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #else
+    if (level->depth >= 6) {
+       printf("Proc %d should not be here nsends %d Iters %d\n", MYTHREAD, level->exchange_ghosts[justFaces].num_sends, iters);
+       exit(1);
+    } 
     sendNbgrData(level->exchange_ghosts[justFaces].send_ranks[n], 
 		 p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #endif
@@ -187,6 +234,19 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // wait for MPI to finish...
   _timeStart = CycleTime();
 
+  int nth = level->depth * 20 + id;
+  while (1) {
+    int arrived = 0;
+    for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
+      if (level->exchange_ghosts[justFaces].flag_data[nth][n] == 1) arrived++;
+    }
+    if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
+    upcxx::advance();
+  }
+  for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
+    level->exchange_ghosts[justFaces].flag_data[nth][n] = 0;
+  }
+
 #ifdef USE_UPCXX
 #ifndef UPCXX_P2P
   async_copy_fence();
@@ -196,7 +256,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   upcxx::barrier();
 #endif
 #else
-  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, iters);
+  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, id, iters);
 #endif
 
 #elif USE_MPI 

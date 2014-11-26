@@ -59,6 +59,9 @@ typedef struct {
     int     * __restrict__       recv_sizes;	//   size of each MPI recv buffer...       recv_sizes[neighbor]
     int     * __restrict__       send_sizes;	//   size of each MPI send buffer...       send_sizes[neighbor]
 #ifdef USE_UPCXX
+    volatile int     * __restrict__        flag_data[400];
+    volatile int     * __restrict__         flag_buf[400];
+
     global_ptr<double>        *global_recv_buffers;
     global_ptr<double>        *global_send_buffers;
     global_ptr<double>        *global_match_buffers;
@@ -90,6 +93,9 @@ typedef struct {
 
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
+#ifdef USE_UPCXX
+  int depth;
+#endif
   double h;					// grid spacing at this level
   int active;					// I am an active process (I have work to do on this or subsequent levels)
   int num_ranks;				// total number of MPI ranks
