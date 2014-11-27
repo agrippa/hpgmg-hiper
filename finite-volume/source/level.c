@@ -760,7 +760,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       /*dim.i         = */ dim_i,
       /*dim.j         = */ dim_j,
       /*dim.k         = */ dim_k,
-      /*read.box      = */ -1,
+      /*read.box      = */ (-1)*ghostsToRecv[ghost].sendRank-1,  // shan -1,
       /*read.ptr      = */ level->exchange_ghosts[justFaces].recv_buffers[neighbor], // NOTE, 1. count _sizes, 2. allocate _buffers, 3. populate blocks
       /*read.i        = */ level->exchange_ghosts[justFaces].recv_sizes[neighbor], // current offset in the MPI recv buffer
       /*read.j        = */ 0,

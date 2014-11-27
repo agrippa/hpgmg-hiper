@@ -85,16 +85,25 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 	break;
      }
   }
+#ifdef DEBUG
   if (i >= level->exchange_ghosts[justFaces].num_recvs) {
 	printf("Wrong again Proc %d not found %d from recv ranks level %d faces %d\n", MYTHREAD, srcid, level->depth, justFaces);
         for (int j = 0; j < level->exchange_ghosts[justFaces].num_recvs; j++) {
           printf("Level %d Proc %d recv pos %d is %d\n", level->depth, MYTHREAD, j, level->exchange_ghosts[justFaces].recv_ranks[j]);
         }
   }
-  
+  else {
+       if (buf != level->exchange_ghosts[justFaces].recv_buffers[i]) 
+	printf("Wrong buffer %p should be %p for Level %d Proc %d recv pos %d\n",
+                      buf, level->exchange_ghosts[justFaces].recv_buffers[i], level->depth, MYTHREAD, i);
+  }
+#endif
+
+  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
   for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
     // should make this more efficient, no need to go through all blocks
-    if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
+    // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
+    if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box == -1-srcid)
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
   }
   _timeEnd = CycleTime();
@@ -279,6 +288,9 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
     level->exchange_ghosts[justFaces].flag_data[nth][n] = 0;
   }
+
+  _timeEnd = CycleTime();
+  level->cycles.blas3 += (_timeEnd-_timeStart);
 
 #ifdef USE_UPCXX
 #ifndef UPCXX_P2P
