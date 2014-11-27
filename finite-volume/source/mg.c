@@ -1047,7 +1047,14 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     MPI_Comm_split(MPI_COMM_WORLD,all_grids->levels[level]->active,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE);
     int SIZE;
     MPI_Comm_size(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &SIZE);
-    cout << "WORLD SIZE IS " << SIZE << " in level " << level << endl;
+#ifdef DEBUG
+    cout << "WORLD SIZE IS " << SIZE << " in level " << level << " for proc " << MYTHREAD <<  " with boxes " << all_grids->levels[level]->num_my_boxes << endl << endl;
+    if (all_grids->levels[level]->num_my_boxes == 0 && all_grids->levels[level]->active==1) {
+      int ll;
+      for(ll=level+1;ll<all_grids->num_levels;ll++) {if(all_grids->levels[ll]->num_my_boxes>0) break;}
+      printf("Special for proc %d in level %d box is 0 but active in level %d boxes %d\n", MYTHREAD, level, ll, all_grids->levels[ll]->num_my_boxes);
+    } 
+#endif
     double comm_split_end = MPI_Wtime();
     double comm_split_time_send = comm_split_end-comm_split_start;
     double comm_split_time = 0;
@@ -1063,7 +1070,6 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     rebuild_operator(all_grids->levels[level],(level>0)?all_grids->levels[level-1]:NULL,a,b);
   }
   if(all_grids->my_rank==0){fprintf(stdout,"\n");}
-
 
   // used for quick test for poisson
   for(level=0;level<all_grids->num_levels;level++){

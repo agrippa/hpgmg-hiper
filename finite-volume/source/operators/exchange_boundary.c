@@ -9,6 +9,8 @@
 static int iters = 0;
 extern mg_type all_grids;
 
+static volatile int allowSendingMsg = 1;
+
 #define GASNET_Safe(fncall) do {                                     \
   int _retval;                                                     \
     if ((_retval = fncall) != GASNET_OK) {                           \
@@ -39,22 +41,31 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   int buffer;
 
   _timeStart = CycleTime();
+
+  if (allowSendingMsg == 0) allowSendingMsg = 1;
+
 /****
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
 ****/
   if (vid != id || depth != para_level->depth || faces != justFaces) {
-  printf("Warning Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d vid %d depth %d faces %d iter %d\n", 
+#ifdef DEBUG
+        printf("Warning Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d vid %d depth %d faces %d iter %d\n", 
           iters, MYTHREAD, para_level->depth, justFaces, id,             buf, n, srcid, vid, depth, faces, it); 
-  if (all_grids.levels != NULL) {
-        printf("Warning depth %d all_grids %pi level %p %d\n", depth, &all_grids, all_grids.levels[depth], all_grids.levels[depth]->depth);
-	level = all_grids.levels[depth];
-  }
-  justFaces = faces;
-  id = vid;
+#endif
+        if (all_grids.levels != NULL) {
+#ifdef DEBUG
+          printf("Warning depth %d all_grids %pi level %p %d\n", depth, &all_grids, all_grids.levels[depth], all_grids.levels[depth]->depth);
+#endif
+	  level = all_grids.levels[depth];
+        }
+        justFaces = faces;
+        id = vid;
   }
   else {
-  printf("Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d iter %d\n", 
+#ifdef DEBUG
+        printf("Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d iter %d\n", 
           iters, MYTHREAD, para_level->depth, justFaces, id,             buf, n, srcid, it);
+#endif
   }
 
   int i;
@@ -67,7 +78,9 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 	}
 	else {
 	  level->exchange_ghosts[justFaces].flag_data[nth][i] =1;
+#ifdef DEBUG
           printf("Iter %d proc %d set single for nth %d pos %d\n", iters, MYTHREAD, nth, i);
+#endif
 	}
 	break;
      }
@@ -94,9 +107,19 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
   int myid = gasnet_mynode(); 
   double * lsrc = (double *)src.raw_ptr();
   double * ldst = (double *)dest.raw_ptr();
+
+#ifdef DEBUG
   cout << "Iter " << iters << " Proc " << gasnet_mynode() << " sending request to " << rid << " for " << nelem << 
-    " elements from src " << src << " ( " << lsrc << ") to dest " << dest << " ( " << ldst << ")" << endl;
-  
+    " elements from src " << src << " ( " << lsrc << ") to dest " << dest << " ( " << ldst << ")" <<  " AllowSending " << allowSendingMsg << endl;
+#endif
+  while (allowSendingMsg == 0) {
+     gasnet_AMPoll();    
+  }
+
+#ifdef DEBUG
+  printf("ALLOW now for proc %d depth %d id %d Iter %d\n", MYTHREAD, para_level->depth, para_id, iters);
+#endif
+
   GASNET_Safe(gasnet_AMRequestLong4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
 
 /*
@@ -107,9 +130,13 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
 
 void syncNeighbor(int nbgr, int vid, int iter) {
 
+#ifdef DEBUG
     cout << "Iter " << iter << " In sync " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << " need " << nbgr << " vid " << vid << endl;
     GASNET_BLOCKUNTIL(upcxx::p2p_flag[vid] == nbgr);
     cout << "Iter " << iter << " P2p_FLAG is " << upcxx::p2p_flag[vid] << " for proc " << gasnet_mynode() << " vid " << vid << endl;
+#else
+    GASNET_BLOCKUNTIL(upcxx::p2p_flag[vid] == nbgr);
+#endif
     upcxx::p2p_flag[vid] = 0;
 }
 
@@ -125,10 +152,20 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   int n;
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
-
   iters++;
-  printf("EXCHANGE Proc %d for id %d level %d Iter %d justFaces %d nsend %d nrecv %d\n", MYTHREAD, id, level->depth, iters, justFaces,
-         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs);
+
+#ifdef DEBUG
+  if (level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs == 0) 
+	if (MYTHREAD != 0 ) allowSendingMsg = 1; 
+
+  printf("EXCHANGE Proc %d for id %d level %d Iter %d justFaces %d nsend %d nrecv %d allow %d\n", MYTHREAD, id, level->depth, iters, justFaces,
+         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs, allowSendingMsg);
+
+  if (level->exchange_ghosts[justFaces].num_sends != level->exchange_ghosts[justFaces].num_recvs) {
+	printf("Wrong msg send/recv number does not match send %d recvs %d for proc %d level %d id %d\n",
+        level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs, MYTHREAD, level->depth, id);
+  }
+#endif
 
 #ifdef UPCXX_P2P
   // For cb_copy function: this can be set as AM parameters
@@ -149,7 +186,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     #endif
   #else
     #ifdef USE_SUBCOMM
-      if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+//      if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
     #endif
   #endif
 
@@ -195,10 +232,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #ifndef UPCXX_P2P
     upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #else
-    if (level->depth >= 6) {
-       printf("Proc %d should not be here nsends %d Iters %d\n", MYTHREAD, level->exchange_ghosts[justFaces].num_sends, iters);
-       exit(1);
-    } 
     sendNbgrData(level->exchange_ghosts[justFaces].send_ranks[n], 
 		 p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #endif
@@ -257,6 +290,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #endif
 #else
   syncNeighbor(level->exchange_ghosts[justFaces].num_sends, id, iters);
+//  if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
 #endif
 
 #elif USE_MPI 
