@@ -63,6 +63,7 @@ void print_communicator(int printSendRecv, int rank, int level, communicator_typ
   printf("recv_sizes=[ ");for(i=0;i<comm->num_recvs;i++)printf("%2d ",comm->recv_sizes[i]);printf("] ");
   printf("recv_buffers=[ ");for(i=0;i<comm->num_recvs;i++)printf("%08lx ",(uint64_t)comm->recv_buffers[i]);printf("] ");
   for(i=0;i<comm->num_blocks[2];i++)printf("[ %dx%dx%d from %d %d %d %d %d to %d %d %d %d %d ] ",comm->blocks[2][i].dim.i,comm->blocks[2][i].dim.j,comm->blocks[2][i].dim.k,comm->blocks[2][i].read.i,comm->blocks[2][i].read.j,comm->blocks[2][i].read.k,comm->blocks[2][i].read.jStride,comm->blocks[2][i].read.kStride,comm->blocks[2][i].write.i,comm->blocks[2][i].write.j,comm->blocks[2][i].write.k,comm->blocks[2][i].write.jStride,comm->blocks[2][i].write.kStride);
+//  for(i=0;i<comm->num_blocks[2];i++)printf("[ %dx%dx%d pos %d from %d for %d]\n", comm->blocks[2][i].dim.i,comm->blocks[2][i].dim.j,comm->blocks[2][i].dim.k, i, comm->blocks[2][i].read.box, MYTHREAD);
   printf("\n");
   }
   fflush(stdout);
@@ -689,6 +690,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].recv_sizes    =     (int*)malloc(numRecvRanks*sizeof(int));
   level->exchange_ghosts[justFaces].recv_buffers  = (double**)malloc(numRecvRanks*sizeof(double*));
 #ifdef USE_UPCXX
+  level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
   for (int i = 0; i < 400; i++) {
     level->exchange_ghosts[justFaces].flag_data[i] = (volatile int *) malloc(numRecvRanks * sizeof(int));
     memset((void *)level->exchange_ghosts[justFaces].flag_data[i], 0, numRecvRanks * sizeof(int));
@@ -834,7 +836,27 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   }
 #endif
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  //print_communicator(4,level->my_rank,0,&level->exchange_ghosts[justFaces]);
+  // if (MYTHREAD < 2 && level->depth < 2) print_communicator(7,level->my_rank,0,&level->exchange_ghosts[justFaces]);
+
+#ifdef USE_UPCXX  
+  // setup start and end position for each receiver
+
+  int curpos = 0;
+  int curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
+  level->exchange_ghosts[justFaces].sblock2[curpos] = 0;
+  for(int buffer=1;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
+      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-curproc) {
+	  level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
+          curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
+      }
+  }
+  if (level->exchange_ghosts[justFaces].num_recvs > 0 && curpos+1 != level->exchange_ghosts[justFaces].num_recvs) {
+    printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, level->exchange_ghosts[justFaces].num_recvs);
+  }
+  level->exchange_ghosts[justFaces].sblock2[curpos+1] = level->exchange_ghosts[justFaces].num_blocks[2];
+
+#endif
+
 }
 
 

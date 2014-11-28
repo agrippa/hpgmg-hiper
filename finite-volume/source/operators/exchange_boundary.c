@@ -76,24 +76,30 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 #endif
 
   int msize = gasnet_AMMaxMedium();
+  int bstart = level->exchange_ghosts[justFaces].sblock2[i];
+  int bend   = level->exchange_ghosts[justFaces].sblock2[i+1];
 
   if (n < msize) { // medium AM 
-    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
-    for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
-      // should make this more efficient, no need to go through all blocks
+    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer, bend-bstart)
+    for(buffer=bstart;buffer<bend;buffer++){
       // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
-      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box == -1-srcid)
-        CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 1);
-      }
+      //if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-srcid) {
+      //  printf("Error srcid in proc %d should be %d actually be %d : %d\n", MYTHREAD, level->exchange_ghosts[justFaces].recv_ranks[i], srcid, 
+      //            level->exchange_ghosts[justFaces].blocks[2][buffer].read.box * (-1) - 1);
+      //}
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 1);
+    }
   }
   else { // long AM
-    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
-    for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
-      // should make this more efficient, no need to go through all blocks
+    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
+    for(buffer=bstart;buffer<bend;buffer++){
       // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
-      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box == -1-srcid)
-        CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
+      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-srcid) {
+          printf("Error srcid long in proc %d should be %d actually be %d : %d\n", MYTHREAD, level->exchange_ghosts[justFaces].recv_ranks[i], srcid,
+                  level->exchange_ghosts[justFaces].blocks[2][buffer].read.box * (-1) - 1);
       }
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
+    }
   }
 
   _timeEnd = CycleTime();
@@ -113,7 +119,7 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
     GASNET_Safe(gasnet_AMRequestMedium4(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), para_id, para_level->depth, para_justFaces, iters));
   }
   else {
-    GASNET_Safe(gasnet_AMRequestLong4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
+    GASNET_Safe(gasnet_AMRequestLongAsync4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
   }
 
 }

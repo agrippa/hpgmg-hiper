@@ -61,6 +61,7 @@ typedef struct {
 #ifdef USE_UPCXX
     volatile int     * __restrict__        flag_data[400];
     volatile int     * __restrict__         flag_buf[400];
+    int              * __restrict__         sblock2, eblock2;  // start and end position in blocks[2] for each neighbor
 
     global_ptr<double>        *global_recv_buffers;
     global_ptr<double>        *global_send_buffers;
