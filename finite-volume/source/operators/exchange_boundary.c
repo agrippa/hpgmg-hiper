@@ -9,8 +9,6 @@
 static int iters = 0;
 extern mg_type all_grids;
 
-static volatile int allowSendingMsg = 1;
-
 #define GASNET_Safe(fncall) do {                                     \
   int _retval;                                                     \
     if ((_retval = fncall) != GASNET_OK) {                           \
@@ -34,42 +32,23 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
 
-  int id = para_id;
-  int justFaces = para_justFaces;
+  int id = vid;
+  int justFaces = faces;
   level_type *level = para_level;
 
   int buffer;
 
   _timeStart = CycleTime();
 
-  if (allowSendingMsg == 0) allowSendingMsg = 1;
-
-/****
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
-****/
-  if (vid != id || depth != para_level->depth || faces != justFaces) {
-#ifdef DEBUG
-        printf("Warning Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d vid %d depth %d faces %d iter %d\n", 
-          iters, MYTHREAD, para_level->depth, justFaces, id,             buf, n, srcid, vid, depth, faces, it); 
-#endif
-        if (all_grids.levels != NULL) {
-#ifdef DEBUG
-          printf("Warning depth %d all_grids %pi level %p %d\n", depth, &all_grids, all_grids.levels[depth], all_grids.levels[depth]->depth);
-#endif
-	  level = all_grids.levels[depth];
-        }
-        justFaces = faces;
-        id = vid;
+  if (all_grids.levels != NULL) {
+     level = all_grids.levels[depth];
   }
   else {
-#ifdef DEBUG
-        printf("Iter %d Proc %d In copy level %d faces %d  id %d to handle buf %p len %d from %d iter %d\n", 
-          iters, MYTHREAD, para_level->depth, justFaces, id,             buf, n, srcid, it);
-#endif
+     level = para_level;
   }
 
   int i;
-  int nth = level->depth * 20 + id;
+  int nth = depth * 20 + id;
   for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
      if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
         if (level->exchange_ghosts[justFaces].flag_data[nth][i] != 0) {
@@ -78,9 +57,6 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 	}
 	else {
 	  level->exchange_ghosts[justFaces].flag_data[nth][i] =1;
-#ifdef DEBUG
-          printf("Iter %d proc %d set single for nth %d pos %d\n", iters, MYTHREAD, nth, i);
-#endif
 	}
 	break;
      }
@@ -99,13 +75,27 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   }
 #endif
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
-    // should make this more efficient, no need to go through all blocks
-    // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
-    if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box == -1-srcid)
-      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
+  int msize = gasnet_AMMaxMedium();
+
+  if (n < msize) { // medium AM 
+    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
+    for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
+      // should make this more efficient, no need to go through all blocks
+      // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
+      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box == -1-srcid)
+        CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 1);
+      }
   }
+  else { // long AM
+    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
+    for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
+      // should make this more efficient, no need to go through all blocks
+      // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
+      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box == -1-srcid)
+        CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
+      }
+  }
+
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);
 
@@ -116,36 +106,21 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
   int myid = gasnet_mynode(); 
   double * lsrc = (double *)src.raw_ptr();
   double * ldst = (double *)dest.raw_ptr();
+  int msize = gasnet_AMMaxMedium();
 
-#ifdef DEBUG
-  cout << "Iter " << iters << " Proc " << gasnet_mynode() << " sending request to " << rid << " for " << nelem << 
-    " elements from src " << src << " ( " << lsrc << ") to dest " << dest << " ( " << ldst << ")" <<  " AllowSending " << allowSendingMsg << endl;
-#endif
-  while (allowSendingMsg == 0) {
-     gasnet_AMPoll();    
+  if (nelem * sizeof(double) < msize) {
+     // using mediumAM
+    GASNET_Safe(gasnet_AMRequestMedium4(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), para_id, para_level->depth, para_justFaces, iters));
   }
-
-#ifdef DEBUG
-  printf("ALLOW now for proc %d depth %d id %d Iter %d\n", MYTHREAD, para_level->depth, para_id, iters);
-#endif
-
-  GASNET_Safe(gasnet_AMRequestLong4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
-
-/*
-  GASNET_Safe(gasnet_AMRequestMedium1(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), myid));
-*/
+  else {
+    GASNET_Safe(gasnet_AMRequestLong4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
+  }
 
 }
 
 void syncNeighbor(int nbgr, int vid, int iter) {
 
-#ifdef DEBUG
-    cout << "Iter " << iter << " In sync " << upcxx::p2p_flag << " for proc " << gasnet_mynode() << " need " << nbgr << " vid " << vid << endl;
     GASNET_BLOCKUNTIL(upcxx::p2p_flag[vid] == nbgr);
-    cout << "Iter " << iter << " P2p_FLAG is " << upcxx::p2p_flag[vid] << " for proc " << gasnet_mynode() << " vid " << vid << endl;
-#else
-    GASNET_BLOCKUNTIL(upcxx::p2p_flag[vid] == nbgr);
-#endif
     upcxx::p2p_flag[vid] = 0;
 }
 
@@ -164,11 +139,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   iters++;
 
 #ifdef DEBUG
-  if (level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs == 0) 
-	if (MYTHREAD != 0 ) allowSendingMsg = 1; 
-
-  printf("EXCHANGE Proc %d for id %d level %d Iter %d justFaces %d nsend %d nrecv %d allow %d\n", MYTHREAD, id, level->depth, iters, justFaces,
-         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs, allowSendingMsg);
+  printf("EXCHANGE Proc %d for id %d level %d Iter %d justFaces %d nsend %d nrecv %d \n", MYTHREAD, id, level->depth, iters, justFaces,
+         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs);
 
   if (level->exchange_ghosts[justFaces].num_sends != level->exchange_ghosts[justFaces].num_recvs) {
 	printf("Wrong msg send/recv number does not match send %d recvs %d for proc %d level %d id %d\n",
@@ -225,7 +197,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // pack MPI send buffers...
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[0])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[0];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);}
+  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[0];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer], NULL, 0);}
   _timeEnd = CycleTime();
   level->cycles.ghostZone_pack += (_timeEnd-_timeStart);
 
@@ -268,7 +240,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);}
+  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer], NULL, 0);}
   _timeEnd = CycleTime();
   level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 
@@ -316,7 +288,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);}
+  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], NULL, 0);}
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);
 #endif

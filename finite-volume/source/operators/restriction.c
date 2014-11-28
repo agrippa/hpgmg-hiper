@@ -198,7 +198,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->restriction[restrictionType].num_blocks[2])
-  for(buffer=0;buffer<level_c->restriction[restrictionType].num_blocks[2];buffer++){CopyBlock(level_c,id_c,&level_c->restriction[restrictionType].blocks[2][buffer]);}
+  for(buffer=0;buffer<level_c->restriction[restrictionType].num_blocks[2];buffer++){CopyBlock(level_c,id_c,&level_c->restriction[restrictionType].blocks[2][buffer], NULL, 0);}
   _timeEnd = CycleTime();
   level_f->cycles.restriction_unpack += (_timeEnd-_timeStart);
  

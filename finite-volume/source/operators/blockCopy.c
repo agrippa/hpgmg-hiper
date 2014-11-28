@@ -3,7 +3,8 @@
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
-static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
+// shan: flag = 0, the same with original; flag =1 , use src as read buffer
+static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, double *src, int flag){
   // copy 3D array from read_i,j,k of read[] to write_i,j,k in write[]
   int   dim_i       = block->dim.i;
   int   dim_j       = block->dim.j;
@@ -23,6 +24,9 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
 
   double * __restrict__  read = block->read.ptr;
   double * __restrict__ write = block->write.ptr;
+
+  if (flag == 1) read = src;
+
   if(block->read.box >=0) read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
   if(block->write.box>=0)write = level->my_boxes[block->write.box].vectors[id] + level->my_boxes[block->write.box].ghosts*(1+level->my_boxes[block->write.box].jStride+level->my_boxes[block->write.box].kStride);
 
