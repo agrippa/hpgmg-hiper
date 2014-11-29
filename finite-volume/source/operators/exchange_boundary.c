@@ -177,25 +177,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     #endif
   #endif
 
-#elif USE_MPI
-  int nMessages = level->exchange_ghosts[justFaces].num_recvs + level->exchange_ghosts[justFaces].num_sends;
-  MPI_Request *recv_requests = level->exchange_ghosts[justFaces].requests;
-  MPI_Request *send_requests = level->exchange_ghosts[justFaces].requests + level->exchange_ghosts[justFaces].num_recvs;
-
-  // loop through packed list of MPI receives and prepost Irecv's...
-#ifdef USE_MPI_THREAD_MULTIPLE
-#pragma omp parallel for schedule(dynamic,1)
-#endif
-  for(n=0;n<level->exchange_ghosts[justFaces].num_recvs;n++){
-    MPI_Irecv(level->exchange_ghosts[justFaces].recv_buffers[n],
-              level->exchange_ghosts[justFaces].recv_sizes[n],
-              MPI_DOUBLE,
-              level->exchange_ghosts[justFaces].recv_ranks[n],
-              my_tag,
-              MPI_COMM_WORLD,
-              &recv_requests[n]
-    );
-  }
 #endif  
   _timeEnd = CycleTime();
   level->cycles.ghostZone_recv += (_timeEnd-_timeStart);
@@ -224,20 +205,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #endif
   }
 
-#elif USE_MPI
-#ifdef USE_MPI_THREAD_MULTIPLE
-#pragma omp parallel for schedule(dynamic,1)
-#endif
-  for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    MPI_Isend(level->exchange_ghosts[justFaces].send_buffers[n],
-              level->exchange_ghosts[justFaces].send_sizes[n],
-              MPI_DOUBLE,
-              level->exchange_ghosts[justFaces].send_ranks[n],
-              my_tag,
-              MPI_COMM_WORLD,
-              &send_requests[n]
-    ); 
-  }
 #endif
   _timeEnd = CycleTime();
   level->cycles.ghostZone_send += (_timeEnd-_timeStart);
@@ -254,6 +221,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // wait for MPI to finish...
   _timeStart = CycleTime();
 
+#ifdef USE_UPCXX
+#ifdef UPCXX_P2P
   int nth = level->depth * 20 + id;
   while (1) {
     int arrived = 0;
@@ -270,21 +239,18 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeEnd = CycleTime();
   level->cycles.blas3 += (_timeEnd-_timeStart);
 
-#ifdef USE_UPCXX
-#ifndef UPCXX_P2P
+  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, id, iters);
+//  if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+
+#else
+
   async_copy_fence();
 #ifdef USE_SUBCOMM
   MPI_Barrier(level->MPI_COMM_ALLREDUCE);
 #else
   upcxx::barrier();
 #endif
-#else
-  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, id, iters);
-//  if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
 #endif
-
-#elif USE_MPI 
-  if(nMessages)MPI_Waitall(nMessages,level->exchange_ghosts[justFaces].requests,level->exchange_ghosts[justFaces].status);
 #endif
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);

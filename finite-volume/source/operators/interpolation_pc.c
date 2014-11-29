@@ -231,6 +231,9 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   if (MYTHREAD == 227 || MYTHREAD == 208 || MYTHREAD == 161)
   printf("PASS WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.flag_data[nth][0]);
 **/
+
+  syncNeighborInt(level_c->interpolation.num_sends, id_c);
+
 #else
 
   async_copy_fence();
