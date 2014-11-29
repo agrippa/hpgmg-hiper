@@ -52,6 +52,10 @@
 
 #ifdef USE_UPCXX
 shared_array< global_ptr<double>, 1 > upc_buf_info;
+#ifdef UPCXX_P2P
+extern void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it);
+extern void cb_copy_res(double *buf, int n, int srcid, int id_f, int depth_f, int type, int id_c, int depth_c);
+#endif
 #endif
 
 mg_type all_grids;
@@ -191,6 +195,10 @@ int main(int argc, char **argv){
 
 #ifdef USE_UPCXX
   upc_buf_info.init(THREADS*THREADS, THREADS);
+#ifdef UPCXX_P2P
+  setCBFunc(cb_copy);	
+  setCBFuncRes(cb_copy_res);
+#endif
 #endif
 
   // create the fine level...

@@ -159,7 +159,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   para_id = id;
   para_justFaces = justFaces;
   para_level = level;
-  setCBFunc(cb_copy); // could set earlier in initialization, for convenience now
+  // setCBFunc(cb_copy); // could set earlier in initialization, for convenience now
 #endif
 
   _timeStart = CycleTime();
