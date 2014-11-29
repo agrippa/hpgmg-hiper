@@ -3,6 +3,100 @@
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
+static int  para_id_c;
+static int  para_id_f;
+static level_type  *para_level_c;
+static level_type  *para_level_f;
+static double para_prescale_f[20]={1.0};
+
+extern mg_type all_grids;
+
+void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid, int id_c, int depth_c) {
+
+  uint64_t _timeCommunicationStart = CycleTime();
+  uint64_t _timeStart,_timeEnd;
+
+  level_type *level_f;
+  level_type *level_c;
+  double prescale_f;
+  int buffer;
+
+  _timeStart = CycleTime();
+
+  //shan: define all_grids earlier in hpgmg.c
+  if (all_grids.levels != NULL) {
+     level_f = all_grids.levels[depth_f];
+     level_c = all_grids.levels[depth_c];
+  }
+  else {
+    printf("WRONG! This should not happen! %d %d\n", depth_f, depth_c);
+    level_f = para_level_f;
+    level_c = para_level_c;
+  }
+  prescale_f = para_prescale_f[level_f->depth];
+
+  int i;
+  int nth = depth_f * 20 + id_f;
+  for (i = 0; i < level_f->interpolation.num_recvs; i++) {
+     if (level_f->interpolation.recv_ranks[i] == srcid) {
+        if (level_f->interpolation.flag_data[nth][i] != 0) {
+          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->interpolation.flag_data[nth][i]);
+        }
+        else {
+          level_f->interpolation.flag_data[nth][i] =1;
+        }
+        break;
+     }
+  }
+
+  int msize = gasnet_AMMaxMedium();
+  int bstart = level_f->interpolation.sblock2[i];
+  int bend   = level_f->interpolation.sblock2[i+1];
+
+  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
+  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
+
+  if (n < msize) { // medium AM 
+    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
+    for(buffer=bstart;buffer<bend;buffer++){
+      IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 1);
+    }
+  }
+  else { // long AM
+    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
+    for(buffer=bstart;buffer<bend;buffer++){
+      IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 0);
+    }
+  }
+
+  _timeEnd = CycleTime();
+  level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
+
+}
+
+void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem) {
+
+  int myid = gasnet_mynode();
+  double * lsrc = (double *)src.raw_ptr();
+  double * ldst = (double *)dest.raw_ptr();
+  int msize = gasnet_AMMaxMedium();
+
+  if (nelem * sizeof(double) < msize) {
+     // using mediumAM
+    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), para_level_f->depth, para_id_f,  myid , para_id_c, para_level_c->depth));
+  }
+  else {
+    // using longAM
+    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_level_f->depth, para_id_f, myid, para_id_c, para_level_c->depth));
+  }
+
+}
+
+void syncNeighborInt(int nbgr, int vid) {
+  GASNET_BLOCKUNTIL(upcxx::p2p_flag_int[vid] == nbgr);
+  upcxx::p2p_flag_int[vid] = 0;
+}
+
 static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double prescale_f, level_type *level_c, int id_c, blockCopy_type *block){
   // interpolate 3D array from read_i,j,k of read[] to write_i,j,k in write[]
   int   dim_i       = block->dim.i<<1; // calculate the dimensions of the resultant fine block
@@ -56,41 +150,26 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   int buffer=0;
   int n;
 
-#ifdef USE_UPCXX
+#ifdef UPCXX_P2P
+  para_id_c = id_c;
+  para_id_f = id_f;
+  para_level_c = level_c;
+  para_level_f = level_f;
+  para_prescale_f[level_f->depth] = prescale_f;
+#endif
+
   _timeStart = CycleTime();
+#ifdef USE_UPCXX
+#ifndef UPCXX_P2P
 #ifdef USE_SUBCOMM
-  // barrier at both level ?
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
   upcxx::barrier();
 #endif
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
-
-#elif USE_MPI
-  // by convention, level_f allocates a combined array of requests for both level_f recvs and level_c sends...
-  int nMessages = level_c->interpolation.num_sends + level_f->interpolation.num_recvs;
-  MPI_Request *recv_requests = level_f->interpolation.requests;
-  MPI_Request *send_requests = level_f->interpolation.requests + level_f->interpolation.num_recvs;
-
-  // loop through packed list of MPI receives and prepost Irecv's...
-  _timeStart = CycleTime();
-  #ifdef USE_MPI_THREAD_MULTIPLE
-  #pragma omp parallel for schedule(dynamic,1)
-  #endif
-  for(n=0;n<level_f->interpolation.num_recvs;n++){
-    MPI_Irecv(level_f->interpolation.recv_buffers[n],
-              level_f->interpolation.recv_sizes[n],
-              MPI_DOUBLE,
-              level_f->interpolation.recv_ranks[n],
-              my_tag,
-              MPI_COMM_WORLD,
-              &recv_requests[n]
-    );
-  }
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 #endif
+#endif
+  _timeEnd = CycleTime();
+  level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
@@ -107,21 +186,11 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     global_ptr<double> p1, p2;
     p1 = level_c->interpolation.global_send_buffers[n];
     p2 = level_c->interpolation.global_match_buffers[n];
+#ifndef UPCXX_P2P
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
-  }
-#elif USE_MPI
-#ifdef USE_MPI_THREAD_MULTIPLE
-#pragma omp parallel for schedule(dynamic,1)
+#else
+    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n]);
 #endif
-  for(n=0;n<level_c->interpolation.num_sends;n++){
-    MPI_Isend(level_c->interpolation.send_buffers[n],
-              level_c->interpolation.send_sizes[n],
-              MPI_DOUBLE,
-              level_c->interpolation.send_ranks[n],
-              my_tag,
-              MPI_COMM_WORLD,
-              &send_requests[n]
-    );
   }
 #endif
   _timeEnd = CycleTime();
@@ -140,24 +209,41 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
+#ifdef UPCXX_P2P
+  int nth = level_f->depth * 20 + id_f;
+  while (1) {
+    int arrived = 0;
+    for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
+      if (level_f->interpolation.flag_data[nth][n]==1) arrived++;
+    }
+    if (arrived == level_f->interpolation.num_recvs) break;
+    upcxx::advance();
+  }
+  for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
+    level_f->interpolation.flag_data[nth][n] = 0;
+  }
+
+#else
+
   async_copy_fence();
 #ifdef USE_SUBCOMM
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
   upcxx::barrier();
 #endif
-#elif USE_MPI
-  if(nMessages)MPI_Waitall(nMessages,level_f->interpolation.requests,level_f->interpolation.status);
+#endif
 #endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
 
-  // unpack MPI receive buffers 
+  // unpack MPI receive buffers
+#ifndef UPCXX_P2P 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
   for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
- 
+#endif
+
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }

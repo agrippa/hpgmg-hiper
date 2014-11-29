@@ -54,7 +54,8 @@
 shared_array< global_ptr<double>, 1 > upc_buf_info;
 #ifdef UPCXX_P2P
 extern void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it);
-extern void cb_copy_res(double *buf, int n, int srcid, int id_f, int depth_f, int type, int id_c, int depth_c);
+extern void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
+extern void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
 #endif
 #endif
 
@@ -198,6 +199,7 @@ int main(int argc, char **argv){
 #ifdef UPCXX_P2P
   setCBFunc(cb_copy);	
   setCBFuncRes(cb_copy_res);
+  setCBFuncInt(cb_copy_int);
 #endif
 #endif
 

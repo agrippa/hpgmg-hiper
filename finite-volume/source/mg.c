@@ -356,6 +356,13 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.recv_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->interpolation.recv_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
 #ifdef USE_UPCXX
+#ifdef UPCXX_P2P
+    all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
+    for (int i = 0; i < 400; i++) {
+      all_grids->levels[level]->interpolation.flag_data[i] = (volatile int *) malloc(numCoarseRanks * sizeof(int));
+      memset((void *)all_grids->levels[level]->interpolation.flag_data[i], 0, numCoarseRanks * sizeof(int));
+    }
+#endif
     all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
     if(numCoarseRanks>0){
@@ -393,7 +400,7 @@ void build_interpolation(mg_type *all_grids){
           /* dim.i         = */ all_grids->levels[level]->box_dim,
           /* dim.j         = */ all_grids->levels[level]->box_dim,
           /* dim.k         = */ all_grids->levels[level]->box_dim,
-          /* read.box      = */ -1,
+	  /* read.box      = */ (-1)*coarseBoxes[coarseBox].sendRank-1, //shan -1,
           /* read.ptr      = */ all_grids->levels[level]->interpolation.recv_buffers[neighbor],
           /* read.i        = */ offset,
           /* read.j        = */ 0,
@@ -426,6 +433,25 @@ void build_interpolation(mg_type *all_grids){
     // free temporary storage...
     free(coarseBoxes);
     free(coarseRanks);
+
+#ifdef UPCXX_P2P
+  // setup start and end position for each receiver
+  
+    int curpos = 0;
+    int curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
+    all_grids->levels[level]->interpolation.sblock2[curpos] = 0;
+    for(int buffer=1;buffer<all_grids->levels[level]->interpolation.num_blocks[2];buffer++){
+      if (all_grids->levels[level]->interpolation.blocks[2][buffer].read.box != -1-curproc) {
+         all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
+         curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
+      }
+    }
+    if (all_grids->levels[level]->interpolation.num_recvs > 0 && curpos+1 != all_grids->levels[level]->interpolation.num_recvs) {
+      printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->interpolation.num_recvs);
+    }
+    all_grids->levels[level]->interpolation.sblock2[curpos+1] = all_grids->levels[level]->interpolation.num_blocks[2];
+#endif
+
   } // recv/unpack
 
 
