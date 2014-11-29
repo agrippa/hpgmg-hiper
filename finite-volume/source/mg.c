@@ -23,6 +23,7 @@
 #include "operators.h"
 #include "solvers.h"
 #include "mg.h"
+
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
   int sendRank;
@@ -737,6 +738,13 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].recv_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
 #ifdef USE_UPCXX
+#ifdef UPCXX_P2P
+    all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
+    for (int i = 0; i < 400; i++) {
+      all_grids->levels[level]->restriction[restrictionType].flag_data[i] = (volatile int *) malloc(numFineRanks * sizeof(int));
+      memset((void *)all_grids->levels[level]->restriction[restrictionType].flag_data[i], 0, numFineRanks * sizeof(int));
+    }
+#endif
     all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif
     if(numFineRanks>0){
@@ -794,7 +802,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* dim.i         = */ restrict_dim_i, 
           /* dim.j         = */ restrict_dim_j, 
           /* dim.k         = */ restrict_dim_k, 
-          /* read.box      = */ -1,
+          /* read.box      = */ (-1)*fineBoxes[fineBox].sendRank-1,  //shan -1,
           /* read.ptr      = */ all_grids->levels[level]->restriction[restrictionType].recv_buffers[neighbor],
           /* read.i        = */ offset,
           /* read.j        = */ 0,
@@ -827,6 +835,24 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     // free temporary storage...
     free(fineBoxes);
     free(fineRanks);
+
+#ifdef UPCXX_P2P
+  // setup start and end position for each receiver
+  
+    int curpos = 0;
+    int curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
+    all_grids->levels[level]->restriction[restrictionType].sblock2[curpos] = 0;
+    for(int buffer=1;buffer<all_grids->levels[level]->restriction[restrictionType].num_blocks[2];buffer++){
+      if (all_grids->levels[level]->restriction[restrictionType].blocks[2][buffer].read.box != -1-curproc) {
+         all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
+         curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
+      }
+    }
+    if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0 && curpos+1 != all_grids->levels[level]->restriction[restrictionType].num_recvs) {
+      printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->restriction[restrictionType].num_recvs);
+    }
+    all_grids->levels[level]->restriction[restrictionType].sblock2[curpos+1] = all_grids->levels[level]->restriction[restrictionType].num_blocks[2];
+#endif
   } // recv/unpack
 
 
@@ -835,7 +861,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
   //MPI_Barrier(MPI_COMM_WORLD);
   //if(all_grids->my_rank==0){printf("================================================================================\n");}
   //if(                         (level==all_grids->num_levels-2))print_communicator(2,all_grids->my_rank,level,&all_grids->levels[level]->restriction);
-  //if((all_grids->my_rank==0)&&(level==all_grids->num_levels-1))print_communicator(1,all_grids->my_rank,level,&all_grids->levels[level]->restriction);
+  //if((all_grids->my_rank==0))print_communicator(4,all_grids->my_rank,level,&all_grids->levels[level]->restriction);
   //MPI_Barrier(MPI_COMM_WORLD);
   } // level loop
 
@@ -881,6 +907,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     }
   }
 #endif
+
 }
 
 
