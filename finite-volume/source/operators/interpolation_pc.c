@@ -3,10 +3,6 @@
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
-static int  para_id_c;
-static int  para_id_f;
-static level_type  *para_level_c;
-static level_type  *para_level_f;
 static double para_prescale_f[20]={1.0};
 
 extern mg_type all_grids;
@@ -30,8 +26,6 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid,
   }
   else {
     printf("WRONG! This should not happen! %d %d\n", depth_f, depth_c);
-    level_f = para_level_f;
-    level_c = para_level_c;
   }
   prescale_f = para_prescale_f[level_f->depth];
 
@@ -49,21 +43,22 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid,
      }
   }
 
+/**
+  printf("NN i is %d limit is %d in level_f %d id_f %d level_c %d id_c %d for proc %d from %d %d\n",
+                  i, level_f->interpolation.num_recvs, level_f->depth, id_f, level_c->depth, id_c, MYTHREAD, srcid, myid);
+**/
   int msize = gasnet_AMMaxMedium();
   int bstart = level_f->interpolation.sblock2[i];
   int bend   = level_f->interpolation.sblock2[i+1];
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
-  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
-
   if (n < msize) { // medium AM 
-    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
+//    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
       IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 1);
     }
   }
   else { // long AM
-    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
+//    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
       IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 0);
     }
@@ -74,7 +69,7 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid,
 
 }
 
-void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem) {
+void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem, int depth_f, int id_f, int id_c, int depth_c) {
 
   int myid = gasnet_mynode();
   double * lsrc = (double *)src.raw_ptr();
@@ -83,12 +78,15 @@ void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, i
 
   if (nelem * sizeof(double) < msize) {
      // using mediumAM
-    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), para_level_f->depth, para_id_f,  myid , para_id_c, para_level_c->depth));
+    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f,  myid , id_c, depth_c));
   }
   else {
     // using longAM
-    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_level_f->depth, para_id_f, myid, para_id_c, para_level_c->depth));
+    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, myid, id_c, depth_c));
   }
+/**
+  printf("SEND proc %d to %d level_f %d id_f %d level_c %d id_c %d\n", MYTHREAD, rid, depth_f, id_f, depth_c, id_c);
+**/
 
 }
 
@@ -151,13 +149,13 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   int n;
 
 #ifdef UPCXX_P2P
-  para_id_c = id_c;
-  para_id_f = id_f;
-  para_level_c = level_c;
-  para_level_f = level_f;
   para_prescale_f[level_f->depth] = prescale_f;
 #endif
 
+/**
+  printf("INT proc %d level_f %d id_f %d level_c %d id_c %d nsends %d nrecv %d\n",
+              MYTHREAD, level_f->depth, id_f, level_c->depth, id_c, level_c->interpolation.num_sends, level_f->interpolation.num_recvs);
+**/
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
 #ifndef UPCXX_P2P
@@ -189,7 +187,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifndef UPCXX_P2P
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
-    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n]);
+    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth);
 #endif
   }
 #endif
@@ -210,7 +208,13 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
 #ifdef USE_UPCXX
 #ifdef UPCXX_P2P
+
   int nth = level_f->depth * 20 + id_f;
+
+/**
+  if (MYTHREAD == 227 || MYTHREAD == 208 || MYTHREAD == 161)
+  printf("ENTER WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.flag_data[nth][0]);
+**/
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
@@ -218,11 +222,15 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
+    gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     level_f->interpolation.flag_data[nth][n] = 0;
   }
-
+/**
+  if (MYTHREAD == 227 || MYTHREAD == 208 || MYTHREAD == 161)
+  printf("PASS WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.flag_data[nth][0]);
+**/
 #else
 
   async_copy_fence();
@@ -240,7 +248,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifndef UPCXX_P2P 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
-  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
+  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer],NULL,0);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
 #endif

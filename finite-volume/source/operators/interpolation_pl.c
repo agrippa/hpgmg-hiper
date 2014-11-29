@@ -163,7 +163,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
   async_copy_fence();
-#ifdef MPI_SUBCOMM
+#ifdef USE_SUBCOMM
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
   upcxx::barrier();
@@ -179,7 +179,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
-  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
+  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], NULL, 0);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
  
