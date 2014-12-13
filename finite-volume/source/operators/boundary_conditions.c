@@ -29,6 +29,23 @@ void apply_BCs_linear(level_type * level, int x_id){
   #pragma omp parallel for private(box)
   #endif
   for(box=0;box<level->num_my_boxes;box++){
+#ifdef USE_UPCXX
+    box_type *lbox = &(level->my_boxes[box]);
+    const int jStride = lbox->jStride;
+    const int kStride = lbox->kStride;
+    const int  ghosts = lbox->ghosts;
+    const int     dim = lbox->dim;
+    double * __restrict__ x      = lbox->vectors[        x_id] + ghosts*(1+jStride+kStride); // i.e. [0] = first non ghost zone point
+  //double * __restrict__  valid = lbox->vectors[VECTOR_VALID] + ghosts*(1+jStride+kStride);
+
+    int box_on_low_i  = (lbox->low.i     ==            0);
+    int box_on_low_j  = (lbox->low.j     ==            0);
+    int box_on_low_k  = (lbox->low.k     ==            0);
+    int box_on_high_i = (lbox->low.i+dim == level->dim.i);
+    int box_on_high_j = (lbox->low.j+dim == level->dim.j);
+    int box_on_high_k = (lbox->low.k+dim == level->dim.k);
+
+#else
     const int jStride = level->my_boxes[box].jStride;
     const int kStride = level->my_boxes[box].kStride;
     const int  ghosts = level->my_boxes[box].ghosts;
@@ -42,6 +59,7 @@ void apply_BCs_linear(level_type * level, int x_id){
     int box_on_high_i = (level->my_boxes[box].low.i+dim == level->dim.i);
     int box_on_high_j = (level->my_boxes[box].low.j+dim == level->dim.j);
     int box_on_high_k = (level->my_boxes[box].low.k+dim == level->dim.k);
+#endif
 
     if(level->domain_boundary_condition == BC_DIRICHLET){
       int i,j,k,normal;

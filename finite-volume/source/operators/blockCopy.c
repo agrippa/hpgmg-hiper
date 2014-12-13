@@ -27,9 +27,17 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 
   if (flag == 1) read = src;
 
+#ifdef USE_UPCXX
+  if(block->read.box >=0) {
+    read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
+  }
+  if(block->write.box>=0) {
+    write = level->my_boxes[block->write.box].vectors[id] + level->my_boxes[block->write.box].ghosts*(1+level->my_boxes[block->write.box].jStride+level->my_boxes[block->write.box].kStride);
+  }
+#else
   if(block->read.box >=0) read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
   if(block->write.box>=0)write = level->my_boxes[block->write.box].vectors[id] + level->my_boxes[block->write.box].ghosts*(1+level->my_boxes[block->write.box].jStride+level->my_boxes[block->write.box].kStride);
-
+#endif
 
   int i,j,k;
   if(dim_i==1){ // be smart and don't have an inner loop from 0 to 0

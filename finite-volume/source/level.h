@@ -72,10 +72,6 @@ typedef struct {
     int                 allocated_blocks[3];	//   number of blocks allocated (not necessarily used) each list...
     int                       num_blocks[3];	//   number of blocks in each list...        num_blocks[pack,local,unpack]
     blockCopy_type *              blocks[3];	//   list of block copies...                     blocks[pack,local,unpack]
-#ifdef USE_MPI
-    MPI_Request * __restrict__     requests;
-    MPI_Status  * __restrict__       status;
-#endif
 } communicator_type;
 
 
@@ -87,8 +83,13 @@ typedef struct {
   int                                ghosts;	// ghost zone depth
   int                jStride,kStride,volume;	// useful for offsets
   int                            numVectors;	//
+#ifdef USE_UPCXX
+  global_ptr<global_ptr<double> >   vectors;
+  global_ptr<double>           vectors_base;
+#else
   double   ** __restrict__          vectors;	// vectors[c] = pointer to 3D array for vector c
   double    * __restrict__     vectors_base;    // pointer used for malloc/free.  vectors[c] are shifted from this for alignment
+#endif
 } box_type;
 
 
@@ -110,7 +111,12 @@ typedef struct {
   int domain_boundary_condition;		//
   int * rank_of_box;				// 3D array containing rank of each box.  i-major ordering
   int    num_my_boxes;				//           number of boxes owned by this rank
+#ifdef USE_UPCXX
+  global_ptr<box_type> *addr_of_box;
+  global_ptr<box_type> my_boxes;
+#else
   box_type * my_boxes;				// pointer to array of boxes owned by this rank
+#endif
   int       allocated_blocks;			//       number of blocks allocated by this rank (note, this represents a flattening of the box/cell hierarchy to facilitate threading)
   int          num_my_blocks;			//       number of blocks     owned by this rank (note, this represents a flattening of the box/cell hierarchy to facilitate threading)
   blockCopy_type * my_blocks;			// pointer to array of blocks owned by this rank (note, this represents a flattening of the box/cell hierarchy to facilitate threading)

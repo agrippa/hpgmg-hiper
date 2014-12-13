@@ -137,7 +137,21 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
 #endif
   box->volume = (dim+2*ghosts)*box->kStride;
 
+#ifdef USE_UPCXX
+  box->vectors = upcxx::allocate<global_ptr<double> >(MYTHREAD, box->numVectors);
+               memory_allocated += box->numVectors*sizeof(global_ptr<double>);
+  if((box->numVectors>0)&&(box->vectors==NULL)){fprintf(stderr,"malloc failed - create_box/box->vectors\n");exit(0);}
+  uint64_t malloc_size = box->volume*box->numVectors + BOX_ALIGN_1ST_CELL/sizeof(double);
+  box->vectors_base = upcxx::allocate<double>(MYTHREAD, malloc_size);
+               memory_allocated += malloc_size;
+  if((box->numVectors>0)&&(box->vectors_base==NULL)){fprintf(stderr,"malloc failed - create_box/box->vectors_base\n");exit(0);}
+  double * tmpbuf = box->vectors_base;
+  int num = 0;
+  memset(tmpbuf,0,malloc_size*sizeof(double)); // zero to avoid 0.0*NaN or 0.0*Inf
+  while( (uint64_t)(tmpbuf+box->ghosts*(1+box->jStride+box->kStride)) & (BOX_ALIGN_1ST_CELL-1) ){tmpbuf++; num++;} // allign first *non-ghost* zone element of first component to page boundary...
+  int c;for(c=0;c<box->numVectors;c++){box->vectors[c] = box->vectors_base + c*box->volume + num;}
 
+#else
   // allocate an array of pointers to vectors...
   box->vectors = (double **)malloc(box->numVectors*sizeof(double*));
                memory_allocated += box->numVectors*sizeof(double*);
@@ -151,14 +165,40 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
   while( (uint64_t)(tmpbuf+box->ghosts*(1+box->jStride+box->kStride)) & (BOX_ALIGN_1ST_CELL-1) ){tmpbuf++;} // allign first *non-ghost* zone element of first component to page boundary...
   memset(tmpbuf,0,box->volume*box->numVectors*sizeof(double)); // zero to avoid 0.0*NaN or 0.0*Inf
   int c;for(c=0;c<box->numVectors;c++){box->vectors[c] = tmpbuf + c*box->volume;}
-
+#endif  // USE_UPCXX
 
   // done... return the total amount of memory allocated...
   return(memory_allocated);
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------
+#ifdef USE_UPCXX
+void add_vectors_to_box(box_type *box, int numAdditionalVectors){
+  if(numAdditionalVectors<=0)return;                                                                    // nothing to do
+  global_ptr<double> old_bp = box->vectors_base;
+  global_ptr<double> old_v0 = box->vectors[0];
+  global_ptr<global_ptr<double> > old_v = box->vectors;
+  box->numVectors+=numAdditionalVectors;                                                                //
+  box->vectors = upcxx::allocate<global_ptr<double> >(MYTHREAD, box->numVectors);
+  if((box->numVectors>0)&&(box->vectors==NULL)){fprintf(stderr,"malloc failed - add_vectors_to_box/box->vectors\n");exit(0);}
+  // NOTE !!! realloc() cannot guarantee the same alignment... malloc, allign, copy...
+  uint64_t malloc_size = box->volume*box->numVectors + BOX_ALIGN_1ST_CELL/sizeof(double); // shift pointer by up to 1 TLB page...
+  box->vectors_base =  upcxx::allocate<double>(MYTHREAD, malloc_size);
+  if((box->numVectors>0)&&(box->vectors_base==NULL)){fprintf(stderr,"malloc failed - add_vectors_to_box/box->vectors_base\n");exit(0);}
+  double * tmpbuf = (double *)box->vectors_base;
+  memset(tmpbuf,0,malloc_size*sizeof(double));  // zero to avoid 0.0*NaN or 0.0*Inf
+  int num = 0;
+  while( (uint64_t)(tmpbuf+box->ghosts*(1+box->jStride+box->kStride)) & (BOX_ALIGN_1ST_CELL-1) ){tmpbuf++; num++;} // allign first *non-ghost* zone element of first component to page boundary...
+  memcpy(tmpbuf,(double *)old_v0,box->volume*(box->numVectors-numAdditionalVectors)*sizeof(double));
+
+//  cout << "NEW BASE " << box->vectors_base + num << " local " << tmpbuf << " num " << num << endl;
+
+  int c;for(c=0;c<box->numVectors;c++){box->vectors[c] = box->vectors_base + c*box->volume + num;}                      // pointer arithmetic...
+  upcxx::deallocate(old_bp);
+  upcxx::deallocate(old_v );
+}
+#else
+
 void add_vectors_to_box(box_type *box, int numAdditionalVectors){
   if(numAdditionalVectors<=0)return;									// nothing to do
   double * old_bp = box->vectors_base;									// save a pointer to the base pointer for subsequent free...
@@ -180,6 +220,7 @@ void add_vectors_to_box(box_type *box, int numAdditionalVectors){
   free(old_v );												// free the list of pointers...
 }
 
+#endif // USE_UPCXX 
 
 //------------------------------------------------------------------------------------------------------------------------------
 void destroy_box(box_type *box){
@@ -919,7 +960,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   level->tag              = log2(level->dim.i);
 
   // allocate 3D array of integers to hold the MPI rank of the corresponding box and initialize to -1 (unassigned)
-     level->rank_of_box = (int*)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
+  level->rank_of_box = (int*)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
   if(level->rank_of_box==NULL){fprintf(stderr,"malloc of level->rank_of_box failed\n");exit(0);}
   level->memory_allocated +=       (level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(int));
   for(box=0;box<level->boxes_in.i*level->boxes_in.j*level->boxes_in.k;box++){level->rank_of_box[box]=-1;}  // -1 denotes that there is no actual box assigned to this region
@@ -937,7 +978,13 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   // build my list of boxes...
   level->num_my_boxes=0;
   for(box=0;box<level->boxes_in.i*level->boxes_in.j*level->boxes_in.k;box++){if(level->rank_of_box[box]==level->my_rank)level->num_my_boxes++;} 
+#ifdef USE_UPCXX
+  level->my_boxes = upcxx::allocate<box_type>(MYTHREAD, level->num_my_boxes);
+  /* NOTE: add a local array to record the global address of every box, later, this array can be shrinked to neighbor boxes only */
+  level->addr_of_box = (global_ptr<box_type> *)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(global_ptr<box_type>));
+#else
   level->my_boxes = (box_type*)malloc(level->num_my_boxes*sizeof(box_type));
+#endif
   if((level->num_my_boxes>0)&&(level->my_boxes==NULL)){fprintf(stderr,"malloc failed - create_level/level->my_boxes\n");exit(0);}
   box=0;
   int i,j,k;
@@ -949,6 +996,9 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
     int b=i + j*jStride + k*kStride;
     if(level->rank_of_box[b]==level->my_rank){
       level->memory_allocated += create_box(&level->my_boxes[box],level->box_vectors,level->box_dim,level->box_ghosts);
+#ifdef USE_UPCXX
+      upcxx_box_info[b] = &level->my_boxes[box];
+#endif
       level->my_boxes[box].low.i = i*level->box_dim;
       level->my_boxes[box].low.j = j*level->box_dim;
       level->my_boxes[box].low.k = k*level->box_dim;
@@ -983,6 +1033,14 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
       /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
     );
   }
+
+#ifdef USE_UPCXX
+  // NOTE: dumb implementation now
+  upcxx::barrier();
+  for (i = 0; i < level->boxes_in.i*level->boxes_in.j*level->boxes_in.k; i++)
+    level->addr_of_box[i] = upcxx_box_info[i];
+  upcxx::barrier();
+#endif
 
   // Tune the OpenMP style of parallelism...
   if(omp_nested){
