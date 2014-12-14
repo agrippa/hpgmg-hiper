@@ -372,7 +372,7 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.recv_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->interpolation.recv_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
 #ifdef USE_UPCXX
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
     for (int i = 0; i < 400; i++) {
       all_grids->levels[level]->interpolation.flag_data[i] = (volatile int *) malloc(numCoarseRanks * sizeof(int));
@@ -450,7 +450,7 @@ void build_interpolation(mg_type *all_grids){
     free(coarseBoxes);
     free(coarseRanks);
 
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   // setup start and end position for each receiver
   
     int curpos = 0;
@@ -796,7 +796,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].recv_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
 #ifdef USE_UPCXX
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
     all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
     for (int i = 0; i < 400; i++) {
       all_grids->levels[level]->restriction[restrictionType].flag_data[i] = (volatile int *) malloc(numFineRanks * sizeof(int));
@@ -894,7 +894,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     free(fineBoxes);
     free(fineRanks);
 
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   // setup start and end position for each receiver
   
     int curpos = 0;

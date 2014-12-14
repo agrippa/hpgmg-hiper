@@ -154,7 +154,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   }
 #endif
 
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   // For cb_copy function: this can be set as AM parameters
   para_id = id;
   para_justFaces = justFaces;
@@ -165,7 +165,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
-  #ifndef UPCXX_P2P
+  #ifndef UPCXX_AM
     #ifdef USE_SUBCOMM
       MPI_Barrier(level->MPI_COMM_ALLREDUCE);
     #else
@@ -197,7 +197,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     global_ptr<double> p1, p2;
     p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
     p2 = level->exchange_ghosts[justFaces].global_match_buffers[n];
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
     upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #else
     sendNbgrData(level->exchange_ghosts[justFaces].send_ranks[n], 
@@ -222,7 +222,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   int nth = level->depth * 20 + id;
   while (1) {
     int arrived = 0;
@@ -256,7 +256,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
 
 
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])

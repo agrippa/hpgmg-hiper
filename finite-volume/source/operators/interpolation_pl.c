@@ -93,13 +93,13 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   int n;
   int my_tag = (level_f->tag<<4) | 0x7;
 
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   para_prescale_f[level_f->depth] = prescale_f;
 #endif
 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
 #ifdef USE_SUBCOMM
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
@@ -125,7 +125,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     global_ptr<double> p1, p2;
     p1 = level_c->interpolation.global_send_buffers[n];
     p2 = level_c->interpolation.global_match_buffers[n];
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
     sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth);
@@ -147,7 +147,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
 
   int nth = level_f->depth * 20 + id_f;
   while (1) {
@@ -180,7 +180,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 
 
   // unpack MPI receive buffers 
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
   for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], NULL, 0);}

@@ -199,7 +199,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   int n;
   int my_tag = (level_f->tag<<4) | 0x5;
 
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   para_id_c = id_c;
   para_id_f = id_f;
   para_level_c = level_c;
@@ -209,7 +209,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
 #ifdef USE_SUBCOMM
   // do we need barrier from both level ?
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
@@ -236,7 +236,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     global_ptr<double> p1, p2;
     p1 = level_f->restriction[restrictionType].global_send_buffers[n];
     p2 = level_f->restriction[restrictionType].global_match_buffers[n];
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
     upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n]);    
 #else
     sendNbgrDataRes(level_f->restriction[restrictionType].send_ranks[n], 
@@ -259,7 +259,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
   // wait for MPI to finish...
   _timeStart = CycleTime();
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   int nth = level_c->depth * 20 + id_c;
   while (1) {
     int arrived = 0;
@@ -276,7 +276,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 #endif
 
 #ifdef USE_UPCXX
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
   async_copy_fence();
 #ifdef USE_SUBCOMM
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
@@ -291,7 +291,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   _timeEnd = CycleTime();
   level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
 
-#ifndef UPCXX_P2P
+#ifndef UPCXX_AM
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->restriction[restrictionType].num_blocks[2])

@@ -756,7 +756,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].recv_sizes    =     (int*)malloc(numRecvRanks*sizeof(int));
   level->exchange_ghosts[justFaces].recv_buffers  = (double**)malloc(numRecvRanks*sizeof(double*));
 #ifdef USE_UPCXX
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
   for (int i = 0; i < 400; i++) {
     level->exchange_ghosts[justFaces].flag_data[i] = (volatile int *) malloc(numRecvRanks * sizeof(int));
@@ -905,7 +905,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // if (MYTHREAD < 2 && level->depth < 2) print_communicator(7,level->my_rank,0,&level->exchange_ghosts[justFaces]);
 
-#ifdef UPCXX_P2P
+#ifdef UPCXX_AM
   // setup start and end position for each receiver
 
   int curpos = 0;
