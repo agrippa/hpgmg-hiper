@@ -52,7 +52,7 @@
 
 #ifdef USE_UPCXX
 shared_array< global_ptr<double>, 1 > upc_buf_info;
-shared_array< global_pte<box>, 1> upc_box_info;
+shared_array< global_ptr<box_type>, 1> upc_box_info;
 #ifdef UPCXX_P2P
 extern void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it);
 extern void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
@@ -197,7 +197,7 @@ int main(int argc, char **argv){
 
 #ifdef USE_UPCXX
   upc_buf_info.init(THREADS*THREADS, THREADS);
-  upcxx_box_info.init(boxes_in_i*boxes_in_i*boxes_in_i,1);
+  upc_box_info.init(boxes_in_i*boxes_in_i*boxes_in_i,1);
 #ifdef UPCXX_P2P
   setCBFunc(cb_copy);	
   setCBFuncRes(cb_copy_res);

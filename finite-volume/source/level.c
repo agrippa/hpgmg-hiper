@@ -40,6 +40,10 @@ int    faces[27] = {0,0,0,0,1,0,0,0,0,  0,1,0,1,0,1,0,1,0,  0,0,0,0,1,0,0,0,0};
 int    edges[27] = {0,1,0,1,0,1,0,1,0,  1,0,1,0,0,0,1,0,1,  0,1,0,1,0,1,0,1,0};
 int  corners[27] = {1,0,1,0,0,0,1,0,1,  0,0,0,0,0,0,0,0,0,  1,0,1,0,0,0,1,0,1};
 
+#ifdef USE_UPCXX
+extern shared_array< global_ptr<double>, 1 > upc_buf_info;
+extern shared_array< global_ptr<box_type>, 1> upc_box_info;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------
 void print_communicator(int printSendRecv, int rank, int level, communicator_type *comm){
@@ -479,10 +483,20 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(dj=-1;dj<=1;dj++){
     for(di=-1;di<=1;di++){
       int dir = 13+di+3*dj+9*dk;if(CommunicateThisDir[dir]){
+
+#ifdef USE_UPCXX
+      box_type* lbox = &(level->my_boxes[sendBox]); 
+      int       myBoxID = lbox->global_box_id;
+      int       myBox_i = lbox->low.i / level->box_dim;
+      int       myBox_j = lbox->low.j / level->box_dim;
+      int       myBox_k = lbox->low.k / level->box_dim;
+#else
       int       myBoxID = level->my_boxes[sendBox].global_box_id;
       int       myBox_i = level->my_boxes[sendBox].low.i / level->box_dim;
       int       myBox_j = level->my_boxes[sendBox].low.j / level->box_dim;
       int       myBox_k = level->my_boxes[sendBox].low.k / level->box_dim;
+#endif
+
       int neighborBoxID = -1;
       //if(1){
       if(level->domain_boundary_condition == BC_PERIODIC){
@@ -512,7 +526,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         if( level->rank_of_box[neighborBoxID] != level->my_rank ){
           sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
         }else{
-          int recvBox=0;while(level->my_boxes[recvBox].global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
+          int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
           ghostsToSend[numGhosts].recvBox   = recvBox;
         }
         numGhosts++;
@@ -616,16 +630,16 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* read.i        = */ send_i,
         /* read.j        = */ send_j,
         /* read.k        = */ send_k,
-        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].jStride,
-        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].kStride,
+        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
+        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
         /* read.scale    = */ 1,
         /* write.box     = */ ghostsToSend[ghost].recvBox,
         /* write.ptr     = */ NULL,
         /* write.i       = */ recv_i,
         /* write.j       = */ recv_j,
         /* write.k       = */ recv_k,
-        /* write.jStride = */ level->my_boxes[ghostsToSend[ghost].recvBox].jStride,
-        /* write.kStride = */ level->my_boxes[ghostsToSend[ghost].recvBox].kStride,
+        /* write.jStride = */ level->my_boxes[ghostsToSend[ghost].recvBox].get().jStride,
+        /* write.kStride = */ level->my_boxes[ghostsToSend[ghost].recvBox].get().kStride,
         /* write.scale   = */ 1,
         /* blockcopy_i   = */ 10000, // don't tile i dimension
         /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -641,8 +655,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* read.i        = */ send_i,
         /* read.j        = */ send_j,
         /* read.k        = */ send_k,
-        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].jStride,
-        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].kStride,
+        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
+        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
         /* read.scale    = */ 1,
         /* write.box     = */ -1,
         /* write.ptr     = */ level->exchange_ghosts[justFaces].send_buffers[neighbor], // NOTE, 1. count _sizes, 2. allocate _buffers, 3. populate blocks
@@ -682,10 +696,21 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(dj=-1;dj<=1;dj++){
     for(di=-1;di<=1;di++){
       int dir = 13+di+3*dj+9*dk;if(CommunicateThisDir[dir]){
+
+#ifdef USE_UPCXX
+      box_type* lbox = &(level->my_boxes[recvBox]);
+      int       myBoxID = lbox->global_box_id;
+      int       myBox_i = lbox->low.i / level->box_dim;
+      int       myBox_j = lbox->low.j / level->box_dim;
+      int       myBox_k = lbox->low.k / level->box_dim;
+#else
+
       int       myBoxID = level->my_boxes[recvBox].global_box_id;
       int       myBox_i = level->my_boxes[recvBox].low.i / level->box_dim;
       int       myBox_j = level->my_boxes[recvBox].low.j / level->box_dim;
       int       myBox_k = level->my_boxes[recvBox].low.k / level->box_dim;
+#endif
+
       int neighborBoxID = -1;
       //if(1){
       if(level->domain_boundary_condition == BC_PERIODIC){
@@ -817,8 +842,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       /*write.i       = */ recv_i,
       /*write.j       = */ recv_j,
       /*write.k       = */ recv_k,
-      /*write.jStride = */ level->my_boxes[ghostsToRecv[ghost].recvBox].jStride,
-      /*write.kStride = */ level->my_boxes[ghostsToRecv[ghost].recvBox].kStride,
+      /*write.jStride = */ level->my_boxes[ghostsToRecv[ghost].recvBox].get().jStride,
+      /*write.kStride = */ level->my_boxes[ghostsToRecv[ghost].recvBox].get().kStride,
       /*write.scale   = */ 1,
       /* blockcopy_i  = */ 10000, // don't tile i dimension
       /* blockcopy_j  = */ BLOCKCOPY_TILE_J, // default
@@ -997,36 +1022,42 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
     if(level->rank_of_box[b]==level->my_rank){
       level->memory_allocated += create_box(&level->my_boxes[box],level->box_vectors,level->box_dim,level->box_ghosts);
 #ifdef USE_UPCXX
-      upcxx_box_info[b] = &level->my_boxes[box];
-#endif
+      upc_box_info[b] = &level->my_boxes[box];
+      box_type* lbox = &(level->my_boxes[box]);
+      lbox->low.i = i*level->box_dim;
+      lbox->low.j = j*level->box_dim;
+      lbox->low.k = k*level->box_dim;
+      lbox->global_box_id = b;
+#else
       level->my_boxes[box].low.i = i*level->box_dim;
       level->my_boxes[box].low.j = j*level->box_dim;
       level->my_boxes[box].low.k = k*level->box_dim;
       level->my_boxes[box].global_box_id = b;
+#endif
       box++;
   }}}}
 
   // Build and auxilarlly data structure that flattens boxes into blocks...
   for(box=0;box<level->num_my_boxes;box++){
     append_block_to_list(&(level->my_blocks),&(level->allocated_blocks),&(level->num_my_blocks),
-      /* dim.i         = */ level->my_boxes[box].dim,
-      /* dim.j         = */ level->my_boxes[box].dim,
-      /* dim.k         = */ level->my_boxes[box].dim,
+      /* dim.i         = */ level->my_boxes[box].get().dim,
+      /* dim.j         = */ level->my_boxes[box].get().dim,
+      /* dim.k         = */ level->my_boxes[box].get().dim,
       /* read.box      = */ box,
       /* read.ptr      = */ NULL,
       /* read.i        = */ 0,
       /* read.j        = */ 0,
       /* read.k        = */ 0,
-      /* read.jStride  = */ level->my_boxes[box].jStride,
-      /* read.kStride  = */ level->my_boxes[box].kStride,
+      /* read.jStride  = */ level->my_boxes[box].get().jStride,
+      /* read.kStride  = */ level->my_boxes[box].get().kStride,
       /* read.scale    = */ 1,
       /* write.box     = */ box,
       /* write.ptr     = */ NULL,
       /* write.i       = */ 0,
       /* write.j       = */ 0,
       /* write.k       = */ 0,
-      /* write.jStride = */ level->my_boxes[box].jStride,
-      /* write.kStride = */ level->my_boxes[box].kStride,
+      /* write.jStride = */ level->my_boxes[box].get().jStride,
+      /* write.kStride = */ level->my_boxes[box].get().kStride,
       /* write.scale   = */ 1,
       /* blockcopy_i   = */ 10000, // don't tile i dimension
       /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -1038,7 +1069,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   // NOTE: dumb implementation now
   upcxx::barrier();
   for (i = 0; i < level->boxes_in.i*level->boxes_in.j*level->boxes_in.k; i++)
-    level->addr_of_box[i] = upcxx_box_info[i];
+    level->addr_of_box[i] = upc_box_info[i];
   upcxx::barrier();
 #endif
 
@@ -1072,8 +1103,8 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   // build an assist structure for Gauss Seidel Red Black that would facilitate unrolling and SIMDization...
   if(level->num_my_boxes){
     int i,j;
-    int kStride = level->my_boxes[0].kStride;
-    int jStride = level->my_boxes[0].jStride;
+    int kStride = level->my_boxes[0].get().kStride;
+    int jStride = level->my_boxes[0].get().jStride;
 
     //posix_memalign((void**)&(level->RedBlack_FP[0]  ),64,kStride*sizeof(double  )); // even planes
     //posix_memalign((void**)&(level->RedBlack_FP[1]  ),64,kStride*sizeof(double  ));

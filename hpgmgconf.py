@@ -23,8 +23,9 @@ def main():
     parser.add_argument('--petsc-dir', help='PETSC_DIR', default=os.environ.get('PETSC_DIR',''))
     parser.add_argument('--petsc-arch', help='PETSC_ARCH', default=os.environ.get('PETSC_ARCH',''))
     parser.add_argument('--with-hpm', help='libHPM profiling library on Blue Gene ("1" or "/path/to/libmpihpm.a /path/to/libbgpm.a")')
+    parser.add_argument('--upcxx-dir', help='Path to UPC++ installation', default=os.environ.get('UPCXX_DIR',''))
     cf = parser.add_argument_group('Compilers and flags')
-    cf.add_argument('--CC', help='Path to C compiler', default=os.environ.get('CC',''))
+    cf.add_argument('--CC', help='Path to C/C++ compiler', default=os.environ.get('CXX',''))
     cf.add_argument('--CFLAGS', help='Flags for C compiler', default=os.environ.get('CFLAGS',''))
     cf.add_argument('--CPPFLAGS', help='Flags for C preprocessor', default=os.environ.get('CPPFLAGS',''))
     cf.add_argument('--LDFLAGS', help='Flags to pass to linker', default=os.environ.get('LDFLAGS',''))
@@ -66,7 +67,8 @@ def makefile(args):
         CC = '$(PCC)'
     else:
         CC = args.CC
-    m = ['HPGMG_ARCH = %s' % args.arch,
+
+    m =['HPGMG_ARCH = %s' % args.arch,
          'HPGMG_CC = %s' % CC,
          'HPGMG_CFLAGS = %s' % (args.CFLAGS if args.CFLAGS else ('$(PCC_FLAGS) ' if args.petsc_dir else '')),
          'HPGMG_CPPFLAGS = %s' % (('$(CCPPFLAGS) ' if args.petsc_dir else '') + args.CPPFLAGS),
@@ -76,6 +78,20 @@ def makefile(args):
          'PETSC_ARCH = %s' % args.petsc_arch,
          'PYTHON = %s' % sys.executable,
          'SRCDIR = %s' % os.path.abspath(os.path.dirname(__name__)),]
+
+    if args.upcxx_dir:
+        m.append('')
+        m.append('## UPC++ specific ##')
+        m.append('UPCXX_DIR = %s' % args.upcxx_dir)
+        m.append('include $(UPCXX_DIR)/include/upcxx.mak')
+        m.append('VPATH=$(UPCXX_DIR)/include')
+        m.append('HPGMG_CFLAGS += -DUSE_UPCXX=1 -DUPCXX_P2P')
+        m.append('HPGMG_CPPFLAGS += $(UPCXX_CXXFLAGS)')
+        m.append('HPGMG_LDFLAGS += $(UPCXX_LDFLAGS)')
+        m.append('HPGMG_LDLIBS += $(UPCXX_LDLIBS)')
+        m.append('## End of UPC++ specific ##')
+        m.append('')
+
     if args.with_hpm:
         m.append('CONFIG_HPM = y')
         hpm_lib = args.with_hpm
@@ -108,6 +124,6 @@ def hpgmg_fv_cflags(args):
         defines.append('USE_SUBCOMM')
     defines.append('USE_%sCYCLES' % args.fv_cycle.upper())
     defines.append('USE_%s' % args.fv_smoother.upper())
-    #defines.append('STENCIL_FUSE_DINV') # generally only good on compute-intensive architectures with good compilers
+    defines.append('STENCIL_FUSE_DINV') # generally only good on compute-intensive architectures with good compilers
     defines.append('STENCIL_FUSE_BC')
     return ' '.join('-D%s=1'%d for d in defines)

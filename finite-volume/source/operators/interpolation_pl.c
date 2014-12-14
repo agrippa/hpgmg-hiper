@@ -26,14 +26,28 @@ static inline void InterpolateBlock_PL(level_type *level_f, int id_f, double pre
   double * __restrict__  read = block->read.ptr;
   double * __restrict__ write = block->write.ptr;
   if(block->read.box >=0){
+#ifdef USE_UPCXX
+     box_type *lbox = &(level_c->my_boxes[block->read.box]);
+     read = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
+     read_jStride = lbox->jStride;
+     read_kStride = lbox->kStride;
+#else
      read = level_c->my_boxes[ block->read.box].vectors[        id_c] + level_c->my_boxes[ block->read.box].ghosts*(1+level_c->my_boxes[ block->read.box].jStride+level_c->my_boxes[ block->read.box].kStride);
      read_jStride = level_c->my_boxes[block->read.box ].jStride;
      read_kStride = level_c->my_boxes[block->read.box ].kStride;
+#endif
   }
   if(block->write.box>=0){
+#ifdef USE_UPCXX
+     box_type *lbox = &(level_f->my_boxes[block->write.box]);    
+    write = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
+    write_jStride = lbox->jStride;
+    write_kStride = lbox->kStride;
+#else
     write = level_f->my_boxes[block->write.box].vectors[id_f] + level_f->my_boxes[block->write.box].ghosts*(1+level_f->my_boxes[block->write.box].jStride+level_f->my_boxes[block->write.box].kStride);
     write_jStride = level_f->my_boxes[block->write.box].jStride;
     write_kStride = level_f->my_boxes[block->write.box].kStride;
+#endif
   }
  
  

@@ -165,10 +165,18 @@ void build_interpolation(mg_type *all_grids){
     int coarseBox;
     for(coarseBox=0;coarseBox<all_grids->levels[level]->num_my_boxes;coarseBox++){
       int bi,bj,bk;
+#ifdef USE_UPCXX
+      box_type *lbox = &(all_grids->levels[level]->my_boxes[coarseBox]);
+      int   coarseBoxID = lbox->global_box_id;
+      int   coarseBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
+      int   coarseBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
+      int   coarseBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
+#else
       int   coarseBoxID = all_grids->levels[level]->my_boxes[coarseBox].global_box_id;
       int   coarseBox_i = all_grids->levels[level]->my_boxes[coarseBox].low.i / all_grids->levels[level]->box_dim;
       int   coarseBox_j = all_grids->levels[level]->my_boxes[coarseBox].low.j / all_grids->levels[level]->box_dim;
       int   coarseBox_k = all_grids->levels[level]->my_boxes[coarseBox].low.k / all_grids->levels[level]->box_dim;
+#endif
       for(bk=0;bk<all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;bk++){
       for(bj=0;bj<all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;bj++){
       for(bi=0;bi<all_grids->levels[level-1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;bi++){
@@ -176,7 +184,7 @@ void build_interpolation(mg_type *all_grids){
         int fineBox_j = (all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j)*coarseBox_j + bj;
         int fineBox_k = (all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k)*coarseBox_k + bk;
         int fineBoxID =  fineBox_i + fineBox_j*all_grids->levels[level-1]->boxes_in.i + fineBox_k*all_grids->levels[level-1]->boxes_in.i*all_grids->levels[level-1]->boxes_in.j;
-        int fineBox   = -1;int f;for(f=0;f<all_grids->levels[level-1]->num_my_boxes;f++)if( all_grids->levels[level-1]->my_boxes[f].global_box_id == fineBoxID )fineBox=f; // try and find the index of a fineBox global_box_id == fineBoxID
+        int fineBox   = -1;int f;for(f=0;f<all_grids->levels[level-1]->num_my_boxes;f++)if( all_grids->levels[level-1]->my_boxes[f].get().global_box_id == fineBoxID )fineBox=f; // try and find the index of a fineBox global_box_id == fineBoxID
         fineBoxes[numFineBoxes].sendRank  = all_grids->levels[level  ]->rank_of_box[coarseBoxID];
         fineBoxes[numFineBoxes].sendBoxID = coarseBoxID;
         fineBoxes[numFineBoxes].sendBox   = coarseBox;
@@ -250,8 +258,8 @@ void build_interpolation(mg_type *all_grids){
           /* read.i        = */ fineBoxes[fineBox].i,
           /* read.j        = */ fineBoxes[fineBox].j,
           /* read.k        = */ fineBoxes[fineBox].k,
-          /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].jStride,
-          /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].kStride,
+          /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().jStride,
+          /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
           /* write.box     = */ -1,
           /* write.ptr     = */ all_grids->levels[level]->interpolation.send_buffers[neighbor],
@@ -287,16 +295,16 @@ void build_interpolation(mg_type *all_grids){
           /* read.i        = */ fineBoxes[fineBox].i,
           /* read.j        = */ fineBoxes[fineBox].j,
           /* read.k        = */ fineBoxes[fineBox].k,
-          /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].jStride,
-          /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].kStride,
+          /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().jStride,
+          /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
           /* write.box     = */ fineBoxes[fineBox].recvBox,
           /* write.ptr     = */ NULL,
           /* write.i       = */ 0,
           /* write.j       = */ 0,
           /* write.k       = */ 0,
-          /* write.jStride = */ all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].jStride,
-          /* write.kStride = */ all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].kStride,
+          /* write.jStride = */ all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride,
+          /* write.kStride = */ all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride,
           /* write.scale   = */ 2,
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -322,10 +330,18 @@ void build_interpolation(mg_type *all_grids){
         numCoarseBoxes       = 0;
     int fineBox;
     for(fineBox=0;fineBox<all_grids->levels[level]->num_my_boxes;fineBox++){
+#ifdef USE_UPCXX
+      box_type *lbox = &(all_grids->levels[level]->my_boxes[fineBox]);
+      int   fineBoxID = lbox->global_box_id;
+      int   fineBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
+      int   fineBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
+      int   fineBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
+#else
       int   fineBoxID = all_grids->levels[level]->my_boxes[fineBox].global_box_id;
       int   fineBox_i = all_grids->levels[level]->my_boxes[fineBox].low.i / all_grids->levels[level]->box_dim;
       int   fineBox_j = all_grids->levels[level]->my_boxes[fineBox].low.j / all_grids->levels[level]->box_dim;
       int   fineBox_k = all_grids->levels[level]->my_boxes[fineBox].low.k / all_grids->levels[level]->box_dim;
+#endif
       int coarseBox_i = fineBox_i*all_grids->levels[level+1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;
       int coarseBox_j = fineBox_j*all_grids->levels[level+1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;
       int coarseBox_k = fineBox_k*all_grids->levels[level+1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;
@@ -413,8 +429,8 @@ void build_interpolation(mg_type *all_grids){
           /* write.i       = */ 0,
           /* write.j       = */ 0,
           /* write.k       = */ 0,
-          /* write.jStride = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].recvBox].jStride,
-          /* write.kStride = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].recvBox].kStride,
+          /* write.jStride = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride,
+          /* write.kStride = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride,
           /* write.scale   = */ 1,
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -543,15 +559,23 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     int numCoarseBoxesRemote = 0;
     int fineBox;
     for(fineBox=0;fineBox<all_grids->levels[level]->num_my_boxes;fineBox++){
+#ifdef USE_UPCXX
+      box_type *lbox = &(all_grids->levels[level]->my_boxes[fineBox]);
+      int   fineBoxID = lbox->global_box_id;
+      int   fineBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
+      int   fineBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
+      int   fineBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
+#else
       int   fineBoxID = all_grids->levels[level]->my_boxes[fineBox].global_box_id;
       int   fineBox_i = all_grids->levels[level]->my_boxes[fineBox].low.i / all_grids->levels[level]->box_dim;
       int   fineBox_j = all_grids->levels[level]->my_boxes[fineBox].low.j / all_grids->levels[level]->box_dim;
       int   fineBox_k = all_grids->levels[level]->my_boxes[fineBox].low.k / all_grids->levels[level]->box_dim;
+#endif
       int coarseBox_i = fineBox_i*all_grids->levels[level+1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;
       int coarseBox_j = fineBox_j*all_grids->levels[level+1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;
       int coarseBox_k = fineBox_k*all_grids->levels[level+1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;
       int coarseBoxID =  coarseBox_i + coarseBox_j*all_grids->levels[level+1]->boxes_in.i + coarseBox_k*all_grids->levels[level+1]->boxes_in.i*all_grids->levels[level+1]->boxes_in.j;
-      int coarseBox   = -1;int c;for(c=0;c<all_grids->levels[level+1]->num_my_boxes;c++)if( all_grids->levels[level+1]->my_boxes[c].global_box_id == coarseBoxID )coarseBox=c; // try and find the coarseBox index of a box with global_box_id == coaseBoxID
+      int coarseBox   = -1;int c;for(c=0;c<all_grids->levels[level+1]->num_my_boxes;c++)if( all_grids->levels[level+1]->my_boxes[c].get().global_box_id == coarseBoxID )coarseBox=c; // try and find the coarseBox index of a box with global_box_id == coaseBoxID
       coarseBoxes[numCoarseBoxes].sendRank  = all_grids->levels[level  ]->rank_of_box[  fineBoxID];
       coarseBoxes[numCoarseBoxes].sendBoxID = fineBoxID;
       coarseBoxes[numCoarseBoxes].sendBox   = fineBox;
@@ -644,8 +668,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* read.i        = */ 0,
           /* read.j        = */ 0,
           /* read.k        = */ 0,
-          /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].jStride,
-          /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].kStride,
+          /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().jStride,
+          /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().kStride,
           /* read.scale    = */ 2,
           /* write.box     = */ -1,
           /* write.ptr     = */ all_grids->levels[level]->restriction[restrictionType].send_buffers[neighbor],
@@ -684,16 +708,16 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* read.i        = */ 0, 
           /* read.j        = */ 0,
           /* read.k        = */ 0,
-          /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].jStride,
-          /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].kStride,
+          /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().jStride,
+          /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().kStride,
           /* read.scale    = */ 2,
           /* write.box     = */ coarseBoxes[coarseBox].recvBox,
           /* write.ptr     = */ NULL,
           /* write.i       = */ coarseBoxes[coarseBox].i,
           /* write.j       = */ coarseBoxes[coarseBox].j,
           /* write.k       = */ coarseBoxes[coarseBox].k,
-          /* write.jStride = */ all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].jStride,
-          /* write.kStride = */ all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].kStride,
+          /* write.jStride = */ all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride,
+          /* write.kStride = */ all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride,
           /* write.scale   = */ 1,
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -724,10 +748,18 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     int coarseBox;
     for(coarseBox=0;coarseBox<all_grids->levels[level]->num_my_boxes;coarseBox++){
       int bi,bj,bk;
+#ifdef USE_UPCXX
+      box_type *lbox = &(all_grids->levels[level]->my_boxes[coarseBox]);
+      int   coarseBoxID = lbox->global_box_id;
+      int   coarseBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
+      int   coarseBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
+      int   coarseBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
+#else
       int   coarseBoxID = all_grids->levels[level]->my_boxes[coarseBox].global_box_id;
       int   coarseBox_i = all_grids->levels[level]->my_boxes[coarseBox].low.i / all_grids->levels[level]->box_dim;
       int   coarseBox_j = all_grids->levels[level]->my_boxes[coarseBox].low.j / all_grids->levels[level]->box_dim;
       int   coarseBox_k = all_grids->levels[level]->my_boxes[coarseBox].low.k / all_grids->levels[level]->box_dim;
+#endif
       for(bk=0;bk<all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;bk++){
       for(bj=0;bj<all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;bj++){
       for(bi=0;bi<all_grids->levels[level-1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;bi++){
@@ -841,8 +873,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* write.i       = */ fineBoxes[fineBox].i,
           /* write.j       = */ fineBoxes[fineBox].j,
           /* write.k       = */ fineBoxes[fineBox].k,
-          /* write.jStride = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].recvBox].jStride,
-          /* write.kStride = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].recvBox].kStride,
+          /* write.jStride = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride,
+          /* write.kStride = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride,
           /* write.scale   = */ 1,
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -1074,7 +1106,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   if(numAdditionalVectors){
     for(box=0;box<all_grids->levels[level]->num_my_boxes;box++){
       add_vectors_to_box(all_grids->levels[level]->my_boxes+box,numAdditionalVectors);
-      all_grids->levels[level]->memory_allocated += numAdditionalVectors*all_grids->levels[level]->my_boxes[box].volume*sizeof(double);
+      all_grids->levels[level]->memory_allocated += numAdditionalVectors*all_grids->levels[level]->my_boxes[box].get().volume*sizeof(double);
     }
   }
 

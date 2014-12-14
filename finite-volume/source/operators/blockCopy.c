@@ -29,10 +29,12 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 
 #ifdef USE_UPCXX
   if(block->read.box >=0) {
-    read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
+    box_type *lbox = &(level->my_boxes[block->read.box]);
+    read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
   }
   if(block->write.box>=0) {
-    write = level->my_boxes[block->write.box].vectors[id] + level->my_boxes[block->write.box].ghosts*(1+level->my_boxes[block->write.box].jStride+level->my_boxes[block->write.box].kStride);
+    box_type *lbox = &(level->my_boxes[block->write.box]);
+    write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
   }
 #else
   if(block->read.box >=0) read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
@@ -109,14 +111,28 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
   if (flag == 1) read = src;
 
   if(block->read.box >=0){
+#ifdef USE_UPCXX
+     box_type *lbox = &(level->my_boxes[block->read.box]);
+     read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
+     read_jStride = lbox->jStride;
+     read_kStride = lbox->kStride;
+#else
      read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
      read_jStride = level->my_boxes[block->read.box ].jStride;
      read_kStride = level->my_boxes[block->read.box ].kStride;
+#endif
   }
   if(block->write.box>=0){
+#ifdef USE_UPCXX
+     box_type *lbox = &(level->my_boxes[block->write.box]);
+    write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
+    write_jStride = lbox->jStride;
+    write_kStride = lbox->kStride;
+#else
     write = level->my_boxes[block->write.box].vectors[id] + level->my_boxes[block->write.box].ghosts*(1+level->my_boxes[block->write.box].jStride+level->my_boxes[block->write.box].kStride);
     write_jStride = level->my_boxes[block->write.box].jStride;
     write_kStride = level->my_boxes[block->write.box].kStride;
+#endif
   }
 
   int i,j,k;
