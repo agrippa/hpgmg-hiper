@@ -6,7 +6,7 @@
 // shan: I noticed that if we use UPCXX_AM for this file, the first iteration results are not correct.
 // However, after the first iteration, everything is ok. The reason is not clearly understood yet.
 // Two solutions now: 1. use a barrier at beginning 2. diable unpacking inside handler
-// This is method 1.
+// This is method 2.
 
 extern mg_type all_grids;
 
@@ -48,6 +48,7 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
   int bstart = level_f->interpolation.sblock2[i];
   int bend   = level_f->interpolation.sblock2[i+1];
 
+  if (pcl == 1) {
   if (n < msize) { // medium AM 
 //    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
@@ -59,6 +60,7 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
     for(buffer=bstart;buffer<bend;buffer++){
       IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 0);
     }
+  }
   }
 
   _timeEnd = CycleTime();
@@ -73,12 +75,20 @@ void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, i
   double * ldst = (double *)dest.raw_ptr();
   int msize = gasnet_AMMaxMedium();
 
+  if (pcl == 1) {
   if (nelem * sizeof(double) < msize) {
     GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f,  pcl, id_c, depth_c));
   }
   else {
     GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, pcl, id_c, depth_c));
   }
+  }
+  else {
+
+    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, pcl, id_c, depth_c));
+  }
+
+
 }
 
 void syncNeighborInt(int nbgr, int depth, int vid, int pcl) {
@@ -164,7 +174,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 **/
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
-#ifndef UPCXX_AMXX
+#ifndef UPCXX_AM
 #ifdef USE_SUBCOMM
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
@@ -228,7 +238,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     level_f->interpolation.rflag[id_f*2][n] = 0;
   }
 
-  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
+//  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
 
 #else
 
@@ -244,13 +254,13 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
 
   // unpack MPI receive buffers
-#ifndef UPCXX_AM
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
   for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer],NULL,0);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
-#endif
+
+  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
 
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }
