@@ -755,8 +755,10 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
-  level->exchange_ghosts[justFaces].rflag         =     (volatile int*)malloc(numRecvRanks * sizeof(int));
-  memset((void *)level->exchange_ghosts[justFaces].rflag, 0, numRecvRanks * sizeof(int));
+  for (int nn = 0; nn < VECTORS_RESERVED; nn++) {
+    level->exchange_ghosts[justFaces].rflag[nn]         =     (volatile int*)malloc(numRecvRanks * sizeof(int));
+    memset((void *)level->exchange_ghosts[justFaces].rflag[nn], 0, numRecvRanks * sizeof(int));
+  }
 #endif
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif

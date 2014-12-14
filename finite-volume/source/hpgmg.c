@@ -54,6 +54,7 @@
 shared_array< global_ptr<double>, 1 > upc_buf_info;
 shared_array< global_ptr<box_type>, 1> upc_box_info;
 #ifdef UPCXX_AM
+level_type *finest_level;
 extern void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it);
 extern void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
 extern void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
@@ -215,6 +216,7 @@ int main(int argc, char **argv){
   int ghosts=stencil_get_radius();
 #ifdef USE_UPCXX
   fine_grid.depth = 0;
+  finest_level = &fine_grid;
 #endif
   create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,bc,my_rank,num_tasks);
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Periodic
@@ -287,6 +289,9 @@ int main(int argc, char **argv){
     #endif
   }
   MGPrintTiming(&all_grids); // don't include the error check in the timing results
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   if(my_rank==0){fprintf(stdout,"calculating error...  ");}
   double fine_error = error(&fine_grid,VECTOR_U,VECTOR_UTRUE);

@@ -20,17 +20,16 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid,
 
   level_f = all_grids.levels[depth_f];
   level_c = all_grids.levels[depth_c];
-  prescale_f = level_f->interpolation.prescale_f;
+  prescale_f = level_f->prescale_f;
 
   int i;
-  int nth = depth_f * 20 + id_f;
   for (i = 0; i < level_f->interpolation.num_recvs; i++) {
      if (level_f->interpolation.recv_ranks[i] == srcid) {
-        if (level_f->interpolation.rflag[i] != 0) {
-          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->interpolation.rflag[i]);
+        if (level_f->interpolation.rflag[id_f][i] != 0) {
+          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->interpolation.rflag[id_f][i]);
         }
         else {
-          level_f->interpolation.rflag[i] =1;
+          level_f->interpolation.rflag[id_f][i] =1;
         }
         break;
      }
@@ -157,7 +156,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
 #ifdef UPCXX_AMXX
   // not clear how to pass double to AM now, temporal approach, fix later
-  level_f->interpolation.prescale_f = prescale_f;
+  level_f->prescale_f = prescale_f;
 #endif
 
 /**
@@ -226,18 +225,18 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-      if (level_f->interpolation.rflag[n]==1) arrived++;
+      if (level_f->interpolation.rflag[id_f][n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
     gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-    level_f->interpolation.rflag[n] = 0;
+    level_f->interpolation.rflag[id_f][n] = 0;
   }
 /**
   if (MYTHREAD == 227 || MYTHREAD == 208 || MYTHREAD == 161)
-  printf("PASS WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.rflag[0]);
+  printf("PASS WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.rflag[id_f][0]);
 **/
 
   syncNeighborInt(level_c->interpolation.num_sends, id_c);

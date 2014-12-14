@@ -11,7 +11,7 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
 
-  level_type *level_f = para_level_f;
+  level_type *level_f;
   level_type *level_c;
   int buffer;
 
@@ -21,14 +21,13 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
   level_c = all_grids.levels[depth_c];
 
   int i;
-  int nth = depth_c * 20 + id_c;
   for (i = 0; i < level_c->restriction[type].num_recvs; i++) {
      if (level_c->restriction[type].recv_ranks[i] == srcid) {
-        if (level_c->restriction[type].rflag[i] != 0) {
-	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->restriction[type].rflag[i]);
+        if (level_c->restriction[type].rflag[id_c][i] != 0) {
+	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->restriction[type].rflag[id_c][i]);
 	}
 	else {
-	  level_c->restriction[type].rflag[i] =1;
+	  level_c->restriction[type].rflag[id_c][i] =1;
 	}
 	break;
      }
@@ -240,17 +239,16 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // wait for MPI to finish...
   _timeStart = CycleTime();
 #ifdef UPCXX_AM
-  int nth = level_c->depth * 20 + id_c;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-      if (level_c->restriction[restrictionType].rflag[n]==1) arrived++;
+      if (level_c->restriction[restrictionType].rflag[id_c][n]==1) arrived++;
     }
     if (arrived == level_c->restriction[restrictionType].num_recvs) break;
     upcxx::advance();
   }
   for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-    level_c->restriction[restrictionType].rflag[n] = 0;
+    level_c->restriction[restrictionType].rflag[id_c][n] = 0;
   }
 
 #endif
