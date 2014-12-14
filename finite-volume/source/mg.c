@@ -108,8 +108,8 @@ void MGPrintTiming(mg_type *all_grids){
   total=0;printf("Total by level            ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.Total;                total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
 
   printf("\n");
-  printf( "   Total time in MGBuild  %12.6f seconds\n",SecondsPerCycle*(double)all_grids->cycles.MGBuild);
-  printf( "   Total time in MGSolve  %12.6f seconds\n",scale*(double)all_grids->cycles.MGSolve);
+  printf( "   Total time in MGBuild UPCXX AM1 %12.6f seconds\n",SecondsPerCycle*(double)all_grids->cycles.MGBuild);
+  printf( "   Total time in MGSolve UPCXX AM1 %12.6f seconds\n",scale*(double)all_grids->cycles.MGSolve);
   printf( "      number of v-cycles  %12d\n"  ,all_grids->levels[0]->vcycles_from_this_level/all_grids->MGSolves_performed);
   printf( "Bottom solver iterations  %12d\n"  ,all_grids->levels[num_levels-1]->Krylov_iterations/all_grids->MGSolves_performed);
   #if defined(USE_CABICGSTAB) || defined(USE_CACG)
