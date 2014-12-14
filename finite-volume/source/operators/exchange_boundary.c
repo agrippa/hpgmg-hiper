@@ -8,6 +8,7 @@
 
 static int iters = 0;
 extern mg_type all_grids;
+extern level_type *finest_level;
 
 #define GASNET_Safe(fncall) do {                                     \
   int _retval;                                                     \
@@ -22,9 +23,6 @@ extern mg_type all_grids;
     }                                                                \
   } while(0)
 
-// can use a function to pass these parameters
-static int para_id, para_justFaces;
-static level_type *para_level;
 typedef void (*CB_INSIDE_FUNC)(double *, int, int, int, int, int, int);
 
 void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it) {
@@ -34,29 +32,29 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 
   int id = vid;
   int justFaces = faces;
-  level_type *level = para_level;
+  level_type *level;
 
   int buffer;
 
   _timeStart = CycleTime();
 
-  if (all_grids.levels != NULL) {
-     level = all_grids.levels[depth];
+  if (level == 0) {
+     level = finest_level;
   }
   else {
-     level = para_level;
+     level = all_grids.levels[depth];
   }
 
   int i;
   int nth = depth * 20 + id;
   for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
      if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
-        if (level->exchange_ghosts[justFaces].flag_data[nth][i] != 0) {
+        if (level->exchange_ghosts[justFaces].rflag[i] != 0) {
 	  printf("Wrong in Ping Handler Proc %d recv msg from %d for vid %d iter %d val %d\n", MYTHREAD, srcid, vid, it, 
-	  level->exchange_ghosts[justFaces].flag_data[nth][i]);
+	  level->exchange_ghosts[justFaces].rflag[i]);
 	}
 	else {
-	  level->exchange_ghosts[justFaces].flag_data[nth][i] =1;
+	  level->exchange_ghosts[justFaces].rflag[i] =1;
 	}
 	break;
      }
@@ -107,7 +105,7 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 
 }
 
-void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem) {
+void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem, int vid, int depth, int faces, int iters) {
 
   int myid = gasnet_mynode(); 
   double * lsrc = (double *)src.raw_ptr();
@@ -116,10 +114,10 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
 
   if (nelem * sizeof(double) < msize) {
      // using mediumAM
-    GASNET_Safe(gasnet_AMRequestMedium4(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), para_id, para_level->depth, para_justFaces, iters));
+    GASNET_Safe(gasnet_AMRequestMedium4(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), vid, depth, faces, iters));
   }
   else {
-    GASNET_Safe(gasnet_AMRequestLongAsync4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_id, para_level->depth, para_justFaces, iters));
+    GASNET_Safe(gasnet_AMRequestLongAsync4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, vid, depth, faces, iters));
   }
 
 }
@@ -152,14 +150,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 	printf("Wrong msg send/recv number does not match send %d recvs %d for proc %d level %d id %d\n",
         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs, MYTHREAD, level->depth, id);
   }
-#endif
-
-#ifdef UPCXX_AM
-  // For cb_copy function: this can be set as AM parameters
-  para_id = id;
-  para_justFaces = justFaces;
-  para_level = level;
-  // setCBFunc(cb_copy); // could set earlier in initialization, for convenience now
 #endif
 
   _timeStart = CycleTime();
@@ -201,7 +191,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #else
     sendNbgrData(level->exchange_ghosts[justFaces].send_ranks[n], 
-		 p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
+		 p1, p2, level->exchange_ghosts[justFaces].send_sizes[n], id, level->depth, justFaces, iters);
 #endif
   }
 
@@ -227,13 +217,13 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-      if (level->exchange_ghosts[justFaces].flag_data[nth][n] == 1) arrived++;
+      if (level->exchange_ghosts[justFaces].rflag[n] == 1) arrived++;
     }
     if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
     upcxx::advance();
   }
   for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-    level->exchange_ghosts[justFaces].flag_data[nth][n] = 0;
+    level->exchange_ghosts[justFaces].rflag[n] = 0;
   }
 
   _timeEnd = CycleTime();

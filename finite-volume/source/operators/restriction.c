@@ -3,11 +3,6 @@
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
-static int  para_id_c;
-static int  para_id_f;
-static level_type  *para_level_c;
-static level_type  *para_level_f;
-static int  para_restrict_type;
 
 extern mg_type all_grids;
 
@@ -22,26 +17,18 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
 
   _timeStart = CycleTime();
 
-  //shan: define all_grids earlier in hpgmg.c
-  if (all_grids.levels != NULL) {
-     level_f = all_grids.levels[depth_f];
-     level_c = all_grids.levels[depth_c];
-  }
-  else {
-    printf("WRONG! This should not happen! %d %d\n", depth_f, depth_c);
-    level_f = para_level_f;
-    level_c = para_level_c; 
-  }
+  level_f = all_grids.levels[depth_f];
+  level_c = all_grids.levels[depth_c];
 
   int i;
   int nth = depth_c * 20 + id_c;
   for (i = 0; i < level_c->restriction[type].num_recvs; i++) {
      if (level_c->restriction[type].recv_ranks[i] == srcid) {
-        if (level_c->restriction[type].flag_data[nth][i] != 0) {
-	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->restriction[type].flag_data[nth][i]);
+        if (level_c->restriction[type].rflag[i] != 0) {
+	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->restriction[type].rflag[i]);
 	}
 	else {
-	  level_c->restriction[type].flag_data[nth][i] =1;
+	  level_c->restriction[type].rflag[i] =1;
 	}
 	break;
      }
@@ -69,7 +56,7 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
 
 }
 
-void sendNbgrDataRes(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem) {
+void sendNbgrDataRes(int rid,global_ptr<double> src,global_ptr<double> dest,int nelem,int depth_f,int id_f,int rtype,int id_c, int depth_c) {
 
   int myid = gasnet_mynode(); 
   double * lsrc = (double *)src.raw_ptr();
@@ -78,11 +65,11 @@ void sendNbgrDataRes(int rid, global_ptr<double> src, global_ptr<double> dest, i
 
   if (nelem * sizeof(double) < msize) {
      // using mediumAM
-    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_RES_MEDREQUEST, lsrc, nelem*sizeof(double), para_level_f->depth, para_id_f,  para_restrict_type, para_id_c, para_level_c->depth));
+    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_RES_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f, rtype, id_c, depth_c));
   }
   else {
     // using longAM
-    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_RES_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, para_level_f->depth, para_id_f, para_restrict_type, para_id_c, para_level_c->depth));
+    GASNET_Safe(gasnet_AMRequestLongAsync5(rid,P2P_RES_LONGREQUEST,lsrc,nelem*sizeof(double),ldst,depth_f,id_f,rtype,id_c,depth_c));
   }
 
 }
@@ -199,14 +186,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   int n;
   int my_tag = (level_f->tag<<4) | 0x5;
 
-#ifdef UPCXX_AM
-  para_id_c = id_c;
-  para_id_f = id_f;
-  para_level_c = level_c;
-  para_level_f = level_f;
-  para_restrict_type = restrictionType;
-#endif
-
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
 #ifndef UPCXX_AM
@@ -240,7 +219,8 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n]);    
 #else
     sendNbgrDataRes(level_f->restriction[restrictionType].send_ranks[n], 
-		 p1, p2, level_f->restriction[restrictionType].send_sizes[n]);
+		    p1, p2, level_f->restriction[restrictionType].send_sizes[n],
+		    level_f->depth,id_f,restrictionType,id_c,level_c->depth);
 #endif
 
   }
@@ -264,13 +244,13 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-      if (level_c->restriction[restrictionType].flag_data[nth][n]==1) arrived++;
+      if (level_c->restriction[restrictionType].rflag[n]==1) arrived++;
     }
     if (arrived == level_c->restriction[restrictionType].num_recvs) break;
     upcxx::advance();
   }
   for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-    level_c->restriction[restrictionType].flag_data[nth][n] = 0;
+    level_c->restriction[restrictionType].rflag[n] = 0;
   }
 
 #endif

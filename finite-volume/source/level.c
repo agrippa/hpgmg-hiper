@@ -463,9 +463,6 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   int _rank;
   int ghost,numGhosts,numGhostsRemote;
 
-  int flag = 0;
-  if (justFaces && level->my_rank == 6) flag = 1;
-
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // traverse my list of boxes and create a lists of neighboring boxes and neighboring ranks
   GZ_type *ghostsToSend = (GZ_type*)malloc(26*level->num_my_boxes*sizeof(GZ_type)); // There are at most 26 neighbors per box.
@@ -758,10 +755,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
-  for (int i = 0; i < 400; i++) {
-    level->exchange_ghosts[justFaces].flag_data[i] = (volatile int *) malloc(numRecvRanks * sizeof(int));
-    memset((void *)level->exchange_ghosts[justFaces].flag_data[i], 0, numRecvRanks * sizeof(int));
-  }
+  level->exchange_ghosts[justFaces].rflag         =     (volatile int*)malloc(numRecvRanks * sizeof(int));
+  memset((void *)level->exchange_ghosts[justFaces].rflag, 0, numRecvRanks * sizeof(int));
 #endif
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif
