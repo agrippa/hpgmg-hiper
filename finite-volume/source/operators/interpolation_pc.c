@@ -6,7 +6,7 @@
 
 extern mg_type all_grids;
 
-void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid, int id_c, int depth_c) {
+void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, int id_c, int depth_c) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -20,16 +20,17 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid,
 
   level_f = all_grids.levels[depth_f];
   level_c = all_grids.levels[depth_c];
-  prescale_f = level_f->prescale_f;
+  if (pcl == 0) prescale_f = level_f->prescale_fc;
+  else prescale_f = level_f->prescale_fl;
 
   int i;
   for (i = 0; i < level_f->interpolation.num_recvs; i++) {
      if (level_f->interpolation.recv_ranks[i] == srcid) {
-        if (level_f->interpolation.rflag[id_f][i] != 0) {
-          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->interpolation.rflag[id_f][i]);
+        if (level_f->interpolation.rflag[id_f*2+pcl][i] != 0) {
+          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->interpolation.rflag[id_f*2+pcl][i]);
         }
         else {
-          level_f->interpolation.rflag[id_f][i] =1;
+          level_f->interpolation.rflag[id_f*2+pcl][i] =1;
         }
         break;
      }
@@ -61,7 +62,7 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int myid,
 
 }
 
-void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem, int depth_f, int id_f, int id_c, int depth_c) {
+void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem, int depth_f, int id_f, int id_c, int depth_c, int pcl) {
 
   int myid = gasnet_mynode();
   double * lsrc = (double *)src.raw_ptr();
@@ -70,11 +71,11 @@ void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, i
 
   if (nelem * sizeof(double) < msize) {
      // using mediumAM
-    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f,  myid , id_c, depth_c));
+    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f,  pcl, id_c, depth_c));
   }
   else {
     // using longAM
-    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, myid, id_c, depth_c));
+    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, pcl, id_c, depth_c));
   }
 /**
   printf("SEND proc %d to %d level_f %d id_f %d level_c %d id_c %d\n", MYTHREAD, rid, depth_f, id_f, depth_c, id_c);
@@ -82,9 +83,9 @@ void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, i
 
 }
 
-void syncNeighborInt(int nbgr, int vid) {
-  GASNET_BLOCKUNTIL(upcxx::p2p_flag_int[vid] == nbgr);
-  upcxx::p2p_flag_int[vid] = 0;
+void syncNeighborInt(int nbgr, int depth, int vid, int pcl) {
+  GASNET_BLOCKUNTIL(upcxx::p2p_flag_int[depth][vid*2+pcl] == nbgr);
+  upcxx::p2p_flag_int[depth][vid*2+pcl] = 0;
 }
 
 static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double prescale_f, level_type *level_c, int id_c, blockCopy_type *block){
@@ -154,9 +155,9 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   int buffer=0;
   int n;
 
-#ifdef UPCXX_AMXX
+#ifdef UPCXX_AM
   // not clear how to pass double to AM now, temporal approach, fix later
-  level_f->prescale_f = prescale_f;
+  level_f->prescale_fc = prescale_f;
 #endif
 
 /**
@@ -194,7 +195,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifndef UPCXX_AMXX
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
-    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth);
+    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,0);
 #endif
   }
 #endif
@@ -225,21 +226,21 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-      if (level_f->interpolation.rflag[id_f][n]==1) arrived++;
+      if (level_f->interpolation.rflag[id_f*2][n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
     gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-    level_f->interpolation.rflag[id_f][n] = 0;
+    level_f->interpolation.rflag[id_f*2][n] = 0;
   }
 /**
   if (MYTHREAD == 227 || MYTHREAD == 208 || MYTHREAD == 161)
-  printf("PASS WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.rflag[id_f][0]);
+  printf("PASS WAIT proc %d level_f %d id_f %d nrecv %d\n first %d", MYTHREAD, level_f->depth, id_f, level_f->interpolation.num_recvs, level_f->interpolation.rflag[id_f*2][0]);
 **/
 
-  syncNeighborInt(level_c->interpolation.num_sends, id_c);
+  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
 
 #else
 

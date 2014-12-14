@@ -73,9 +73,9 @@ void sendNbgrDataRes(int rid,global_ptr<double> src,global_ptr<double> dest,int 
 
 }
 
-void syncNeighborRes(int nbgr, int vid) {
-  GASNET_BLOCKUNTIL(upcxx::p2p_flag_res[vid] == nbgr);
-  upcxx::p2p_flag_res[vid] = 0;
+void syncNeighborRes(int nbgr, int depth, int vid, int rtype) {
+  GASNET_BLOCKUNTIL(upcxx::p2p_flag_res[depth][vid*4+rtype] == nbgr);
+  upcxx::p2p_flag_res[depth][vid*4+rtype] = 0;
 }
 
 static inline void RestrictBlock(level_type *level_c, int id_c, level_type *level_f, int id_f, blockCopy_type *block, int restrictionType){
@@ -262,7 +262,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   upcxx::barrier();
 #endif
 #else
-  syncNeighborRes(level_f->restriction[restrictionType].num_sends, id_f);
+  syncNeighborRes(level_f->restriction[restrictionType].num_sends, level_f->depth, id_f, restrictionType);
 #endif
 #endif
 

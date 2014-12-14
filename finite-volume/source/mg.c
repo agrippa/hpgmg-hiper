@@ -374,7 +374,7 @@ void build_interpolation(mg_type *all_grids){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
-    for (int nn = 0; nn < VECTORS_RESERVED; nn++) {
+    for (int nn = 0; nn < VECTORS_RESERVED*2; nn++) {
       all_grids->levels[level]->interpolation.rflag[nn]         =     (volatile int*)malloc(numCoarseRanks * sizeof(int));
       memset((void *)all_grids->levels[level]->interpolation.rflag[nn], 0, numCoarseRanks * sizeof(int));
     }
