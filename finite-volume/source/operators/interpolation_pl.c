@@ -114,7 +114,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   int my_tag = (level_f->tag<<4) | 0x7;
 
 #ifdef UPCXX_AM
-  level_f->prescale_f = prescale_f;
+  level_f->prescale_fl = prescale_f;
 #endif
 
   _timeStart = CycleTime();
@@ -148,7 +148,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #ifndef UPCXX_AM
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
-    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth);
+    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,1);
 #endif
   }
 #endif
@@ -172,17 +172,17 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-      if (level_f->interpolation.rflag[id_f][n]==1) arrived++;
+      if (level_f->interpolation.rflag[id_f*2+1][n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
     gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-    level_f->interpolation.rflag[id_f][n] = 0;
+    level_f->interpolation.rflag[id_f*2+1][n] = 0;
   }
 
-  syncNeighborInt(level_c->interpolation.num_sends, id_c);
+  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 1);
 
 #else
 

@@ -122,10 +122,10 @@ void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int 
 
 }
 
-void syncNeighbor(int nbgr, int vid, int iter) {
+void syncNeighbor(int nbgr, int depth, int vid, int iter) {
 
-    GASNET_BLOCKUNTIL(upcxx::p2p_flag[vid] == nbgr);
-    upcxx::p2p_flag[vid] = 0;
+    GASNET_BLOCKUNTIL(upcxx::p2p_flag[depth][vid] == nbgr);
+    upcxx::p2p_flag[depth][vid] = 0;
 }
 
 // perform a (intra-level) ghost zone exchange
@@ -228,7 +228,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeEnd = CycleTime();
   level->cycles.blas3 += (_timeEnd-_timeStart);
 
-  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, id, iters);
+  syncNeighbor(level->exchange_ghosts[justFaces].num_sends, level->depth, id, iters);
 //  if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
 
 #else
