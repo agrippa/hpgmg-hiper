@@ -29,11 +29,31 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 
 #ifdef USE_UPCXX
   if(block->read.box >=0) {
+#ifdef UPCXX_SHARED
+    int rank = level->rank_of_box(block->read.box);
+    if (!upcxx::is_memory_shared_with(rank)) {
+      printf("Wrong: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);
+      exit(1);
+    }
+    global_ptr<box_type> box = level->addr_of_box(block->read.box);
+    box_type *lbox = (box_type *)box;
+#else
     box_type *lbox = &(level->my_boxes[block->read.box]);
+#endif
     read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
   }
   if(block->write.box>=0) {
+#ifdef UPCXX_SHARED
+    int rank = level->rank_of_box(block->write.box);
+    if (!upcxx::is_memory_shared_with(rank)) {
+      printf("Wrong: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, rank);
+      exit(1);
+    }
+    global_ptr<box_type> box = level->addr_of_box(block->write.box);
+    box_type *lbox = (box_type *)box;
+#else
     box_type *lbox = &(level->my_boxes[block->write.box]);
+#endif
     write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
   }
 #else
@@ -112,7 +132,17 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
 
   if(block->read.box >=0){
 #ifdef USE_UPCXX
+#ifdef UPCXX_SHARED
+     int rank = level->rank_of_box(block->read.box);
+     if (!upcxx::is_memory_shared_with(rank)) {
+      printf("Wrong1: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);
+      exit(1);
+     }
+     global_ptr<box_type> box = level->addr_of_box(block->read.box);
+     box_type *lbox = (box_type *)box;
+#else
      box_type *lbox = &(level->my_boxes[block->read.box]);
+#endif
      read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
      read_jStride = lbox->jStride;
      read_kStride = lbox->kStride;
@@ -124,7 +154,17 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
   }
   if(block->write.box>=0){
 #ifdef USE_UPCXX
-     box_type *lbox = &(level->my_boxes[block->write.box]);
+#ifdef UPCXX_SHARED
+    int rank = level->rank_of_box(block->write.box);
+    if (!upcxx::is_memory_shared_with(rank)) {
+      printf("Wrong: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, rank);
+      exit(1);
+    }
+    global_ptr<box_type> box = level->addr_of_box(block->write.box);
+    box_type *lbox = (box_type *)box;
+#else
+    box_type *lbox = &(level->my_boxes[block->write.box]);
+#endif
     write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;

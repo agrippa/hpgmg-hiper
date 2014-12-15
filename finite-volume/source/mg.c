@@ -195,7 +195,11 @@ void build_interpolation(mg_type *all_grids){
         fineBoxes[numFineBoxes].j         = bj*all_grids->levels[level-1]->box_dim/2;
         fineBoxes[numFineBoxes].k         = bk*all_grids->levels[level-1]->box_dim/2;
                   numFineBoxes++;
+#ifdef UPCXX_SHARED
+	if (!upcxx::is_memory_shared_with(all_grids->levels[level-1]->rank_of_box[fineBoxID])){
+#else
         if(all_grids->levels[level-1]->rank_of_box[fineBoxID] != all_grids->levels[level]->my_rank){
+#endif
           fineRanks[numFineBoxesRemote++] = all_grids->levels[level-1]->rank_of_box[fineBoxID];
         }else{numFineBoxesLocal++;}
       }}}
@@ -284,7 +288,11 @@ void build_interpolation(mg_type *all_grids){
     } // neighbor
     {
       int fineBox;
+#ifdef UPCXX_SHARED
+      for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(upcxx::is_memory_shared_with(fineBoxes[fineBox].recvRank)){
+#else
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(fineBoxes[fineBox].recvRank==all_grids->my_rank){
+#endif
         // local interpolations...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[1]),&(all_grids->levels[level]->interpolation.allocated_blocks[1]),&(all_grids->levels[level]->interpolation.num_blocks[1]),
           /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
@@ -346,7 +354,11 @@ void build_interpolation(mg_type *all_grids){
       int coarseBox_j = fineBox_j*all_grids->levels[level+1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;
       int coarseBox_k = fineBox_k*all_grids->levels[level+1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;
       int coarseBoxID =  coarseBox_i + coarseBox_j*all_grids->levels[level+1]->boxes_in.i + coarseBox_k*all_grids->levels[level+1]->boxes_in.i*all_grids->levels[level+1]->boxes_in.j;
+#ifdef UPCXX_SHARED
+      if(!upcxx::is_memory_shared_with(all_grids->levels[level+1]->rank_of_box[coarseBoxID])){
+#else
       if(all_grids->levels[level]->my_rank != all_grids->levels[level+1]->rank_of_box[coarseBoxID]){
+#endif
         coarseBoxes[numCoarseBoxes].sendRank  = all_grids->levels[level+1]->rank_of_box[coarseBoxID];
         coarseBoxes[numCoarseBoxes].sendBoxID = coarseBoxID;
         coarseBoxes[numCoarseBoxes].sendBox   = -1; 
@@ -586,7 +598,11 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       coarseBoxes[numCoarseBoxes].j         = (all_grids->levels[level]->box_dim/2)*( fineBox_j % (all_grids->levels[level]->boxes_in.j/all_grids->levels[level+1]->boxes_in.j) );
       coarseBoxes[numCoarseBoxes].k         = (all_grids->levels[level]->box_dim/2)*( fineBox_k % (all_grids->levels[level]->boxes_in.k/all_grids->levels[level+1]->boxes_in.k) );
                   numCoarseBoxes++;
+#ifdef UPCXX_SHARED
+      if(!upcxx::is_memory_shared_with(all_grids->levels[level+1]->rank_of_box[coarseBoxID])){
+#else
       if(all_grids->levels[level]->my_rank != all_grids->levels[level+1]->rank_of_box[coarseBoxID]){
+#endif
         coarseRanks[numCoarseBoxesRemote++] = all_grids->levels[level+1]->rank_of_box[coarseBoxID];
       }else{numCoarseBoxesLocal++;}
     } // my (fine) boxes
@@ -695,7 +711,11 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     // for construct the local restriction list... 
     {
       int coarseBox;
+#ifdef UPCXX_SHARED
+      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(upcxx::is_memory_shared_with(coarseBoxes[coarseBox].recvRank)){
+#else
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==all_grids->levels[level+1]->my_rank){
+#endif
         // restrict to local...
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[1]),
                               &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[1]),
@@ -767,7 +787,11 @@ void build_restriction(mg_type *all_grids, int restrictionType){
         int fineBox_j = (all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j)*coarseBox_j + bj;
         int fineBox_k = (all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k)*coarseBox_k + bk;
         int fineBoxID =  fineBox_i + fineBox_j*all_grids->levels[level-1]->boxes_in.i + fineBox_k*all_grids->levels[level-1]->boxes_in.i*all_grids->levels[level-1]->boxes_in.j;
+#ifdef UPCXX_SHARED
+        if(!upcxx::is_memory_shared_with(all_grids->levels[level-1]->rank_of_box[fineBoxID])){
+#else
         if(all_grids->levels[level-1]->rank_of_box[fineBoxID] != all_grids->levels[level]->my_rank){
+#endif
           fineBoxes[numFineBoxesRemote].sendRank  = all_grids->levels[level-1]->rank_of_box[  fineBoxID];
           fineBoxes[numFineBoxesRemote].sendBoxID = fineBoxID;
           fineBoxes[numFineBoxesRemote].sendBox   = -1; // I don't know the off-node box index

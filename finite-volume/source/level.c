@@ -520,7 +520,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         ghostsToSend[numGhosts].recvRank  = level->rank_of_box[neighborBoxID];
         ghostsToSend[numGhosts].recvBoxID = neighborBoxID;
         ghostsToSend[numGhosts].recvBox   = -1;
+#ifdef UPCXX_SHARED
+	if (!upcxx::is_memory_shared_with(level->rank_of_box[neighborBoxID])) {
+#else
         if( level->rank_of_box[neighborBoxID] != level->my_rank ){
+#endif
           sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
         }else{
           int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
@@ -608,7 +612,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
  
       // determine if this ghost requires a pack or local exchange 
       int LocalExchange; // 0 = pack list, 1 = local exchange list
+#ifdef UPCXX_SHARED
+      if (!upcxx::is_memory_shared_with(ghostsToSend[ghost].recvRank)) {
+#else
       if(ghostsToSend[ghost].recvRank != level->my_rank){
+#endif
         LocalExchange=0; // pack
         neighbor=0;while(level->exchange_ghosts[justFaces].send_ranks[neighbor] != ghostsToSend[ghost].recvRank)neighbor++;
       }else{
@@ -726,7 +734,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         }
       }
       if(neighborBoxID>=0){
+#ifdef UPCXX_SHARED
+      if( (level->rank_of_box[neighborBoxID] != -1) && (!upcxx::is_memory_shared_with(level->rank_of_box[neighborBoxID]))) {
+#else
       if( (level->rank_of_box[neighborBoxID] != -1) && (level->rank_of_box[neighborBoxID] != level->my_rank)  ){
+#endif
         ghostsToRecv[numGhosts].sendRank  = level->rank_of_box[neighborBoxID];
         ghostsToRecv[numGhosts].sendBoxID = neighborBoxID;
         ghostsToRecv[numGhosts].sendBox   = -1;
