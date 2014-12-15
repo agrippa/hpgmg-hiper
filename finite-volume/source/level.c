@@ -522,14 +522,21 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         ghostsToSend[numGhosts].recvBox   = -1;
 #ifdef UPCXX_SHARED
 	if (!upcxx::is_memory_shared_with(level->rank_of_box[neighborBoxID])) {
+          sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
+        }else{
+	  if( level->rank_of_box[neighborBoxID] != level->my_rank ){
+	    int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
+	    ghostsToSend[numGhosts].recvBox   = recvBox;
+	  }
+        }
 #else
         if( level->rank_of_box[neighborBoxID] != level->my_rank ){
-#endif
           sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
         }else{
           int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
           ghostsToSend[numGhosts].recvBox   = recvBox;
         }
+#endif
         numGhosts++;
       }}
     }}}}
@@ -630,7 +637,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
+#ifdef UPCXX_SHARED
+        /* read.box      = */ ghostsToSend[ghost].sendBoxID,
+#else
         /* read.box      = */ ghostsToSend[ghost].sendBox,
+#endif
         /* read.ptr      = */ NULL,
         /* read.i        = */ send_i,
         /* read.j        = */ send_j,
@@ -638,7 +649,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
         /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
         /* read.scale    = */ 1,
+#ifdef UPCXX_SHARED
+        /* write.box     = */ ghostsToSend[ghost].recvBoxID,
+#else
         /* write.box     = */ ghostsToSend[ghost].recvBox,
+#endif
         /* write.ptr     = */ NULL,
         /* write.i       = */ recv_i,
         /* write.j       = */ recv_j,
@@ -655,7 +670,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
+#ifdef UPCXX_SHARED
+        /* read.box      = */ ghostsToSend[ghost].sendBoxID,
+#else
         /* read.box      = */ ghostsToSend[ghost].sendBox,
+#endif
         /* read.ptr      = */ NULL,
         /* read.i        = */ send_i,
         /* read.j        = */ send_j,
@@ -846,7 +865,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       /*read.jStride  = */ dim_i,       // contiguous block
       /*read.kStride  = */ dim_i*dim_j, // contiguous block
       /*read.scale    = */ 1,
+#ifdef UPCXX_SHARED
+      /*write.box     = */ ghostsToRecv[ghost].recvBoxID,
+#else
       /*write.box     = */ ghostsToRecv[ghost].recvBox,
+#endif
       /*write.ptr     = */ NULL,
       /*write.i       = */ recv_i,
       /*write.j       = */ recv_j,
