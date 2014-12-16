@@ -485,6 +485,7 @@ void build_interpolation(mg_type *all_grids){
 #ifdef UPCXX_AM
   // setup start and end position for each receiver
   
+    if (all_grids->levels[level]->interpolation.num_recvs > 0) {
     int curpos = 0;
     int curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
     all_grids->levels[level]->interpolation.sblock2[curpos] = 0;
@@ -510,6 +511,8 @@ void build_interpolation(mg_type *all_grids){
       printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->interpolation.num_recvs);
     }
     all_grids->levels[level]->interpolation.sblock2[curpos+1] = all_grids->levels[level]->interpolation.num_blocks[2];
+
+    }
 #endif
 
   } // recv/unpack
@@ -971,6 +974,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef UPCXX_AM
   // setup start and end position for each receiver
   
+    if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0) {
     int curpos = 0;
     int curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
     all_grids->levels[level]->restriction[restrictionType].sblock2[curpos] = 0;
@@ -997,6 +1001,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     }
     all_grids->levels[level]->restriction[restrictionType].sblock2[curpos+1] = all_grids->levels[level]->restriction[restrictionType].num_blocks[2];
 #endif
+
+    }
   } // recv/unpack
 
 
@@ -1238,7 +1244,9 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   // rebuild various coefficients for the operator... must occur after build_restriction !!!
   if(all_grids->my_rank==0){fprintf(stdout,"\n");}
   for(level=1;level<all_grids->num_levels;level++){
+    printf("EEE proc %d enter rebuild level %d\n", MYTHREAD, level);
     rebuild_operator(all_grids->levels[level],(level>0)?all_grids->levels[level-1]:NULL,a,b);
+    printf("EEE proc %d finish rebuild level %d\n", MYTHREAD, level);
   }
   if(all_grids->my_rank==0){fprintf(stdout,"\n");}
 
