@@ -30,14 +30,20 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 #ifdef USE_UPCXX
   if(block->read.box >=0) {
 #ifdef UPCXX_SHARED
-    int rank = level->rank_of_bo[block->read.box];
+    int rank = level->rank_of_box[block->read.box];
     if (!upcxx::is_memory_shared_with(rank)) {
       printf("Wrong: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);
       exit(1);
     }
+    else {
+      printf("R: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);   
+    }
     global_ptr<box_type> box = level->addr_of_box[block->read.box];
-    global_ptr<double> gp = box->vectors[id] + box->ghosts*(1+box->jStride+box->kStride); 
+    box_type *lbox = (box_type *) box;
+    global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
+    cout << "PPP proc " << MYTHREAD << " gp " << gp << " read " << read << " box id " << block->read.box << " rank " << rank << endl;
+
 #else
     box_type *lbox = &(level->my_boxes[block->read.box]);
     read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
@@ -45,15 +51,19 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
   }
   if(block->write.box>=0) {
 #ifdef UPCXX_SHARED
-    printf("Info: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, 0);
     int rank = level->rank_of_box[block->write.box];
     if (!upcxx::is_memory_shared_with(rank)) {
       printf("Wrong: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, rank);
       exit(1);
     }
+    else {
+      printf("Wrong: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, rank);
+    }
     global_ptr<box_type> box = level->addr_of_box[block->write.box];
-    global_ptr<double> gp = box->vectors[id] + box->ghosts*(1+box->jStride+box->kStride); 
+    box_type *lbox = (box_type *) box;
+    global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
+    cout << "PPP proc " << MYTHREAD << " gp " << gp << " write " << write << " box id " << block->write.box << " rank " << rank << endl;
 #else
     box_type *lbox = &(level->my_boxes[block->write.box]);
     write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
@@ -142,10 +152,11 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
       exit(1);
      }
      global_ptr<box_type> box = level->addr_of_box[block->read.box];
-     global_ptr<double> gp = box->vectors[id] + box->ghosts*(1+box->jStride+box->kStride); 
+     box_type *lbox = (box_type *) box;
+     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
      read = (double *)gp;
-     read_jStride = box->jStride;
-     read_kStride = box->kStride;
+     read_jStride = lbox->jStride;
+     read_kStride = lbox->kStride;
 #else
      box_type *lbox = &(level->my_boxes[block->read.box]);
      read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
@@ -168,10 +179,11 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
       exit(1);
     }
     global_ptr<box_type> box = level->addr_of_box[block->write.box];
-    global_ptr<double> gp = box->vectors[id] + box->ghosts*(1+box->jStride+box->kStride);
+    box_type *lbox = (box_type *) box;
+    global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
     write = (double *) gp;
-    write_jStride = box->jStride;
-    write_kStride = box->kStride;
+    write_jStride = lbox->jStride;
+    write_kStride = lbox->kStride;
 #else
     box_type *lbox = &(level->my_boxes[block->write.box]);
     write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);

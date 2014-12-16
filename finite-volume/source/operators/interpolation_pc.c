@@ -125,10 +125,11 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
       exit(1);
     }
     global_ptr<box_type> box = level_c->addr_of_box[block->read.box];
-    global_ptr<double> gp = box->vectors[id_c] + box->ghosts*(1+box->jStride+box->kStride); 
+    box_type *lbox = (box_type *) box;
+    global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
-    read_jStride = box->jStride;
-    read_kStride = box->kStride;
+    read_jStride = lbox->jStride;
+    read_kStride = lbox->kStride;
 #else
     box_type *lbox = &(level_c->my_boxes[block->read.box]);   
     read = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
@@ -151,10 +152,11 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
       exit(1);
     }
     global_ptr<box_type> box = level_f->addr_of_box[block->write.box];
-    global_ptr<double> gp = box->vectors[id_f] + box->ghosts*(1+box->jStride+box->kStride); 
+    box_type *lbox = (box_type *) box;
+    global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
-    write_jStride = box->jStride;
-    write_kStride = box->kStride;
+    write_jStride = lbox->jStride;
+    write_kStride = lbox->kStride;
 #else
     box_type *lbox = &(level_f->my_boxes[block->write.box]);  
     write = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
