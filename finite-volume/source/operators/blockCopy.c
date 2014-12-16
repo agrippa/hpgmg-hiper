@@ -6,6 +6,10 @@
 // shan: flag = 0, the same with original; flag =1 , use src as read buffer
 static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, double *src, int flag){
   // copy 3D array from read_i,j,k of read[] to write_i,j,k in write[]
+
+  static int it = 0;
+  it++;
+
   int   dim_i       = block->dim.i;
   int   dim_j       = block->dim.j;
   int   dim_k       = block->dim.k;
@@ -35,14 +39,12 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
       printf("Wrong: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);
       exit(1);
     }
-    else {
-      printf("R: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);   
-    }
     global_ptr<box_type> box = level->addr_of_box[block->read.box];
     box_type *lbox = (box_type *) box;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
-    cout << "PPP proc " << MYTHREAD << " gp " << gp << " read " << read << " box id " << block->read.box << " rank " << rank << endl;
+    read_jStride = lbox->jStride;
+    read_kStride = lbox->kStride;
 
 #else
     box_type *lbox = &(level->my_boxes[block->read.box]);
@@ -56,14 +58,12 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
       printf("Wrong: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, rank);
       exit(1);
     }
-    else {
-      printf("Wrong: Proc %d level %d write box %d rank is %d not shared!\n", level->my_rank, level->depth, block->write.box, rank);
-    }
     global_ptr<box_type> box = level->addr_of_box[block->write.box];
     box_type *lbox = (box_type *) box;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
-    cout << "PPP proc " << MYTHREAD << " gp " << gp << " write " << write << " box id " << block->write.box << " rank " << rank << endl;
+    write_jStride = lbox->jStride;
+    write_kStride = lbox->kStride;
 #else
     box_type *lbox = &(level->my_boxes[block->write.box]);
     write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);

@@ -524,10 +524,10 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 	if (!upcxx::is_memory_shared_with(level->rank_of_box[neighborBoxID])) {
           sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
         }else{
-	  if( level->rank_of_box[neighborBoxID] != level->my_rank ){
-	    int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
-	    ghostsToSend[numGhosts].recvBox   = recvBox;
-	  }
+//	  if( level->rank_of_box[neighborBoxID] != level->my_rank ){
+//	    int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
+//	    ghostsToSend[numGhosts].recvBox   = recvBox;
+//	  }
         }
 #else
         if( level->rank_of_box[neighborBoxID] != level->my_rank ){
@@ -1188,6 +1188,14 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   MPI_Allreduce(&BoxesPerProcessSend,&BoxesPerProcess,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
   #endif
   if(my_rank==0){fprintf(stdout,"  Calculating boxes per process... target=%0.3f, max=%d\n",(double)TotalBoxes/(double)num_ranks,BoxesPerProcess);}
+
+  for (int i = 0; i < level->boxes_in.i * level->boxes_in.j * level->boxes_in.k; i++) {
+    bool shr = is_memory_shared_with(level->rank_of_box[i]);
+    cout << "AAA proc " << level->my_rank << " box " << i << " rank " << level->rank_of_box[i] << " addr " << level->addr_of_box[i] << " shared " << shr << endl;
+  }
+  cout << "BBB proc " << level->my_rank << " level " << level->depth << " nsend " << level->exchange_ghosts[0].num_sends << " nrecv " << 
+       level->exchange_ghosts[0].num_recvs << " block " <<
+       level->exchange_ghosts[0].num_blocks[0] << " " << level->exchange_ghosts[0].num_blocks[1] << " " << level->exchange_ghosts[0].num_blocks[2] << endl;
 }
 
 
