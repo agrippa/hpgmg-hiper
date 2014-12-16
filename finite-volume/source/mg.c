@@ -195,11 +195,7 @@ void build_interpolation(mg_type *all_grids){
         fineBoxes[numFineBoxes].j         = bj*all_grids->levels[level-1]->box_dim/2;
         fineBoxes[numFineBoxes].k         = bk*all_grids->levels[level-1]->box_dim/2;
                   numFineBoxes++;
-#ifdef UPCXX_SHARED
-	if (!upcxx::is_memory_shared_with(all_grids->levels[level-1]->rank_of_box[fineBoxID])){
-#else
         if(all_grids->levels[level-1]->rank_of_box[fineBoxID] != all_grids->levels[level]->my_rank){
-#endif
           fineRanks[numFineBoxesRemote++] = all_grids->levels[level-1]->rank_of_box[fineBoxID];
         }else{numFineBoxesLocal++;}
       }}}
@@ -245,13 +241,17 @@ void build_interpolation(mg_type *all_grids){
 
     // for each neighbor, construct the pack list and allocate the MPI send buffer... 
     for(neighbor=0;neighbor<numFineRanks;neighbor++){
+#ifdef UPCXX_SHARED
+      if(upcxx::is_memory_shared_with(fineRanks[neighbor])) continue;
+#endif
       int fineBox;
       int offset = 0;
 #ifdef USE_UPCXX
       all_grids->levels[level]->interpolation.global_send_buffers[neighbor] = my_send_buffers;
 #endif
       all_grids->levels[level]->interpolation.send_buffers[neighbor] = all_send_buffers;
-      for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(fineBoxes[fineBox].recvRank==fineRanks[neighbor]){
+      for(fineBox=0;fineBox<numFineBoxes;fineBox++)
+	if(fineBoxes[fineBox].recvRank==fineRanks[neighbor]){
         // pack the MPI send buffer...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[0]),&(all_grids->levels[level]->interpolation.allocated_blocks[0]),&(all_grids->levels[level]->interpolation.num_blocks[0]),
           /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
@@ -432,9 +432,13 @@ void build_interpolation(mg_type *all_grids){
       int offset = 0;
 #ifdef USE_UPCXX
       all_grids->levels[level]->interpolation.global_recv_buffers[neighbor] = my_recv_buffers;
+#ifdef UPCXX_SHARED
+      if(is_memory_shared_with(coarseRanks[neighbor])) continue;
+#endif
 #endif
       all_grids->levels[level]->interpolation.recv_buffers[neighbor] = all_recv_buffers;
-      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].sendRank==coarseRanks[neighbor]){
+      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)
+	if(coarseBoxes[coarseBox].sendRank==coarseRanks[neighbor]){
         // unpack MPI recv buffer...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[2]),&(all_grids->levels[level]->interpolation.allocated_blocks[2]),&(all_grids->levels[level]->interpolation.num_blocks[2]),
           /* dim.i         = */ all_grids->levels[level]->box_dim,
@@ -614,11 +618,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       coarseBoxes[numCoarseBoxes].j         = (all_grids->levels[level]->box_dim/2)*( fineBox_j % (all_grids->levels[level]->boxes_in.j/all_grids->levels[level+1]->boxes_in.j) );
       coarseBoxes[numCoarseBoxes].k         = (all_grids->levels[level]->box_dim/2)*( fineBox_k % (all_grids->levels[level]->boxes_in.k/all_grids->levels[level+1]->boxes_in.k) );
                   numCoarseBoxes++;
-#ifdef UPCXX_SHARED
-      if(!upcxx::is_memory_shared_with(all_grids->levels[level+1]->rank_of_box[coarseBoxID])){
-#else
       if(all_grids->levels[level]->my_rank != all_grids->levels[level+1]->rank_of_box[coarseBoxID]){
-#endif
         coarseRanks[numCoarseBoxesRemote++] = all_grids->levels[level+1]->rank_of_box[coarseBoxID];
       }else{numCoarseBoxesLocal++;}
     } // my (fine) boxes
@@ -687,7 +687,13 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       all_grids->levels[level]->restriction[restrictionType].global_send_buffers[neighbor] = my_send_buffers;
 #endif
       all_grids->levels[level]->restriction[restrictionType].send_buffers[neighbor] = all_send_buffers;
-      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==coarseRanks[neighbor]){
+
+#ifdef UPCXX_SHARED
+      if(upcxx::is_memory_shared_with(coarseRanks[neighbor])) continue;
+#endif
+
+      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)
+	if(coarseBoxes[coarseBox].recvRank==coarseRanks[neighbor]){
         // restrict to MPI send buffer...
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[0]),
                               &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[0]),
@@ -815,11 +821,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
         int fineBox_j = (all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j)*coarseBox_j + bj;
         int fineBox_k = (all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k)*coarseBox_k + bk;
         int fineBoxID =  fineBox_i + fineBox_j*all_grids->levels[level-1]->boxes_in.i + fineBox_k*all_grids->levels[level-1]->boxes_in.i*all_grids->levels[level-1]->boxes_in.j;
-#ifdef UPCXX_SHARED
-        if(!upcxx::is_memory_shared_with(all_grids->levels[level-1]->rank_of_box[fineBoxID])){
-#else
         if(all_grids->levels[level-1]->rank_of_box[fineBoxID] != all_grids->levels[level]->my_rank){
-#endif
           fineBoxes[numFineBoxesRemote].sendRank  = all_grids->levels[level-1]->rank_of_box[  fineBoxID];
           fineBoxes[numFineBoxesRemote].sendBoxID = fineBoxID;
           fineBoxes[numFineBoxesRemote].sendBox   = -1; // I don't know the off-node box index
@@ -904,6 +906,10 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       all_grids->levels[level]->restriction[restrictionType].global_recv_buffers[neighbor] = my_recv_buffers;
 #endif
       all_grids->levels[level]->restriction[restrictionType].recv_buffers[neighbor] = all_recv_buffers;
+
+#ifdef UPCXX_SHARED
+      if (is_memory_shared_with(fineRanks[neighbor])) continue;
+#endif
       for(fineBox=0;fineBox<numFineBoxesRemote;fineBox++)if(fineBoxes[fineBox].sendRank==fineRanks[neighbor]){
         // unpack MPI recv buffer...
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[2]),

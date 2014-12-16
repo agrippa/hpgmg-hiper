@@ -520,23 +520,13 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         ghostsToSend[numGhosts].recvRank  = level->rank_of_box[neighborBoxID];
         ghostsToSend[numGhosts].recvBoxID = neighborBoxID;
         ghostsToSend[numGhosts].recvBox   = -1;
-#ifdef UPCXX_SHARED
-	if (!upcxx::is_memory_shared_with(level->rank_of_box[neighborBoxID])) {
-          sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
-        }else{
-//	  if( level->rank_of_box[neighborBoxID] != level->my_rank ){
-//	    int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
-//	    ghostsToSend[numGhosts].recvBox   = recvBox;
-//	  }
-        }
-#else
+
         if( level->rank_of_box[neighborBoxID] != level->my_rank ){
           sendRanks[numGhostsRemote++] = level->rank_of_box[neighborBoxID];
         }else{
           int recvBox=0;while(level->my_boxes[recvBox].get().global_box_id!=neighborBoxID)recvBox++; // search my list of boxes for the appropriate recvBox index
           ghostsToSend[numGhosts].recvBox   = recvBox;
         }
-#endif
         numGhosts++;
       }}
     }}}}
@@ -753,11 +743,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         }
       }
       if(neighborBoxID>=0){
-#ifdef UPCXX_SHARED
-      if( (level->rank_of_box[neighborBoxID] != -1) && (!upcxx::is_memory_shared_with(level->rank_of_box[neighborBoxID]))) {
-#else
       if( (level->rank_of_box[neighborBoxID] != -1) && (level->rank_of_box[neighborBoxID] != level->my_rank)  ){
-#endif
         ghostsToRecv[numGhosts].sendRank  = level->rank_of_box[neighborBoxID];
         ghostsToRecv[numGhosts].sendBoxID = neighborBoxID;
         ghostsToRecv[numGhosts].sendBox   = -1;
@@ -852,6 +838,9 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       }
  
       // determine if this ghost requires a pack or local exchange 
+#ifdef UPCXX_SHARED
+      if (is_memory_shared_with(ghostsToRecv[ghost].sendRank)) continue;
+#endif
       neighbor=0;while(level->exchange_ghosts[justFaces].recv_ranks[neighbor] != ghostsToRecv[ghost].sendRank)neighbor++;
       if(stage==1)append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[2]),&(level->exchange_ghosts[justFaces].allocated_blocks[2]),&(level->exchange_ghosts[justFaces].num_blocks[2]),
       /*dim.i         = */ dim_i,
