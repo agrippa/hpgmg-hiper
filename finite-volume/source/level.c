@@ -932,10 +932,22 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   int curpos = 0;
   int curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
   level->exchange_ghosts[justFaces].sblock2[curpos] = 0;
+#ifdef UPCXX_SHARED
+  while (is_memory_shared_with(curproc) && curpos < level->exchange_ghosts[justFaces].num_recvs-1) {
+    level->exchange_ghosts[justFaces].sblock2[++curpos] = 0;
+    curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
+  }
+#endif
   for(int buffer=1;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
       if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-curproc) {
 	  level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
           curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
+#ifdef UPCXX_SHARED
+	  while (is_memory_shared_with(curproc) && curpos < level->exchange_ghosts[justFaces].num_recvs-1) {
+	    level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
+	    curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
+	  }
+#endif	 
       }
   }
   if (level->exchange_ghosts[justFaces].num_recvs > 0 && curpos+1 != level->exchange_ghosts[justFaces].num_recvs) {

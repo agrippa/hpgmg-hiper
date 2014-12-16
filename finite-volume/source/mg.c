@@ -488,10 +488,22 @@ void build_interpolation(mg_type *all_grids){
     int curpos = 0;
     int curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
     all_grids->levels[level]->interpolation.sblock2[curpos] = 0;
+#ifdef UPCXX_SHARED
+    while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->interpolation.num_recvs-1) {
+    all_grids->levels[level]->interpolation.sblock2[++curpos] = 0;
+    curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
+  }
+#endif
     for(int buffer=1;buffer<all_grids->levels[level]->interpolation.num_blocks[2];buffer++){
       if (all_grids->levels[level]->interpolation.blocks[2][buffer].read.box != -1-curproc) {
          all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
          curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
+#ifdef UPCXX_SHARED
+	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->interpolation.num_recvs-1) {
+	   all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
+	   curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
+	 }
+#endif
       }
     }
     if (all_grids->levels[level]->interpolation.num_recvs > 0 && curpos+1 != all_grids->levels[level]->interpolation.num_recvs) {
@@ -962,10 +974,22 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     int curpos = 0;
     int curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
     all_grids->levels[level]->restriction[restrictionType].sblock2[curpos] = 0;
+#ifdef UPCXX_SHARED
+    while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs-1) {
+    all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = 0;
+    curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
+  }
+#endif
     for(int buffer=1;buffer<all_grids->levels[level]->restriction[restrictionType].num_blocks[2];buffer++){
       if (all_grids->levels[level]->restriction[restrictionType].blocks[2][buffer].read.box != -1-curproc) {
          all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
          curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
+#ifdef UPCXX_SHARED
+	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs-1) {
+	   all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
+	   curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
+	 }
+#endif
       }
     }
     if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0 && curpos+1 != all_grids->levels[level]->restriction[restrictionType].num_recvs) {
