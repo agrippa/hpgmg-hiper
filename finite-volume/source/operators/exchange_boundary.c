@@ -73,6 +73,7 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   }
 #endif
 
+  if (n > 0) {
   int msize = gasnet_AMMaxMedium();
   int bstart = level->exchange_ghosts[justFaces].sblock2[i];
   int bend   = level->exchange_ghosts[justFaces].sblock2[i+1];
@@ -82,7 +83,6 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
     for(buffer=bstart;buffer<bend;buffer++){
       // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
       //if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-srcid) {
-      //  printf("Error srcid in proc %d should be %d actually be %d : %d\n", MYTHREAD, level->exchange_ghosts[justFaces].recv_ranks[i], srcid, 
       //            level->exchange_ghosts[justFaces].blocks[2][buffer].read.box * (-1) - 1);
       //}
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 1);
@@ -99,6 +99,7 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
     }
   }
+  } // n > 0
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);

@@ -179,6 +179,8 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+printf("MPL proc %d enter wait in level %d id %d num %d\n", level_f->my_rank, level_f->depth, id_f, level_f->interpolation.num_recvs);
+
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
@@ -192,6 +194,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     level_f->interpolation.rflag[id_f*2+1][n] = 0;
   }
 
+printf("MPL proc %d pass  wait in level %d id %d num %d\n", level_f->my_rank, level_f->depth, id_f, level_f->interpolation.num_recvs);
   syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 1);
 
 #else

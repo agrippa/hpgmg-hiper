@@ -1200,10 +1200,6 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
        level->exchange_ghosts[0].num_recvs << " block " <<
        level->exchange_ghosts[0].num_blocks[0] << " " << level->exchange_ghosts[0].num_blocks[1] << " " << level->exchange_ghosts[0].num_blocks[2] << endl;
 
-  cout << "CCC proc " << level->my_rank << " level " << level->depth << " nsend " << level->restriction[0].num_sends << " nrecv " <<
-       level->restriction[0].num_recvs << " block " << 
-       level->restriction[0].num_blocks[0] << " " << level->restriction[0].num_blocks[1] << " " << level->restriction[0].num_blocks[2] << endl;
-
 }
 
 

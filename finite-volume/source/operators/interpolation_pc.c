@@ -44,6 +44,8 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
   printf("NN i is %d limit is %d in level_f %d id_f %d level_c %d id_c %d for proc %d from %d %d\n",
                   i, level_f->interpolation.num_recvs, level_f->depth, id_f, level_c->depth, id_c, MYTHREAD, srcid, myid);
 **/
+
+  if (n > 0) {
   int msize = gasnet_AMMaxMedium();
   int bstart = level_f->interpolation.sblock2[i];
   int bend   = level_f->interpolation.sblock2[i+1];
@@ -62,6 +64,7 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
     }
   }
   }
+  }   // n > 0
 
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
@@ -255,6 +258,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+printf("MPC proc %d enter wait in level %d id %d num %d\n", level_f->my_rank, level_f->depth, id_f, level_f->interpolation.num_recvs);
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
@@ -267,6 +271,8 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     level_f->interpolation.rflag[id_f*2][n] = 0;
   }
+
+printf("MPC proc %d pass  wait in level %d id %d num %d\n", level_f->my_rank, level_f->depth, id_f, level_f->interpolation.num_recvs);
 
 //  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
 
