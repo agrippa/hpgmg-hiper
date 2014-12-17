@@ -36,7 +36,7 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 #ifdef UPCXX_SHARED
     int rank = level->rank_of_box[block->read.box];
     if (!upcxx::is_memory_shared_with(rank)) {
-      printf("Wrong: Proc %d level %d read box %d rank is %d not shared!\n", level->my_rank, level->depth, block->read.box, rank);
+      printf("Wrong: Proc %d level %d read box %d rank is %d not shared flag %d!\n", level->my_rank, level->depth, block->read.box, rank, flag);
       exit(1);
     }
     global_ptr<box_type> box = level->addr_of_box[block->read.box];

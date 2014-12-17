@@ -515,17 +515,21 @@ void build_interpolation(mg_type *all_grids){
          all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
          curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
 #ifdef UPCXX_SHARED
-	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->interpolation.num_recvs-1) {
+	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->interpolation.num_recvs) {
 	   all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
 	   curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
 	 }
 #endif
       }
     }
-    if (all_grids->levels[level]->interpolation.num_recvs > 0 && curpos+1 != all_grids->levels[level]->interpolation.num_recvs) {
-      printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->interpolation.num_recvs);
+
+    for (int i = curpos+1; i <= all_grids->levels[level]->interpolation.num_recvs; i++) {
+      all_grids->levels[level]->interpolation.sblock2[i] = all_grids->levels[level]->interpolation.num_blocks[2];
     }
-    all_grids->levels[level]->interpolation.sblock2[curpos+1] = all_grids->levels[level]->interpolation.num_blocks[2];
+
+    if (all_grids->levels[level]->interpolation.num_recvs > 0 && curpos+1 != all_grids->levels[level]->interpolation.num_recvs) {
+      printf("ErrorI: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->interpolation.num_recvs, all_grids->levels[level]->depth);
+    }
 
     }
 #endif
@@ -1021,17 +1025,21 @@ void build_restriction(mg_type *all_grids, int restrictionType){
          all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
          curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
 #ifdef UPCXX_SHARED
-	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs-1) {
+	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs) {
 	   all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
 	   curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
 	 }
 #endif
       }
     }
-    if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0 && curpos+1 != all_grids->levels[level]->restriction[restrictionType].num_recvs) {
-      printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->restriction[restrictionType].num_recvs);
+
+    for (int i = curpos+1; i <= all_grids->levels[level]->restriction[restrictionType].num_recvs; i++) {
+      all_grids->levels[level]->restriction[restrictionType].sblock2[i] = all_grids->levels[level]->restriction[restrictionType].num_blocks[2];
     }
-    all_grids->levels[level]->restriction[restrictionType].sblock2[curpos+1] = all_grids->levels[level]->restriction[restrictionType].num_blocks[2];
+
+    if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0 && curpos+1 != all_grids->levels[level]->restriction[restrictionType].num_recvs) {
+      printf("ErrorR: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->restriction[restrictionType].num_recvs, all_grids->levels[level]->depth);
+    }
 #endif
 
     }
@@ -1244,6 +1252,25 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
 
   {
     for (level = 0; level < all_grids->num_levels;level++) {
+     level_type *l = all_grids->levels[level];
+     communicator_type *c = &l->restriction[0];
+     for (int i = 0; i < c->num_recvs; i++) {
+      printf("SBR proc %d level %d pos %d sb (%d -- %d) out of %d ngr %d out of %d\n", l->my_rank, l->depth, i, c->sblock2[i],
+          c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
+     }}
+
+    for (level = 0; level < all_grids->num_levels;level++) {
+     level_type *l = all_grids->levels[level];
+     communicator_type *c = &l->interpolation;
+     for (int i = 0; i < c->num_recvs; i++) {
+      printf("SBI proc %d level %d pos %d sb (%d -- %d) out of %d ngr %d out of %d\n", l->my_rank, l->depth, i, c->sblock2[i],
+          c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
+     }}
+
+  }
+
+  {
+    for (level = 0; level < all_grids->num_levels;level++) {
       level_type *l = all_grids->levels[level];
       cout << "RES proc " << l->my_rank << " level " << l->depth << " nsend " << l->exchange_ghosts[0].num_sends << " nrecv " <<
        l->exchange_ghosts[0].num_recvs << " block " << l->exchange_ghosts[0].num_blocks[0] << " " << 
@@ -1291,9 +1318,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   // rebuild various coefficients for the operator... must occur after build_restriction !!!
   if(all_grids->my_rank==0){fprintf(stdout,"\n");}
   for(level=1;level<all_grids->num_levels;level++){
-    printf("EEE proc %d enter rebuild level %d\n", MYTHREAD, level);
     rebuild_operator(all_grids->levels[level],(level>0)?all_grids->levels[level-1]:NULL,a,b);
-    printf("EEE proc %d finish rebuild level %d\n", MYTHREAD, level);
   }
   if(all_grids->my_rank==0){fprintf(stdout,"\n");}
 

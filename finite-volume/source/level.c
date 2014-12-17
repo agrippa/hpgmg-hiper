@@ -624,10 +624,10 @@ void build_exchange_ghosts(level_type *level, int justFaces){
    
       if(stage==1){ 
 	if(LocalExchange) {// append to the local exchange list...
-	  int jStride, kStride;
 	  global_ptr<box_type> box = level->addr_of_box[ghostsToSend[ghost].recvBoxID];
-	  jStride = box->jStride;
-	  kStride = box->kStride;
+          box_type *lbox = (box_type *)box;
+	  int jStride = lbox->jStride;
+	  int kStride = lbox->kStride;
 
 	  append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[1]),&(level->exchange_ghosts[justFaces].allocated_blocks[1]),&(level->exchange_ghosts[justFaces].num_blocks[1]),
         /* dim.i         = */ dim_i,
@@ -936,6 +936,12 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef UPCXX_AM
   // setup start and end position for each receiver
 
+  for(int buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
+     blockCopy_type *b = &level->exchange_ghosts[justFaces].blocks[2][buffer];
+     printf("BB2 proc %d level %d face %d pos %d rbox %d (%d) wbox %d (%d) \n", level->my_rank, level->depth, justFaces, buffer, b->read.box,
+      (b->read.box >= 0) ? level->rank_of_box[b->read.box] : -1, b->write.box, level->rank_of_box[b->write.box]);  
+  }
+
   if (level->exchange_ghosts[justFaces].num_recvs > 0) {
   int curpos = 0;
   level->exchange_ghosts[justFaces].sblock2[curpos] = 0;
@@ -951,17 +957,29 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 	  level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
           curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
 #ifdef UPCXX_SHARED
-	  while (is_memory_shared_with(curproc) && curpos < level->exchange_ghosts[justFaces].num_recvs-1) {
+	  while (is_memory_shared_with(curproc) && curpos < level->exchange_ghosts[justFaces].num_recvs) {
 	    level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
 	    curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
 	  }
 #endif	 
       }
   }
-  if (level->exchange_ghosts[justFaces].num_recvs > 0 && curpos+1 != level->exchange_ghosts[justFaces].num_recvs) {
-    printf("Error: Proc %d in build_exchange current %d not equal num recvs %d\n", MYTHREAD, curpos+1, level->exchange_ghosts[justFaces].num_recvs);
+  for (int i = curpos+1; i <= level->exchange_ghosts[justFaces].num_recvs; i++) {
+    level->exchange_ghosts[justFaces].sblock2[i] = level->exchange_ghosts[justFaces].num_blocks[2];
   }
-  level->exchange_ghosts[justFaces].sblock2[curpos+1] = level->exchange_ghosts[justFaces].num_blocks[2];
+
+  if (level->exchange_ghosts[justFaces].num_recvs > 0 && curpos+1 != level->exchange_ghosts[justFaces].num_recvs) {
+    printf("ErrorE: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, level->exchange_ghosts[justFaces].num_recvs, level->depth);
+  }
+
+  {
+    communicator_type *c = &level->exchange_ghosts[justFaces];
+    for (int i = 0; i < c->num_recvs; i++) {
+      printf("SB face %d proc %d level %d pos %d sb (%d - %d) out of %d ngr %d out of %d\n", justFaces, level->my_rank, level->depth, i, c->sblock2[i],
+          c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
+    }
+  }
+
 
   }
 #endif

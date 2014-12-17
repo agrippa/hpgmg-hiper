@@ -27,7 +27,6 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
 	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->restriction[type].rflag[id_c][i]);
 	}
 	else {
-  printf("KKK proc %d received message from %din level %d for type %d id %d\n", level_c->my_rank, srcid, level_c->depth, type, id_c);
 	  level_c->restriction[type].rflag[id_c][i] =1;
 	}
 	break;
@@ -42,13 +41,13 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
   if (n < msize) { // medium AM 
     PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
-      CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 1);
+      CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 11);
     }
   }
   else { // long AM
     PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
-      CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 0);
+      CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 10);
     }
   }
   }
@@ -272,12 +271,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // wait for MPI to finish...
   _timeStart = CycleTime();
 #ifdef UPCXX_AM
-  printf("MMM proc %d enter wait in level %d type %d\n", level_c->my_rank, level_c->depth, restrictionType);
-  if (level_c->my_rank == 0 && level_c->depth == 4) {
-    for (int i = 0; i < level_c->restriction[restrictionType].num_recvs; i++) {
-      printf("Waiting ith %d procs %d for type %d\n", i, level_c->restriction[restrictionType].recv_ranks[i], restrictionType); 
-    }
-  }
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
@@ -290,8 +283,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     level_c->restriction[restrictionType].rflag[id_c][n] = 0;
   }
 
-  printf("MMM proc %d pass  wait in level %d type %d\n", level_c->my_rank, level_c->depth, restrictionType);
-
 #endif
 
 #ifdef USE_UPCXX
@@ -303,9 +294,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   upcxx::barrier();
 #endif
 #else
-  printf("MMM proc %d enter sync in level %d type %d\n", level_f->my_rank, level_f->depth, restrictionType);
   syncNeighborRes(level_f->restriction[restrictionType].num_sends, level_f->depth, id_f, restrictionType);
-  printf("MMM proc %d pass  sync in level %d type %d\n", level_f->my_rank, level_f->depth, restrictionType);
 #endif
 #endif
 
@@ -316,7 +305,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->restriction[restrictionType].num_blocks[2])
-  for(buffer=0;buffer<level_c->restriction[restrictionType].num_blocks[2];buffer++){CopyBlock(level_c,id_c,&level_c->restriction[restrictionType].blocks[2][buffer], NULL, 0);}
+  for(buffer=0;buffer<level_c->restriction[restrictionType].num_blocks[2];buffer++){CopyBlock(level_c,id_c,&level_c->restriction[restrictionType].blocks[2][buffer], NULL, 12);}
   _timeEnd = CycleTime();
   level_f->cycles.restriction_unpack += (_timeEnd-_timeStart);
 #endif

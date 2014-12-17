@@ -208,22 +208,14 @@ int stencil_is_star_shaped(){return(1);} // replaces #define STENCIL_IS_STAR_SHA
 void rebuild_operator(level_type * level, level_type *fromLevel, double a, double b){
   if(level->my_rank==0){fprintf(stdout,"  rebuilding operator for level...  h=%e \n ",level->h);}
 
-  if (level->depth == 4) printf("Point 1 for proc %d\n", level->my_rank);
-
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // form restriction of alpha[], beta_*[] coefficients from fromLevel
   if(fromLevel != NULL){
     restriction(level,VECTOR_ALPHA ,fromLevel,VECTOR_ALPHA ,RESTRICT_CELL  );
-  if (level->depth == 4) printf("Point 21 for proc %d\n", level->my_rank);
     restriction(level,VECTOR_BETA_I,fromLevel,VECTOR_BETA_I,RESTRICT_FACE_I);
-  if (level->depth == 4) printf("Point 22 for proc %d\n", level->my_rank);
     restriction(level,VECTOR_BETA_J,fromLevel,VECTOR_BETA_J,RESTRICT_FACE_J);
-  if (level->depth == 4) printf("Point 23 for proc %d\n", level->my_rank);
     restriction(level,VECTOR_BETA_K,fromLevel,VECTOR_BETA_K,RESTRICT_FACE_K);
-  if (level->depth == 4) printf("Point 24 for proc %d\n", level->my_rank);
   } // else case assumes alpha/beta have been set
-
-  if (level->depth == 4) printf("Point 2 for proc %d\n", level->my_rank);
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // exchange alpha/beta/...  (must be done before calculating Dinv)
@@ -231,9 +223,6 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
   exchange_boundary(level,VECTOR_BETA_I,0);
   exchange_boundary(level,VECTOR_BETA_J,0);
   exchange_boundary(level,VECTOR_BETA_K,0);
-
-
-  if (level->depth == 4) printf("Point 3 for proc %d\n", level->my_rank);
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // calculate Dinv, L1inv, and estimate the dominant Eigenvalue
