@@ -236,7 +236,7 @@ void build_interpolation(mg_type *all_grids){
 #endif
     if(numFineBoxesRemote*elementSize>0)
       if(all_send_buffers==NULL){fprintf(stderr,"malloc failed - interpolation/all_send_buffers\n");exit(0);}
-                      memset(all_send_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
+    memset(all_send_buffers,0,numFineBoxesRemote*elementSize*sizeof(double)); // DO NOT DELETE... you must initialize to 0 to avoid getting something like 0.0*NaN and corrupting the solve
     //printf("level=%d, rank=%2d, send_buffers=%6d\n",level,all_grids->my_rank,numFineBoxesRemote*elementSize*sizeof(double));
 
     // for each neighbor, construct the pack list and allocate the MPI send buffer... 
@@ -301,8 +301,14 @@ void build_interpolation(mg_type *all_grids){
       int fineBox;
 #ifdef UPCXX_SHARED
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(upcxx::is_memory_shared_with(fineBoxes[fineBox].recvRank)){
+	  global_ptr<box_type> box = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
+	  box_type *lbox = (box_type *) box;
+	  int jStride = lbox->jStride;
+	  int kStride = lbox->kStride;
 #else
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(fineBoxes[fineBox].recvRank==all_grids->my_rank){
+	  int jStride = all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride;
+	  int kStride = all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride;
 #endif
         // local interpolations...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[1]),&(all_grids->levels[level]->interpolation.allocated_blocks[1]),&(all_grids->levels[level]->interpolation.num_blocks[1]),
@@ -330,8 +336,8 @@ void build_interpolation(mg_type *all_grids){
           /* write.i       = */ 0,
           /* write.j       = */ 0,
           /* write.k       = */ 0,
-          /* write.jStride = */ all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride,
-          /* write.kStride = */ all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride,
+	  /* write.jStride = */ jStride, //all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride,
+	  /* write.kStride = */ kStride, //all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride,
           /* write.scale   = */ 2,
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
@@ -768,8 +774,15 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       int coarseBox;
 #ifdef UPCXX_SHARED
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(upcxx::is_memory_shared_with(coarseBoxes[coarseBox].recvRank)){
+	  global_ptr<box_type> box = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
+	  box_type *lbox = (box_type *) box;
+	  int jStride = lbox->jStride;
+	  int kStride = lbox->kStride;
 #else
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==all_grids->levels[level+1]->my_rank){
+          int jStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride;
+          int kStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride;
+
 #endif
         // restrict to local...
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[1]),
@@ -799,8 +812,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* write.i       = */ coarseBoxes[coarseBox].i,
           /* write.j       = */ coarseBoxes[coarseBox].j,
           /* write.k       = */ coarseBoxes[coarseBox].k,
-          /* write.jStride = */ all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride,
-          /* write.kStride = */ all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride,
+	  /* write.jStride = */ jStride, //all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride,
+	  /* write.kStride = */ kStride, //all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride,
           /* write.scale   = */ 1,
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default

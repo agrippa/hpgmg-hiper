@@ -577,7 +577,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
           if(level->exchange_ghosts[justFaces].send_sizes[neighbor]>0)
 	    if(level->exchange_ghosts[justFaces].send_buffers[neighbor]==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].send_buffers[neighbor]\n",justFaces);exit(0);}
 #endif
-	  memset(level->exchange_ghosts[justFaces].send_buffers[neighbor],                0,level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
+	  if (level->exchange_ghosts[justFaces].send_sizes[neighbor] > 0) 
+	    memset(level->exchange_ghosts[justFaces].send_buffers[neighbor], 0,level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
       }
       level->exchange_ghosts[justFaces].send_ranks[neighbor]=sendRanks[neighbor];
       level->exchange_ghosts[justFaces].send_sizes[neighbor]=0;
@@ -622,8 +623,13 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       }
    
       if(stage==1){ 
-      if(LocalExchange) // append to the local exchange list...
-      append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[1]),&(level->exchange_ghosts[justFaces].allocated_blocks[1]),&(level->exchange_ghosts[justFaces].num_blocks[1]),
+	if(LocalExchange) {// append to the local exchange list...
+	  int jStride, kStride;
+	  global_ptr<box_type> box = level->addr_of_box[ghostsToSend[ghost].recvBoxID];
+	  jStride = box->jStride;
+	  kStride = box->kStride;
+
+	  append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[1]),&(level->exchange_ghosts[justFaces].allocated_blocks[1]),&(level->exchange_ghosts[justFaces].num_blocks[1]),
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
@@ -648,13 +654,13 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* write.i       = */ recv_i,
         /* write.j       = */ recv_j,
         /* write.k       = */ recv_k,
-        /* write.jStride = */ level->my_boxes[ghostsToSend[ghost].recvBox].get().jStride,
-        /* write.kStride = */ level->my_boxes[ghostsToSend[ghost].recvBox].get().kStride,
+	/* write.jStride = */ jStride, //level->my_boxes[ghostsToSend[ghost].recvBox].get().jStride,
+	/* write.kStride = */ kStride, //level->my_boxes[ghostsToSend[ghost].recvBox].get().kStride,
         /* write.scale   = */ 1,
         /* blockcopy_i   = */ 10000, // don't tile i dimension
         /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
         /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
-      );
+			       ); }
       else // append to the MPI pack list...
       append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[0]),&(level->exchange_ghosts[justFaces].allocated_blocks[0]),&(level->exchange_ghosts[justFaces].num_blocks[0]),
         /* dim.i         = */ dim_i,
@@ -807,7 +813,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
           if(level->exchange_ghosts[justFaces].recv_sizes[neighbor]>0)
           if(level->exchange_ghosts[justFaces].recv_buffers[neighbor]==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].recv_buffers[neighbor]\n",justFaces);exit(0);}
 #endif
-      memset(level->exchange_ghosts[justFaces].recv_buffers[neighbor],                0,level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
+	  if (level->exchange_ghosts[justFaces].recv_sizes[neighbor] > 0)
+	    memset(level->exchange_ghosts[justFaces].recv_buffers[neighbor], 0,level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
       }
       level->exchange_ghosts[justFaces].recv_ranks[neighbor]=recvRanks[neighbor];
       level->exchange_ghosts[justFaces].recv_sizes[neighbor]=0;
