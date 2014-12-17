@@ -1250,6 +1250,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   build_restriction(all_grids,RESTRICT_FACE_K); // face-centered, normal to k
   build_interpolation(all_grids);
 
+/*****
   {
   printf("There are %d levels\n", all_grids->num_levels);
     for (int lev = 0; lev < all_grids->num_levels;lev++) {
@@ -1286,7 +1287,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
        l->interpolation.num_blocks[1] << " " << l->interpolation.num_blocks[2] << endl;
     }
   }
-
+*****/
 
   // build subcommunicators...
   #ifdef USE_MPI

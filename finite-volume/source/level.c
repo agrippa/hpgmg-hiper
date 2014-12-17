@@ -935,12 +935,13 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 
 #ifdef UPCXX_AM
   // setup start and end position for each receiver
-
+/*******
   for(int buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
      blockCopy_type *b = &level->exchange_ghosts[justFaces].blocks[2][buffer];
      printf("BB2 proc %d level %d face %d pos %d rbox %d (%d) wbox %d (%d) \n", level->my_rank, level->depth, justFaces, buffer, b->read.box,
       (b->read.box >= 0) ? level->rank_of_box[b->read.box] : -1, b->write.box, level->rank_of_box[b->write.box]);  
   }
+*******/
 
   if (level->exchange_ghosts[justFaces].num_recvs > 0) {
   int curpos = 0;
@@ -972,6 +973,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     printf("ErrorE: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, level->exchange_ghosts[justFaces].num_recvs, level->depth);
   }
 
+/*******
   {
     communicator_type *c = &level->exchange_ghosts[justFaces];
     for (int i = 0; i < c->num_recvs; i++) {
@@ -979,7 +981,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
           c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
     }
   }
-
+********/
 
   }
 #endif
@@ -1217,6 +1219,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   #endif
   if(my_rank==0){fprintf(stdout,"  Calculating boxes per process... target=%0.3f, max=%d\n",(double)TotalBoxes/(double)num_ranks,BoxesPerProcess);}
 
+/*******
   for (int i = 0; i < level->boxes_in.i * level->boxes_in.j * level->boxes_in.k; i++) {
     bool shr = is_memory_shared_with(level->rank_of_box[i]);
     cout << "AAA proc " << level->my_rank << " box " << i << " rank " << level->rank_of_box[i] << " addr " << level->addr_of_box[i] << " shared " << shr << endl;
@@ -1224,7 +1227,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   cout << "BBB proc " << level->my_rank << " level " << level->depth << " nsend " << level->exchange_ghosts[0].num_sends << " nrecv " << 
        level->exchange_ghosts[0].num_recvs << " block " <<
        level->exchange_ghosts[0].num_blocks[0] << " " << level->exchange_ghosts[0].num_blocks[1] << " " << level->exchange_ghosts[0].num_blocks[2] << endl;
-
+*******/
 }
 
 

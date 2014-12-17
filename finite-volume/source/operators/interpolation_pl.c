@@ -140,6 +140,14 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 
+  // perform local interpolation... try and hide within Isend latency... 
+  _timeStart = CycleTime();
+  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
+  for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PL(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
+  _timeEnd = CycleTime();
+  level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
+
+
   // pack MPI send buffers...
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[0])
@@ -165,13 +173,14 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_send += (_timeEnd-_timeStart);
 
-
+/****
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
   for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PL(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
+****/
 
   // wait for MPI to finish...
   _timeStart = CycleTime();
