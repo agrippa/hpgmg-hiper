@@ -29,7 +29,7 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
   double * __restrict__  read = block->read.ptr;
   double * __restrict__ write = block->write.ptr;
 
-  if (flag == 1) read = src;
+  if (flag == 1 || flag == 11) read = src;
 
 #ifdef USE_UPCXX
   if(block->read.box >=0) {

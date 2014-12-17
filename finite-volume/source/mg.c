@@ -1251,16 +1251,18 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   build_interpolation(all_grids);
 
   {
-    for (level = 0; level < all_grids->num_levels;level++) {
-     level_type *l = all_grids->levels[level];
+  printf("There are %d levels\n", all_grids->num_levels);
+    for (int lev = 0; lev < all_grids->num_levels;lev++) {
+     level_type *l = all_grids->levels[lev];
      communicator_type *c = &l->restriction[0];
+     printf("LEVEL depth is %d should be %d nrecv %d\n", l->depth, lev, c->num_recvs);
      for (int i = 0; i < c->num_recvs; i++) {
       printf("SBR proc %d level %d pos %d sb (%d -- %d) out of %d ngr %d out of %d\n", l->my_rank, l->depth, i, c->sblock2[i],
           c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
      }}
 
-    for (level = 0; level < all_grids->num_levels;level++) {
-     level_type *l = all_grids->levels[level];
+    for (int lev = 0; lev < all_grids->num_levels;lev++) {
+     level_type *l = all_grids->levels[lev];
      communicator_type *c = &l->interpolation;
      for (int i = 0; i < c->num_recvs; i++) {
       printf("SBI proc %d level %d pos %d sb (%d -- %d) out of %d ngr %d out of %d\n", l->my_rank, l->depth, i, c->sblock2[i],
@@ -1270,15 +1272,15 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   }
 
   {
-    for (level = 0; level < all_grids->num_levels;level++) {
-      level_type *l = all_grids->levels[level];
+    for (int lev = 0; lev < all_grids->num_levels;lev++) {
+      level_type *l = all_grids->levels[lev];
       cout << "RES proc " << l->my_rank << " level " << l->depth << " nsend " << l->exchange_ghosts[0].num_sends << " nrecv " <<
        l->exchange_ghosts[0].num_recvs << " block " << l->exchange_ghosts[0].num_blocks[0] << " " << 
        l->exchange_ghosts[0].num_blocks[1] << " " << l->exchange_ghosts[0].num_blocks[2] << endl;
     }
 
-    for (level = 0; level < all_grids->num_levels;level++) {
-      level_type *l = all_grids->levels[level];
+    for (int lev = 0; lev < all_grids->num_levels;lev++) {
+      level_type *l = all_grids->levels[lev];
       cout << "INT proc " << l->my_rank << " level " << l->depth << " nsend " << l->interpolation.num_sends << " nrecv " <<
        l->interpolation.num_recvs << " block " << l->interpolation.num_blocks[0] << " " << 
        l->interpolation.num_blocks[1] << " " << l->interpolation.num_blocks[2] << endl;
