@@ -15,11 +15,6 @@
 #ifdef USE_UPCXX
 #include <upcxx.h>
 using namespace upcxx;
-
-#define MAX_VECTORS 20
-#define MAX_LEVELS  100
-#define MAX_NBG 26
-
 #endif
 
 #include "defines.h"
@@ -46,7 +41,11 @@ using namespace upcxx;
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
   struct {int i, j, k;}dim;			// dimensions of the block to copy
+#ifdef UPCXX_SHARED
+  struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; globap_ptr<box_type> boxgp;}read,write;
+#else
   struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr;}read,write;
+#endif
   // coordinates in the read grid to extract data, 
   // coordinates in the write grid to insert data
   // if read/write.box<0, then use write/read.ptr, otherwise use boxes[box].vectors[id]

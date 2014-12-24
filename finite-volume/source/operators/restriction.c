@@ -104,13 +104,7 @@ static inline void RestrictBlock(level_type *level_c, int id_c, level_type *leve
   if(block->read.box >=0){
 #ifdef USE_UPCXX
 #ifdef UPCXX_SHARED
-     int rank = level_f->rank_of_box[block->read.box];
-     if (!upcxx::is_memory_shared_with(rank)) {
-      printf("WrongR: Proc %d level %d read box %d rank is %d not shared!\n",level_f->my_rank,level_f->depth,block->read.box,rank);
-      exit(1);
-     }
-     global_ptr<box_type> box = level_f->addr_of_box[block->read.box];
-     box_type *lbox = (box_type *) box;
+     box_type *lbox = (box_type *) block->read.boxgp;
      global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
      read = (double *)gp;
      read_jStride = lbox->jStride;
@@ -131,13 +125,7 @@ static inline void RestrictBlock(level_type *level_c, int id_c, level_type *leve
   if(block->write.box>=0){
 #ifdef USE_UPCXX
 #ifdef UPCXX_SHARED
-    int rank = level_c->rank_of_box[block->write.box];
-    if (!upcxx::is_memory_shared_with(rank)) {
-     printf("WrongR: Proc %d level %d write box %d rank is %d not shared!\n",level_c->my_rank,level_c->depth,block->write.box,rank);
-     exit(1);
-    }
-    global_ptr<box_type> box = level_c->addr_of_box[block->write.box];
-    box_type *lbox = (box_type *) box;
+    box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
