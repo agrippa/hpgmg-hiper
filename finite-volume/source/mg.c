@@ -274,7 +274,7 @@ void build_interpolation(mg_type *all_grids){
 #ifdef UPCXX_SHARED
           /* read.boxgp    = */ send_boxgp,
 #endif
-          /* read.box      = */ fineBoxes[fineBox].sendBox,
+          /* read.box      = */ fineBoxes[fineBox].sendBoxID,
           /* read.ptr      = */ NULL,
           /* read.i        = */ fineBoxes[fineBox].i,
           /* read.j        = */ fineBoxes[fineBox].j,
@@ -283,7 +283,7 @@ void build_interpolation(mg_type *all_grids){
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
 #ifdef UPCXX_SHARED
-          /* write.boxgp   = */ write_boxgp,
+          /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ -1,
           /* write.ptr     = */ all_grids->levels[level]->interpolation.send_buffers[neighbor],
@@ -328,7 +328,7 @@ void build_interpolation(mg_type *all_grids){
 #ifdef UPCXX_SHARED
           /* read.boxgp    = */ send_boxgp,
 #endif
-          /* read.box      = */ fineBoxes[fineBox].sendBox,
+          /* read.box      = */ fineBoxes[fineBox].sendBoxID,
           /* read.ptr      = */ NULL,
           /* read.i        = */ fineBoxes[fineBox].i,
           /* read.j        = */ fineBoxes[fineBox].j,
@@ -337,9 +337,9 @@ void build_interpolation(mg_type *all_grids){
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
 #ifdef UPCXX_SHARED
-          /* write.boxgp   = */ write_boxgp,
+          /* write.boxgp   = */ recv_boxgp,
 #endif
-          /* write.box     = */ fineBoxes[fineBox].recvBox,
+          /* write.box     = */ fineBoxes[fineBox].recvBoxID,
           /* write.ptr     = */ NULL,
           /* write.i       = */ 0,
           /* write.j       = */ 0,
@@ -472,7 +472,7 @@ void build_interpolation(mg_type *all_grids){
           /* dim.j         = */ all_grids->levels[level]->box_dim,
           /* dim.k         = */ all_grids->levels[level]->box_dim,
 #ifdef UPCXX_SHARED
-	  /* read.boxgp    = */ send_gp,
+	  /* read.boxgp    = */ send_boxgp,
 #endif
 	  /* read.box      = */ (-1)*coarseBoxes[coarseBox].sendRank-1, //shan -1,
           /* read.ptr      = */ all_grids->levels[level]->interpolation.recv_buffers[neighbor],
@@ -483,9 +483,9 @@ void build_interpolation(mg_type *all_grids){
           /* read.kStride  = */ all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim,
           /* read.scale    = */ 1,
 #ifdef UPCXX_SHARED
-          /* write.boxgp   = */ write_boxgp,
+          /* write.boxgp   = */ recv_boxgp,
 #endif
-          /* write.box     = */ coarseBoxes[coarseBox].recvBox,
+          /* write.box     = */ coarseBoxes[coarseBox].recvBoxID,
           /* write.ptr     = */ NULL,
           /* write.i       = */ 0,
           /* write.j       = */ 0,
@@ -762,7 +762,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef UPCXX_SHARED
           /* read.boxgp    = */ send_boxgp,
 #endif
-          /* read.box      = */ coarseBoxes[coarseBox].sendBox,
+          /* read.box      = */ coarseBoxes[coarseBox].sendBoxID,
           /* read.ptr      = */ NULL,
           /* read.i        = */ 0,
           /* read.j        = */ 0,
@@ -820,7 +820,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef UPCXX_SHARED
           /* read.box      = */ send_boxgp,
 #endif
-          /* read.box      = */ coarseBoxes[coarseBox].sendBox,
+          /* read.box      = */ coarseBoxes[coarseBox].sendBoxID,
           /* read.ptr      = */ NULL,
           /* read.i        = */ 0, 
           /* read.j        = */ 0,
@@ -831,7 +831,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef UPCXX_SHARED
           /* write.boxgp   = */ recv_boxgp,
 #endif
-          /* write.box     = */ coarseBoxes[coarseBox].recvBox,
+          /* write.box     = */ coarseBoxes[coarseBox].recvBoxID,
           /* write.ptr     = */ NULL,
           /* write.i       = */ coarseBoxes[coarseBox].i,
           /* write.j       = */ coarseBoxes[coarseBox].j,
@@ -1007,7 +1007,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef UPCXX_SHARED
           /* write.boxgp   = */ recv_boxgp,
 #endif
-          /* write.box     = */ fineBoxes[fineBox].recvBox,
+          /* write.box     = */ fineBoxes[fineBox].recvBoxID,
           /* write.ptr     = */ NULL,
           /* write.i       = */ fineBoxes[fineBox].i,
           /* write.j       = */ fineBoxes[fineBox].j,

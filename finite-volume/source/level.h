@@ -39,10 +39,13 @@ using namespace upcxx;
 #define BLOCKCOPY_TILE_K 8
 #endif
 //------------------------------------------------------------------------------------------------------------------------------
+
+struct box_type;
+
 typedef struct {
   struct {int i, j, k;}dim;			// dimensions of the block to copy
 #ifdef UPCXX_SHARED
-  struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; globap_ptr<box_type> boxgp;}read,write;
+  struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; global_ptr<box_type> boxgp;}read,write;
 #else
   struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr;}read,write;
 #endif
@@ -84,7 +87,7 @@ typedef struct {
 
 
 //------------------------------------------------------------------------------------------------------------------------------
-typedef struct {
+typedef struct box_type {
   int                         global_box_id;	// used to inded into level->rank_of_box
   struct {int i, j, k;}low;			// global coordinates of the first (non-ghost) element of subdomain
   int                                   dim;	// dimension of this box's core (owned)
@@ -198,7 +201,14 @@ void   max_level_timers(level_type *level);
 int qsortInt(const void *a, const void *b);
 void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *num_blocks,
                           int dim_i, int dim_j, int dim_k,
+#ifdef UPCXX_SHARED
+			  global_ptr<box_type> read_boxgp,
+#endif
                           int  read_box, double*  read_ptr, int  read_i, int  read_j, int  read_k, int  read_jStride, int  read_kStride, int  read_scale,
+#ifdef UPCXX_SHARED
+                          global_ptr<box_type> write_boxgp,
+#endif
+
                           int write_box, double* write_ptr, int write_i, int write_j, int write_k, int write_jStride, int write_kStride, int write_scale,
                           int my_blockcopy_tile_i, int my_blockcopy_tile_j, int my_blockcopy_tile_k
                          );

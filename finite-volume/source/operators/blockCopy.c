@@ -34,6 +34,7 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 #ifdef USE_UPCXX
   if(block->read.box >=0) {
 #ifdef UPCXX_SHARED
+
     box_type *lbox = (box_type *) block->read.boxgp;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
@@ -47,6 +48,7 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
   }
   if(block->write.box>=0) {
 #ifdef UPCXX_SHARED
+
     box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
