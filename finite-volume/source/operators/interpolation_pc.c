@@ -8,8 +8,6 @@
 // Two solutions now: 1. use a barrier at beginning 2. diable unpacking inside handler
 // This is method 2.
 
-extern mg_type all_grids;
-
 void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, int id_c, int depth_c) {
 
   uint64_t _timeCommunicationStart = CycleTime();
@@ -22,28 +20,24 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
 
   _timeStart = CycleTime();
 
-  level_f = all_grids.levels[depth_f];
-  level_c = all_grids.levels[depth_c];
+  level_f = all_grids->levels[depth_f];
+  level_c = all_grids->levels[depth_c];
   if (pcl == 0) prescale_f = level_f->prescale_fc;
   else prescale_f = level_f->prescale_fl;
 
   int i;
+  int nth = MAX_TLVG*level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+pcl);
   for (i = 0; i < level_f->interpolation.num_recvs; i++) {
      if (level_f->interpolation.recv_ranks[i] == srcid) {
-        if (level_f->interpolation.rflag[id_f*2+pcl][i] != 0) {
-          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, level_c->interpolation.rflag[id_f*2+pcl][i]);
+        if (upc_rflag[nth+i] != 0) {
+          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, upc_rflag[nth+i].get());
         }
         else {
-          level_f->interpolation.rflag[id_f*2+pcl][i] =1;
+          upc_rflag[nth+i] =1;
         }
         break;
      }
   }
-
-/**
-  printf("NN i is %d limit is %d in level_f %d id_f %d level_c %d id_c %d for proc %d from %d %d\n",
-                  i, level_f->interpolation.num_recvs, level_f->depth, id_f, level_c->depth, id_c, MYTHREAD, srcid, myid);
-**/
 
   if (n > 0) {
   int msize = gasnet_AMMaxMedium();
@@ -236,6 +230,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
+  int nshm = 0;
   for(n=0;n<level_c->interpolation.num_sends;n++){
     global_ptr<double> p1, p2;
     p1 = level_c->interpolation.global_send_buffers[n];
@@ -243,7 +238,15 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifndef UPCXX_AM
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
-    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,0);
+    if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
+      sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,0);
+    } else {
+      int rid = level_c->interpolation.send_ranks[n];
+      int pos = level_c->interpolation.send_match_pos[n];
+      int nth = MAX_TLVG*rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2);
+      upc_rflag[nth+pos] = 1;
+      nshm++;
+    }
 #endif
   }
 #endif
@@ -265,17 +268,18 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+  int nth = MAX_TLVG*level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*id_f*2;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-      if (level_f->interpolation.rflag[id_f*2][n]==1) arrived++;
+      if (upc_rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
     gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-    level_f->interpolation.rflag[id_f*2][n] = 0;
+    upc_rflag[nth+n] = 0;
   }
 
 //  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
@@ -300,7 +304,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
 
-  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
+  syncNeighborInt(level_c->interpolation.num_sends - nshm, level_c->depth, id_c, 0);
 
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }

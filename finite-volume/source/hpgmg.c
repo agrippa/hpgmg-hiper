@@ -51,17 +51,24 @@
 //------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef USE_UPCXX
+// these arrays only used temporarily
+shared_array< int, 1> upc_int_info;
 shared_array< global_ptr<double>, 1 > upc_buf_info;
 shared_array< global_ptr<box_type>, 1> upc_box_info;
+shared_array< global_ptr<mg_type>, 1> upc_grids;
 #ifdef UPCXX_AM
 level_type *finest_level;
 extern void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it);
 extern void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
 extern void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
 #endif
+
+// sync is moved here from communicator, a little ugly
+shared_array< int, 1 > upc_rflag;
+
 #endif
 
-mg_type all_grids;
+mg_type *all_grids;
 
 int main(int argc, char **argv){
   int my_rank=0;
@@ -197,8 +204,17 @@ int main(int argc, char **argv){
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 #ifdef USE_UPCXX
+  upc_int_info.init(THREADS*THREADS, THREADS);
   upc_buf_info.init(THREADS*THREADS, THREADS);
   upc_box_info.init(boxes_in_i*boxes_in_i*boxes_in_i,1);
+  upc_grids.init(THREADS, 1);
+  upc_grids[MYTHREAD] = allocate<mg_type>(MYTHREAD, 1);
+
+  upc_rflag.init(MAX_TLVG * THREADS, MAX_TLVG);
+  int *itmp = (int *) &upc_rflag[MAX_TLVG * MYTHREAD];
+  memset(itmp, 0, MAX_TLVG*sizeof(int));
+  
+  barrier();
 #ifdef UPCXX_AM
   setCBFunc(cb_copy);	
   setCBFuncRes(cb_copy_res);
@@ -217,6 +233,11 @@ int main(int argc, char **argv){
 #ifdef USE_UPCXX
   fine_grid.depth = 0;
   finest_level = &fine_grid;
+  all_grids = (mg_type *) upc_grids[MYTHREAD].get();
+  all_grids->levels = (level_type**)malloc(MAX_LEVELS*sizeof(level_type*));
+  if(all_grids->levels == NULL){fprintf(stderr,"malloc failed - MGBuild/all_grids->levels\n");exit(0);}
+  all_grids->num_levels=1;
+  all_grids->levels[0] = finest_level;
 #endif
   create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,bc,my_rank,num_tasks);
   //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Periodic
@@ -239,7 +260,7 @@ int main(int argc, char **argv){
   // mg_type all_grids;
 
   int minCoarseDim = 1;
-  MGBuild(&all_grids,&fine_grid,a,b,minCoarseDim); // build the Multigrid Hierarchy 
+  MGBuild(all_grids,&fine_grid,a,b,minCoarseDim); // build the Multigrid Hierarchy 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
      int     doTiming;
      int    minSolves = 10; // do at least minSolves MGSolves
@@ -265,13 +286,13 @@ int main(int argc, char **argv){
     }
 
     int numSolves =  0; // solves completed
-    MGResetTimers(&all_grids);
+    MGResetTimers(all_grids);
     while( (numSolves<minSolves) ){
-      zero_vector(all_grids.levels[0],VECTOR_U);
+      zero_vector(all_grids->levels[0],VECTOR_U);
       #ifdef USE_FCYCLES
-      FMGSolve(&all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
+      FMGSolve(all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
       #else
-       MGSolve(&all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
+       MGSolve(all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
       #endif
       numSolves++;
     }
@@ -288,7 +309,7 @@ int main(int argc, char **argv){
     if(doTiming)HPM_Stop("FMGSolve()");
     #endif
   }
-  MGPrintTiming(&all_grids); // don't include the error check in the timing results
+  MGPrintTiming(all_grids); // don't include the error check in the timing results
 
   MPI_Barrier(MPI_COMM_WORLD);
 

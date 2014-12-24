@@ -15,6 +15,11 @@
 #ifdef USE_UPCXX
 #include <upcxx.h>
 using namespace upcxx;
+
+#define MAX_VECTORS 20
+#define MAX_LEVELS  100
+#define MAX_NBG 26
+
 #endif
 
 #include "defines.h"
@@ -50,6 +55,7 @@ typedef struct {
 
 #ifdef USE_UPCXX
 extern shared_array< global_ptr<double>, 1 > upc_buf_info;
+extern shared_array< int, 1 > upc_rflag;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -63,6 +69,7 @@ typedef struct {
 #ifdef USE_UPCXX
     volatile int     *rflag[VECTORS_RESERVED*2];
     volatile int     *sflag;
+    int              *send_match_pos;
     int              * __restrict__         sblock2, eblock2;  // start and end position in blocks[2] for each neighbor
 
     global_ptr<double>        *global_recv_buffers;

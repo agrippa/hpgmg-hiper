@@ -159,6 +159,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
+  int nshm = 0;
   for(n=0;n<level_c->interpolation.num_sends;n++){
     global_ptr<double> p1, p2;
     p1 = level_c->interpolation.global_send_buffers[n];
@@ -166,7 +167,15 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #ifndef UPCXX_AM
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
-    sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,1);
+    if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
+      sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,1);
+    } else {
+      int rid = level_c->interpolation.send_ranks[n];
+      int pos = level_c->interpolation.send_match_pos[n];
+      int nth = MAX_TLVG*rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
+      upc_rflag[nth+pos] = 1;
+      nshm++;
+    }
 #endif
   }
 #endif
@@ -188,20 +197,21 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+  int nth = MAX_TLVG*level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-      if (level_f->interpolation.rflag[id_f*2+1][n]==1) arrived++;
+      if (upc_rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
     gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-    level_f->interpolation.rflag[id_f*2+1][n] = 0;
+    upc_rflag[nth+n] = 0;
   }
 
-  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 1);
+  syncNeighborInt(level_c->interpolation.num_sends - nshm, level_c->depth, id_c, 1);
 
 #else
 

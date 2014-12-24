@@ -24,6 +24,8 @@
 #include "solvers.h"
 #include "mg.h"
 
+extern shared_array< int, 1> upc_int_info;
+
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
   int sendRank;
@@ -216,6 +218,7 @@ void build_interpolation(mg_type *all_grids){
 #ifdef USE_UPCXX
     all_grids->levels[level]->interpolation.global_send_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));   
     all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->interpolation.send_match_pos = (int *)malloc(numFineRanks*sizeof(int));
 #endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);exit(0);}
@@ -527,9 +530,11 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.sblock2[i] = all_grids->levels[level]->interpolation.num_blocks[2];
     }
 
+/******
     if (all_grids->levels[level]->interpolation.num_recvs > 0 && curpos+1 != all_grids->levels[level]->interpolation.num_recvs) {
       printf("ErrorI: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->interpolation.num_recvs, all_grids->levels[level]->depth);
     }
+******/
 
     }
 #endif
@@ -560,8 +565,7 @@ void build_interpolation(mg_type *all_grids){
       for (neighbor = 0; neighbor < ct->num_recvs; neighbor++) {
 	int nid = ct->recv_ranks[neighbor];
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct->global_recv_buffers[neighbor];
-//	p = upc_buf_info[MYTHREAD * THREADS + nid];
-//	cout << "SETTING2 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+        upc_int_info[MYTHREAD * THREADS + nid] = neighbor;
       }
     }
     upcxx::barrier();
@@ -570,8 +574,7 @@ void build_interpolation(mg_type *all_grids){
       for (neighbor = 0; neighbor < ct1->num_sends; neighbor++) {
 	int nid = ct1->send_ranks[neighbor];
 	ct1->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
-//	p = ct1->global_match_buffers[neighbor];
-//	cout << "MATCHI2 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+        ct1->send_match_pos[neighbor] = upc_int_info[THREADS*nid + MYTHREAD];
       }
     }
     upcxx::barrier();
@@ -673,6 +676,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef USE_UPCXX
     all_grids->levels[level]->restriction[restrictionType].global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
     all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->restriction[restrictionType].send_match_pos = (int*)malloc(numCoarseRanks*sizeof(int));
 #endif
 
     if(numCoarseRanks>0){
@@ -1069,8 +1073,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       for (neighbor = 0; neighbor < ct1->num_recvs; neighbor++) {
 	int nid = ct1->recv_ranks[neighbor];
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct1->global_recv_buffers[neighbor];
-//	p = upc_buf_info[MYTHREAD * THREADS + nid];
-//	cout << "SETTING1 by " << MYTHREAD << " Ngr " << nid << " Pos " << MYTHREAD * THREADS + nid << " is " << p << endl;
+        upc_int_info[MYTHREAD * THREADS + nid] = neighbor;
       }
     }
     upcxx::barrier();
@@ -1079,8 +1082,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       for (neighbor = 0; neighbor < ct->num_sends; neighbor++) {
 	int nid = ct->send_ranks[neighbor];
 	ct->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
-//	p = ct->global_match_buffers[neighbor];
-//	cout << "MATCHI1 by " << MYTHREAD << " Ngr " << nid << " Pos " << THREADS*nid +MYTHREAD  << " is " << p << endl;
+        ct->send_match_pos[neighbor] = upc_int_info[THREADS*nid + MYTHREAD];
       }
     }
     upcxx::barrier();
@@ -1130,11 +1132,13 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   box_ghosts[0] = fine_grid->box_ghosts;
 
   // build the list of levels...
+  // move to main function
+/***
   all_grids->levels = (level_type**)malloc(maxLevels*sizeof(level_type*));
   if(all_grids->levels == NULL){fprintf(stderr,"malloc failed - MGBuild/all_grids->levels\n");exit(0);}
   all_grids->num_levels=1;
   all_grids->levels[0] = fine_grid;
-
+***/
 
   // build a table to guide the construction of the v-cycle...
   int doRestrict=1;if(maxLevels<2)doRestrict=0; // i.e. can't restrict if there is only one level !!!

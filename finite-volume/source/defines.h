@@ -25,4 +25,16 @@
 //------------------------------------------------------------------------------------------------------------------
 #define VECTORS_RESERVED    12 // total number of grids and the starting location for any auxillary bottom solver grids
 //------------------------------------------------------------------------------------------------------------------------------
+
+#ifdef USE_UPCXX
+#define MAX_LEVELS 100
+#define MAX_VECS 40
+#define MAX_NBGS 26
+#define MAX_TYPES 7    // 2 for exchange, 4 for restriction, 1 for interpolation
+#define MAX_TLVG MAX_TYPES * MAX_LEVELS * MAX_VECS * MAX_NBGS   // T : types, L : levels, V : vectors, G : neighbors
+#define MAX_LVG MAX_LEVELS * MAX_VECS * MAX_NBGS
+#define MAX_VG MAX_VECS * MAX_NBGS
+
+#endif
+
 #endif
