@@ -21,7 +21,7 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
   level_c = all_grids->levels[depth_c];
 
   int i;
-  int nth = MAX_TLVG*level_c->my_rank + MAX_LVG*(type+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
+  size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(type+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
   for (i = 0; i < level_c->restriction[type].num_recvs; i++) {
      if (level_c->restriction[type].recv_ranks[i] == srcid) {
         if (upc_rflag[nth+i] != 0) {
@@ -253,7 +253,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      int nth = MAX_TLVG*rid + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
+      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
       upc_rflag[nth+pos] = 1;
       nshm++;
     }
@@ -277,7 +277,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // wait for MPI to finish...
   _timeStart = CycleTime();
 #ifdef UPCXX_AM
-  int nth = MAX_TLVG*level_c->my_rank + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
+  size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {

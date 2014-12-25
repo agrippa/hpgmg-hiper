@@ -47,7 +47,7 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   }
 
   int i;
-  int nth = MAX_TLVG*level->my_rank + MAX_LVG*faces + MAX_VG*depth + MAX_NBGS*vid;
+  size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*faces + MAX_VG*depth + MAX_NBGS*vid;
   for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
      if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
         if (upc_rflag[nth+i] != 0) {
@@ -205,7 +205,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     } else {
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
-      int nth = MAX_TLVG*rid + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
+      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
       upc_rflag[nth+pos] = 1;
       nshm++;
     }
@@ -232,7 +232,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
-  int nth = MAX_TLVG*level->my_rank + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
+  size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {

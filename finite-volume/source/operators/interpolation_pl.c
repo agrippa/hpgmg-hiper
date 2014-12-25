@@ -160,7 +160,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      int nth = MAX_TLVG*rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
+      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
       upc_rflag[nth+pos] = 1;
       nshm++;
     }
@@ -185,7 +185,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
-  int nth = MAX_TLVG*level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
+  size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {

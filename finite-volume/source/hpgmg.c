@@ -211,7 +211,7 @@ int main(int argc, char **argv){
   upc_grids[MYTHREAD] = allocate<mg_type>(MYTHREAD, 1);
 
   upc_rflag.init(MAX_TLVG * THREADS, MAX_TLVG);
-  int *itmp = (int *) &upc_rflag[MAX_TLVG * MYTHREAD];
+  int *itmp = (int *) &upc_rflag[MAX_TLVG * (size_t)MYTHREAD];
   memset(itmp, 0, MAX_TLVG*sizeof(int));
   
   barrier();
