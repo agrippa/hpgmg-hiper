@@ -48,13 +48,14 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 
   int i;
   size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*faces + MAX_VG*depth + MAX_NBGS*vid;
+  int *p = (int *) &upc_rflag[nth];
   for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
      if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
-        if (upc_rflag[nth+i] != 0) {
+        if (p[i] != 0) {
 	  printf("Wrong in Ping Handler Proc %d recv msg from %d for vid %d iter %d val %d\n", MYTHREAD, srcid, vid, it, upc_rflag[nth+i].get());
 	}
 	else {
-	  upc_rflag[nth+i] =1;
+          p[i] = 1; // upc_rflag[nth+i] =1;
 	}
 	break;
      }
@@ -206,7 +207,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
       size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
-      upc_rflag[nth+pos] = 1;
+      int *p = (int *)&upc_rflag[nth+pos]; *p = 1; // upc_rflag[nth+pos] = 1;
       nshm++;
     }
 #endif
@@ -233,6 +234,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #ifdef UPCXX_AM
 
   size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
+  int *p = (int *) &upc_rflag[nth];
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
@@ -242,7 +244,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     upcxx::advance();
   }
   for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-    upc_rflag[nth+n] = 0;
+    p[n] = 0;  //upc_rflag[nth+n] = 0;
   }
 
   _timeEnd = CycleTime();

@@ -27,7 +27,7 @@
 //------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef USE_UPCXX
-#define MAX_LEVELS 100
+#define MAX_LEVELS 40
 #define MAX_VECS 40
 #define MAX_NBGS 26
 #define MAX_TYPES 7    // 2 for exchange, 4 for restriction, 1 for interpolation

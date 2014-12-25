@@ -22,13 +22,14 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
 
   int i;
   size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(type+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
+  int *p = (int *) &upc_rflag[nth];
   for (i = 0; i < level_c->restriction[type].num_recvs; i++) {
      if (level_c->restriction[type].recv_ranks[i] == srcid) {
-        if (upc_rflag[nth+i] != 0) {
+        if (p[i] != 0) {
 	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, upc_rflag[nth+i].get());
 	}
 	else {
-	  upc_rflag[nth+i] =1;
+	  p[i] =1;
 	}
 	break;
      }
@@ -253,8 +254,8 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
-      upc_rflag[nth+pos] = 1;
+      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c + pos;
+      int *p = (int *) &upc_rflag[nth]; *p = 1;
       nshm++;
     }
 
@@ -278,6 +279,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   _timeStart = CycleTime();
 #ifdef UPCXX_AM
   size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
+  int *p = (int *) &upc_rflag[nth];
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
@@ -287,7 +289,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     upcxx::advance();
   }
   for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-    upc_rflag[nth+n] = 0;
+    p[n] = 0;
   }
 
 #endif

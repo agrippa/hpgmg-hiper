@@ -80,7 +80,7 @@ int main(int argc, char **argv){
   upcxx::init(&argc, &argv);
   num_tasks = THREADS;
   my_rank = MYTHREAD;
-  if (my_rank == 0) printf("Using UPCXX AM2: Total %d processes\n", num_tasks);
+  if (my_rank == 0) printf("Using UPCXX AM2 SHM: Total %d processes\n", num_tasks);
 #endif
 
 #ifdef _OPENMP
