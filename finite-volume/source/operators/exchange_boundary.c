@@ -11,7 +11,21 @@ extern mg_type *all_grids;
 extern level_type *finest_level;
 extern shared_array< global_ptr<mg_type>, 1> upc_grids;
 
-void cb_unpack(double *buf, int srcid, int pos, int n, int vid, int depth, int faces) {
+#define GASNET_Safe(fncall) do {                                     \
+  int _retval;                                                     \
+    if ((_retval = fncall) != GASNET_OK) {                           \
+      fprintf(stderr, "ERROR calling: %s\n"                          \
+                   " at: %s:%i\n"                                    \
+                   " error: %s (%s)\n",                              \
+              #fncall, __FILE__, __LINE__,                           \
+              gasnet_ErrorName(_retval), gasnet_ErrorDesc(_retval)); \
+      fflush(stderr);                                                \
+      gasnet_exit(_retval);                                          \
+    }                                                                \
+  } while(0)
+
+
+void cb_unpack(int srcid, int pos, int n, int vid, int depth, int faces) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -38,7 +52,7 @@ void cb_unpack(double *buf, int srcid, int pos, int n, int vid, int depth, int f
   for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
      if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
         if (p[i] != 0) {
-	  printf("Wrong in Ping Handler Proc %d recv msg from %d for vid %d iter %d val %d\n", MYTHREAD, srcid, vid, it, upc_rflag[nth+i].get());
+	  printf("Wrong in Ping Handler Proc %d recv msg from %d for vid %d val %d\n", MYTHREAD, srcid, vid, upc_rflag[nth+i].get());
 	}
 	else {
           p[i] = 1; // upc_rflag[nth+i] =1;

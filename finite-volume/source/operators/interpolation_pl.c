@@ -110,6 +110,9 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   int buffer=0;
   int n;
   int my_tag = (level_f->tag<<4) | 0x7;
+#ifdef USE_UPCXX
+  event copy_e[27], data_e[27];
+#endif
 
 #ifdef UPCXX_AM
   level_f->prescale_fl = prescale_f;
@@ -156,7 +159,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
     if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
-      sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,1);
+      upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], &copy_e[n]);
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
@@ -185,6 +188,21 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+  for(n=0;n<level_c->interpolation.num_sends;n++){
+    int rid = level_c->interpolation.send_ranks[n];
+
+    if (is_memory_shared_with(rid)) {
+      // unpack buffer
+    } else {
+      int cnt = level_c->interpolation.send_sizes[n];
+      int pos = level_c->interpolation.send_match_pos[n];
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, cnt, level_c->my_rank,
+                  level_f->depth, id_f, 1, id_c, level_c->depth);
+    }
+  }
+
+  async_wait();
+
   size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
   int *p = (int *) &upc_rflag[nth];
   while (1) {
@@ -200,8 +218,6 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     p[n] = 0;
   }
 
-  syncNeighborInt(level_c->interpolation.num_sends - nshm, level_c->depth, id_c, 1);
-
 #else
 
   async_copy_fence();
@@ -214,16 +230,6 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
-
-
-  // unpack MPI receive buffers 
-#ifndef UPCXX_AM
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
-  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], NULL, 0);}
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
-#endif
  
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }

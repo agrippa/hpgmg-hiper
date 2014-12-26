@@ -8,7 +8,7 @@
 // Two solutions now: 1. use a barrier at beginning 2. diable unpacking inside handler
 // This is method 2.
 
-void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, int id_c, int depth_c) {
+void cb_unpack_int(int n, int srcid, int depth_f, int id_f, int pcl, int id_c, int depth_c) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -17,6 +17,7 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
   level_type *level_c;
   double prescale_f;
   int buffer;
+  double *buf;
 
   _timeStart = CycleTime();
 
@@ -40,58 +41,22 @@ void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int pcl, 
      }
   }
 
-  if (n > 0) {
-  int msize = gasnet_AMMaxMedium();
+  assert(n > 0);
+  buf = level_f->interpolation.recv_buffers[i];
+
   int bstart = level_f->interpolation.sblock2[i];
   int bend   = level_f->interpolation.sblock2[i+1];
 
   if (pcl == 1) {
-  if (n < msize) { // medium AM 
-//    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
-    for(buffer=bstart;buffer<bend;buffer++){
-      IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 1);
-    }
-  }
-  else { // long AM
 //    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
       IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 0);
     }
   }
-  }
-  }   // n > 0
 
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
 
-}
-
-void sendNbgrDataInt(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem, int depth_f, int id_f, int id_c, int depth_c, int pcl) {
-
-  int myid = gasnet_mynode();
-  double * lsrc = (double *)src.raw_ptr();
-  double * ldst = (double *)dest.raw_ptr();
-  int msize = gasnet_AMMaxMedium();
-
-  if (pcl == 1) {
-  if (nelem * sizeof(double) < msize) {
-    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_INT_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f,  pcl, id_c, depth_c));
-  }
-  else {
-    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, pcl, id_c, depth_c));
-  }
-  }
-  else {
-
-    GASNET_Safe(gasnet_AMRequestLongAsync5(rid, P2P_INT_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, depth_f, id_f, pcl, id_c, depth_c));
-  }
-
-
-}
-
-void syncNeighborInt(int nbgr, int depth, int vid, int pcl) {
-  GASNET_BLOCKUNTIL(upcxx::p2p_flag_int[depth][vid*2+pcl] == nbgr);
-  upcxx::p2p_flag_int[depth][vid*2+pcl] = 0;
 }
 
 static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double prescale_f, level_type *level_c, int id_c, blockCopy_type *block){
@@ -178,16 +143,15 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   int my_tag = (level_f->tag<<4) | 0x6;
   int buffer=0;
   int n;
+#ifdef USE_UPCXX
+  event copy_e[27], data_e[27];
+#endif
 
 #ifdef UPCXX_AM
   // not clear how to pass double to AM now, temporal approach, fix later
   level_f->prescale_fc = prescale_f;
 #endif
 
-/**
-  printf("INT proc %d level_f %d id_f %d level_c %d id_c %d nsends %d nrecv %d\n",
-              MYTHREAD, level_f->depth, id_f, level_c->depth, id_c, level_c->interpolation.num_sends, level_f->interpolation.num_recvs);
-**/
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
 #ifndef UPCXX_AM
@@ -228,7 +192,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
     if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
-      sendNbgrDataInt(level_c->interpolation.send_ranks[n], p1, p2, level_c->interpolation.send_sizes[n], level_f->depth, id_f, id_c, level_c->depth,0);
+      upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], &copy_e[n]);
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
@@ -257,6 +221,21 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+  for(n=0;n<level_c->interpolation.num_sends;n++){
+    int rid = level_c->interpolation.send_ranks[n];
+
+    if (is_memory_shared_with(rid)) {
+      // unpack buffer
+    } else {
+      int cnt = level_c->interpolation.send_sizes[n];
+      int pos = level_c->interpolation.send_match_pos[n];
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, cnt, level_c->my_rank,
+                  level_f->depth, id_f, 0, id_c, level_c->depth);
+    }
+  }
+
+  async_wait();
+
   size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*id_f*2;
   int *p = (int *) &upc_rflag[nth];
   while (1) {
@@ -271,8 +250,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     p[n] = 0;
   }
-
-//  syncNeighborInt(level_c->interpolation.num_sends, level_c->depth, id_c, 0);
 
 #else
 
@@ -293,8 +270,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer],NULL,0);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
-
-  syncNeighborInt(level_c->interpolation.num_sends - nshm, level_c->depth, id_c, 0);
 
   level_f->cycles.interpolation_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }

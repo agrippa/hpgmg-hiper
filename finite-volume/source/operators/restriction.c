@@ -6,7 +6,7 @@
 
 extern mg_type *all_grids;
 
-void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c) {
+void cb_unpack_res(int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -14,6 +14,7 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
   level_type *level_f;
   level_type *level_c;
   int buffer;
+  double *buf;
 
   _timeStart = CycleTime();
 
@@ -34,52 +35,21 @@ void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type,
 	break;
      }
   }
+  assert(n > 0);
 
-  if (n > 0) {
-  int msize = gasnet_AMMaxMedium();
+  buf = level_c->restriction[type].recv_buffers[i];
+
   int bstart = level_c->restriction[type].sblock2[i];
   int bend   = level_c->restriction[type].sblock2[i+1];
 
-  if (n < msize) { // medium AM 
-    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer, bend-bstart)
-    for(buffer=bstart;buffer<bend;buffer++){
-      CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 11);
-    }
-  }
-  else { // long AM
-    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
-    for(buffer=bstart;buffer<bend;buffer++){
-      CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 10);
-    }
-  }
+  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
+  for(buffer=bstart;buffer<bend;buffer++){
+    CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 10);
   }
 
   _timeEnd = CycleTime();
   level_f->cycles.restriction_unpack += (_timeEnd-_timeStart);
 
-}
-
-void sendNbgrDataRes(int rid,global_ptr<double> src,global_ptr<double> dest,int nelem,int depth_f,int id_f,int rtype,int id_c, int depth_c) {
-
-  int myid = gasnet_mynode(); 
-  double * lsrc = (double *)src.raw_ptr();
-  double * ldst = (double *)dest.raw_ptr();
-  int msize = gasnet_AMMaxMedium();
-
-  if (nelem * sizeof(double) < msize) {
-     // using mediumAM
-    GASNET_Safe(gasnet_AMRequestMedium5(rid, P2P_RES_MEDREQUEST, lsrc, nelem*sizeof(double), depth_f, id_f, rtype, id_c, depth_c));
-  }
-  else {
-    // using longAM
-    GASNET_Safe(gasnet_AMRequestLongAsync5(rid,P2P_RES_LONGREQUEST,lsrc,nelem*sizeof(double),ldst,depth_f,id_f,rtype,id_c,depth_c));
-  }
-
-}
-
-void syncNeighborRes(int nbgr, int depth, int vid, int rtype) {
-  GASNET_BLOCKUNTIL(upcxx::p2p_flag_res[depth][vid*4+rtype] == nbgr);
-  upcxx::p2p_flag_res[depth][vid*4+rtype] = 0;
 }
 
 static inline void RestrictBlock(level_type *level_c, int id_c, level_type *level_f, int id_f, blockCopy_type *block, int restrictionType){
@@ -206,6 +176,9 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   int buffer=0;
   int n;
   int my_tag = (level_f->tag<<4) | 0x5;
+#ifdef USE_UPCXX
+  event copy_e[27], data_e[27];
+#endif
 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
@@ -248,9 +221,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n]);    
 #else
     if (!is_memory_shared_with(level_f->restriction[restrictionType].send_ranks[n])) {
-      sendNbgrDataRes(level_f->restriction[restrictionType].send_ranks[n], 
-		    p1, p2, level_f->restriction[restrictionType].send_sizes[n],
-		    level_f->depth,id_f,restrictionType,id_c,level_c->depth);
+      upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], &copy_e[n]);
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
@@ -278,6 +249,22 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // wait for MPI to finish...
   _timeStart = CycleTime();
 #ifdef UPCXX_AM
+
+  for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
+    int rid = level_f->restriction[restrictionType].send_ranks[n];
+
+    if (is_memory_shared_with(rid)) {
+      // unpack buffer
+    } else {
+      int cnt = level_f->restriction[restrictionType].send_sizes[n];
+      int pos = level_f->restriction[restrictionType].send_match_pos[n];
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_res, cnt, level_f->my_rank, 
+		  level_f->depth, id_f, restrictionType, id_c, level_c->depth);
+    }
+  }
+
+  async_wait();
+
   size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
   int *p = (int *) &upc_rflag[nth];
   while (1) {
@@ -303,21 +290,11 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   upcxx::barrier();
 #endif
 #else
-  syncNeighborRes(level_f->restriction[restrictionType].num_sends-nshm, level_f->depth, id_f, restrictionType);
 #endif
 #endif
 
   _timeEnd = CycleTime();
   level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
-
-#ifndef UPCXX_AM
-  // unpack MPI receive buffers 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->restriction[restrictionType].num_blocks[2])
-  for(buffer=0;buffer<level_c->restriction[restrictionType].num_blocks[2];buffer++){CopyBlock(level_c,id_c,&level_c->restriction[restrictionType].blocks[2][buffer], NULL, 12);}
-  _timeEnd = CycleTime();
-  level_f->cycles.restriction_unpack += (_timeEnd-_timeStart);
-#endif
 
   level_f->cycles.restriction_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }

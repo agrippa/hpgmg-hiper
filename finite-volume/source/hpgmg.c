@@ -58,9 +58,6 @@ shared_array< global_ptr<box_type>, 1> upc_box_info;
 shared_array< global_ptr<mg_type>, 1> upc_grids;
 #ifdef UPCXX_AM
 level_type *finest_level;
-extern void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it);
-extern void cb_copy_res(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
-extern void cb_copy_int(double *buf, int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c);
 #endif
 
 // sync is moved here from communicator, a little ugly
@@ -215,11 +212,6 @@ int main(int argc, char **argv){
   memset(itmp, 0, MAX_TLVG*sizeof(int));
   
   barrier();
-#ifdef UPCXX_AM
-  setCBFunc(cb_copy);	
-  setCBFuncRes(cb_copy_res);
-  setCBFuncInt(cb_copy_int);
-#endif
 #endif
 
   // create the fine level...
