@@ -143,7 +143,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1) + pos;
+      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f) + pos;
       int *p = (int *) &upc_rflag[nth];  *p = 1;   // upc_rflag[nth+pos] = 1;
       nshm++;
     }
@@ -166,13 +166,13 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
       async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, level_c->my_rank, pos,
-                  level_f->depth, id_f, 1, prescale_f);
+                  level_f->depth, id_f, prescale_f);
     }
   }
 
   async_wait();
 
-  size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+1);
+  size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f);
   int *p = (int *) &upc_rflag[nth];
   while (1) {
     int arrived = 0;
