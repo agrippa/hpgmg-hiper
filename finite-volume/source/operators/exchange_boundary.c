@@ -11,22 +11,7 @@ extern mg_type *all_grids;
 extern level_type *finest_level;
 extern shared_array< global_ptr<mg_type>, 1> upc_grids;
 
-#define GASNET_Safe(fncall) do {                                     \
-  int _retval;                                                     \
-    if ((_retval = fncall) != GASNET_OK) {                           \
-      fprintf(stderr, "ERROR calling: %s\n"                          \
-                   " at: %s:%i\n"                                    \
-                   " error: %s (%s)\n",                              \
-              #fncall, __FILE__, __LINE__,                           \
-              gasnet_ErrorName(_retval), gasnet_ErrorDesc(_retval)); \
-      fflush(stderr);                                                \
-      gasnet_exit(_retval);                                          \
-    }                                                                \
-  } while(0)
-
-typedef void (*CB_INSIDE_FUNC)(double *, int, int, int, int, int, int);
-
-void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int it) {
+void cb_unpack(double *buf, int srcid, int pos, int n, int vid, int depth, int faces) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -34,6 +19,7 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   int id = vid;
   int justFaces = faces;
   level_type *level;
+  double *buf;
 
   int buffer;
 
@@ -60,6 +46,10 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
 	break;
      }
   }
+  assert(i == pos);
+  assert(n > 0);
+  buf = level->exchange_ghosts[justFaces].recv_buffers[pos];
+
 #ifdef DEBUG
   if (i >= level->exchange_ghosts[justFaces].num_recvs) {
 	printf("Wrong again Proc %d not found %d from recv ranks level %d faces %d\n", MYTHREAD, srcid, level->depth, justFaces);
@@ -74,60 +64,17 @@ void cb_copy(double *buf, int n, int srcid, int vid, int depth, int faces, int i
   }
 #endif
 
-  if (n > 0) {
-  int msize = gasnet_AMMaxMedium();
   int bstart = level->exchange_ghosts[justFaces].sblock2[i];
   int bend   = level->exchange_ghosts[justFaces].sblock2[i+1];
 
-  if (n < msize) { // medium AM 
-    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer, bend-bstart)
-    for(buffer=bstart;buffer<bend;buffer++){
-      // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
-      //if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-srcid) {
-      //            level->exchange_ghosts[justFaces].blocks[2][buffer].read.box * (-1) - 1);
-      //}
-      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 1);
-    }
+  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
+  for(buffer=bstart;buffer<bend;buffer++){
+    CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
   }
-  else { // long AM
-    PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
-    for(buffer=bstart;buffer<bend;buffer++){
-      // if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.ptr == buf)
-      //if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-srcid) {
-      //    printf("Error srcid long in proc %d should be %d actually be %d : %d\n", MYTHREAD, level->exchange_ghosts[justFaces].recv_ranks[i], srcid,
-      //            level->exchange_ghosts[justFaces].blocks[2][buffer].read.box * (-1) - 1);
-      //}
-      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
-    }
-  }
-  } // n > 0
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);
 
-}
-
-void sendNbgrData(int rid, global_ptr<double> src, global_ptr<double> dest, int nelem, int vid, int depth, int faces, int iters) {
-
-  int myid = gasnet_mynode(); 
-  double * lsrc = (double *)src.raw_ptr();
-  double * ldst = (double *)dest.raw_ptr();
-  int msize = gasnet_AMMaxMedium();
-
-  if (nelem * sizeof(double) < msize) {
-     // using mediumAM
-    GASNET_Safe(gasnet_AMRequestMedium4(rid, P2P_PING_MEDREQUEST, lsrc, nelem*sizeof(double), vid, depth, faces, iters));
-  }
-  else {
-    GASNET_Safe(gasnet_AMRequestLongAsync4(rid, P2P_PING_LONGREQUEST, lsrc, nelem*sizeof(double), ldst, vid, depth, faces, iters));
-  }
-
-}
-
-void syncNeighbor(int nbgr, int depth, int vid, int iter) {
-
-    GASNET_BLOCKUNTIL(upcxx::p2p_flag[depth][vid] == nbgr);
-    upcxx::p2p_flag[depth][vid] = 0;
 }
 
 // perform a (intra-level) ghost zone exchange
@@ -140,6 +87,9 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   int my_tag = (level->tag<<4) | justFaces;
   int buffer=0;
   int n;
+#ifdef USE_UPCXX
+  event copy_e[27], data_e[27];
+#endif
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
   iters++;
@@ -201,8 +151,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #else
     if (!is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
-      sendNbgrData(level->exchange_ghosts[justFaces].send_ranks[n], 
-		 p1, p2, level->exchange_ghosts[justFaces].send_sizes[n], id, level->depth, justFaces, iters);
+      upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],&copy_e[n]);
     } else {
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
@@ -233,6 +182,20 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
+  for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
+    int rid = level->exchange_ghosts[justFaces].send_ranks[n];
+    
+    if (is_memory_shared_with(rid)) {
+      // unpack buffer
+    } else {
+      int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
+      int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
+    }     
+  }
+
+  async_wait();
+
   size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
   int *p = (int *) &upc_rflag[nth];
   while (1) {
@@ -250,8 +213,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeEnd = CycleTime();
   level->cycles.blas3 += (_timeEnd-_timeStart);
 
-  syncNeighbor(level->exchange_ghosts[justFaces].num_sends - nshm, level->depth, id, iters);
-//  if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
 
 #else
 
@@ -265,16 +226,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #endif
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
-
-
-#ifndef UPCXX_AM
-  // unpack MPI receive buffers 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[2])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], NULL, 4);}
-  _timeEnd = CycleTime();
-  level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);
-#endif
  
   level->cycles.ghostZone_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
 }
