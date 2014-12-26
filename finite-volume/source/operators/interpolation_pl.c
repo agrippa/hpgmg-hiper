@@ -27,19 +27,11 @@ static inline void InterpolateBlock_PL(level_type *level_f, int id_f, double pre
   double * __restrict__ write = block->write.ptr;
   if(block->read.box >=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
     box_type *lbox = (box_type *) block->read.boxgp;
     global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
     read_jStride = lbox->jStride;
     read_kStride = lbox->kStride;
-#else
-     box_type *lbox = &(level_c->my_boxes[block->read.box]);
-     read = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-     read_jStride = lbox->jStride;
-     read_kStride = lbox->kStride;
-#endif // UPCXX_SHARED
-
 #else  // USE_UPCXX
      read = level_c->my_boxes[ block->read.box].vectors[        id_c] + level_c->my_boxes[ block->read.box].ghosts*(1+level_c->my_boxes[ block->read.box].jStride+level_c->my_boxes[ block->read.box].kStride);
      read_jStride = level_c->my_boxes[block->read.box ].jStride;
@@ -48,19 +40,11 @@ static inline void InterpolateBlock_PL(level_type *level_f, int id_f, double pre
   }
   if(block->write.box>=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
     box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
-#else
-    box_type *lbox = &(level_f->my_boxes[block->write.box]);    
-    write = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-    write_jStride = lbox->jStride;
-    write_kStride = lbox->kStride;
-#endif // UPCXX_SHARED
-
 #else  // USE_UPCXX
     write = level_f->my_boxes[block->write.box].vectors[id_f] + level_f->my_boxes[block->write.box].ghosts*(1+level_f->my_boxes[block->write.box].jStride+level_f->my_boxes[block->write.box].kStride);
     write_jStride = level_f->my_boxes[block->write.box].jStride;
@@ -114,10 +98,6 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   event copy_e[27], data_e[27];
 #endif
 
-#ifdef UPCXX_AM
-  level_f->prescale_fl = prescale_f;
-#endif
-
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
 #ifndef UPCXX_AM
@@ -129,7 +109,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 #endif
 #endif
   _timeEnd = CycleTime();
-  level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
+  level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
 
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
@@ -173,15 +153,6 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_send += (_timeEnd-_timeStart);
 
-/****
-  // perform local interpolation... try and hide within Isend latency... 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PL(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
-****/
-
   // wait for MPI to finish...
   _timeStart = CycleTime();
 
@@ -191,13 +162,11 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   for(n=0;n<level_c->interpolation.num_sends;n++){
     int rid = level_c->interpolation.send_ranks[n];
 
-    if (is_memory_shared_with(rid)) {
-      // unpack buffer
-    } else {
+    if (!is_memory_shared_with(rid)) {
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, cnt, level_c->my_rank,
-                  level_f->depth, id_f, 1, id_c, level_c->depth);
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, level_c->my_rank, pos,
+                  level_f->depth, id_f, 1, prescale_f);
     }
   }
 
@@ -212,7 +181,6 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
-    gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     p[n] = 0;

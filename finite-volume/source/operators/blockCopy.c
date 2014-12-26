@@ -4,11 +4,8 @@
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
 // shan: flag = 0, the same with original; flag =1 , use src as read buffer
-static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, double *src, int flag){
+static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
   // copy 3D array from read_i,j,k of read[] to write_i,j,k in write[]
-
-  static int it = 0;
-  it++;
 
   int   dim_i       = block->dim.i;
   int   dim_j       = block->dim.j;
@@ -29,35 +26,20 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
   double * __restrict__  read = block->read.ptr;
   double * __restrict__ write = block->write.ptr;
 
-  if (flag == 1 || flag == 11) read = src;
-
 #ifdef USE_UPCXX
   if(block->read.box >=0) {
-#ifdef UPCXX_SHARED
-
     box_type *lbox = (box_type *) block->read.boxgp;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
     read_jStride = lbox->jStride;
     read_kStride = lbox->kStride;
-
-#else
-    box_type *lbox = &(level->my_boxes[block->read.box]);
-    read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-#endif
   }
   if(block->write.box>=0) {
-#ifdef UPCXX_SHARED
-
     box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
-#else
-    box_type *lbox = &(level->my_boxes[block->write.box]);
-    write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-#endif
   }
 #else
   if(block->read.box >=0) read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
@@ -110,7 +92,7 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block, d
 
 
 //------------------------------------------------------------------------------------------------------------------------------
-static inline void IncrementBlock(level_type *level, int id, double prescale, blockCopy_type *block, double *src, int flag ){
+static inline void IncrementBlock(level_type *level, int id, double prescale, blockCopy_type *block){
   // copy 3D array from read_i,j,k of read[] to write_i,j,k in write[]
   int   dim_i       = block->dim.i;
   int   dim_j       = block->dim.j;
@@ -131,23 +113,13 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
   double * __restrict__  read = block->read.ptr;
   double * __restrict__ write = block->write.ptr;
 
-  if (flag == 1) read = src;
-
   if(block->read.box >=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
      box_type *lbox = (box_type *) block->read.boxgp;
      global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
      read = (double *)gp;
      read_jStride = lbox->jStride;
      read_kStride = lbox->kStride;
-#else
-     box_type *lbox = &(level->my_boxes[block->read.box]);
-     read = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-     read_jStride = lbox->jStride;
-     read_kStride = lbox->kStride;
-#endif // UPCXX_SHARED
-
 #else  // USE_UPCXX
      read = level->my_boxes[ block->read.box].vectors[id] + level->my_boxes[ block->read.box].ghosts*(1+level->my_boxes[ block->read.box].jStride+level->my_boxes[ block->read.box].kStride);
      read_jStride = level->my_boxes[block->read.box ].jStride;
@@ -156,19 +128,11 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
   }
   if(block->write.box>=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
     box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
     write = (double *) gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
-#else
-    box_type *lbox = &(level->my_boxes[block->write.box]);
-    write = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-    write_jStride = lbox->jStride;
-    write_kStride = lbox->kStride;
-#endif // UPCXX_SHARED
-
 #else  // USE_UPCXX
     write = level->my_boxes[block->write.box].vectors[id] + level->my_boxes[block->write.box].ghosts*(1+level->my_boxes[block->write.box].jStride+level->my_boxes[block->write.box].kStride);
     write_jStride = level->my_boxes[block->write.box].jStride;

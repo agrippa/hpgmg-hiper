@@ -4,92 +4,44 @@
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
 
-//Functions for AM 
+//Functions for asyncafter 
 
-static int iters = 0;
+#ifdef USE_UPCXX
 extern mg_type *all_grids;
-extern level_type *finest_level;
-extern shared_array< global_ptr<mg_type>, 1> upc_grids;
-
-#define GASNET_Safe(fncall) do {                                     \
-  int _retval;                                                     \
-    if ((_retval = fncall) != GASNET_OK) {                           \
-      fprintf(stderr, "ERROR calling: %s\n"                          \
-                   " at: %s:%i\n"                                    \
-                   " error: %s (%s)\n",                              \
-              #fncall, __FILE__, __LINE__,                           \
-              gasnet_ErrorName(_retval), gasnet_ErrorDesc(_retval)); \
-      fflush(stderr);                                                \
-      gasnet_exit(_retval);                                          \
-    }                                                                \
-  } while(0)
-
-
-void cb_unpack(int srcid, int pos, int n, int vid, int depth, int faces) {
+void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
 
-  int id = vid;
-  int justFaces = faces;
-  level_type *level;
-  double *buf;
-
+  level_type *level = all_grids->levels[depth];
   int buffer;
 
   _timeStart = CycleTime();
 
-  if (depth == 0) {
-     level = finest_level;
-  }
-  else {
-     level = all_grids->levels[depth];
-  }
-
   int i;
-  size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*faces + MAX_VG*depth + MAX_NBGS*vid;
+  size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*justFaces + MAX_VG*depth + MAX_NBGS*id;
   int *p = (int *) &upc_rflag[nth];
-  for (i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
-     if (level->exchange_ghosts[justFaces].recv_ranks[i] == srcid) {
-        if (p[i] != 0) {
-	  printf("Wrong in Ping Handler Proc %d recv msg from %d for vid %d val %d\n", MYTHREAD, srcid, vid, upc_rflag[nth+i].get());
-	}
-	else {
-          p[i] = 1; // upc_rflag[nth+i] =1;
-	}
-	break;
-     }
-  }
-  assert(i == pos);
-  assert(n > 0);
-  buf = level->exchange_ghosts[justFaces].recv_buffers[pos];
-
-#ifdef DEBUG
-  if (i >= level->exchange_ghosts[justFaces].num_recvs) {
-	printf("Wrong again Proc %d not found %d from recv ranks level %d faces %d\n", MYTHREAD, srcid, level->depth, justFaces);
-        for (int j = 0; j < level->exchange_ghosts[justFaces].num_recvs; j++) {
-          printf("Level %d Proc %d recv pos %d is %d\n", level->depth, MYTHREAD, j, level->exchange_ghosts[justFaces].recv_ranks[j]);
-        }
+  if (p[pos] != 0) {
+    printf("Wrong in Ping Handler Proc %d recv msg from %d for id %d val %d\n", MYTHREAD, srcid, id, p[pos]);
   }
   else {
-       if (buf != level->exchange_ghosts[justFaces].recv_buffers[i]) 
-	printf("Wrong buffer %p should be %p for Level %d Proc %d recv pos %d\n",
-                      buf, level->exchange_ghosts[justFaces].recv_buffers[i], level->depth, MYTHREAD, i);
+    p[pos] = 1; // upc_rflag[nth+i] =1;
   }
-#endif
 
-  int bstart = level->exchange_ghosts[justFaces].sblock2[i];
-  int bend   = level->exchange_ghosts[justFaces].sblock2[i+1];
+  int bstart = level->exchange_ghosts[justFaces].sblock2[pos];
+  int bend   = level->exchange_ghosts[justFaces].sblock2[pos+1];
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
+  //  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
   for(buffer=bstart;buffer<bend;buffer++){
-    CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], buf, 0);
+    CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
   }
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);
 
 }
+
+#endif // USE_UPCXX
 
 // perform a (intra-level) ghost zone exchange
 //  NOTE exchange_boundary() only exchanges the boundary.  
@@ -106,52 +58,34 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 #endif
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
-  iters++;
-
-#ifdef DEBUG
-  printf("EXCHANGE Proc %d for id %d level %d Iter %d justFaces %d nsend %d nrecv %d \n", MYTHREAD, id, level->depth, iters, justFaces,
-         level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs);
-
-  if (level->exchange_ghosts[justFaces].num_sends != level->exchange_ghosts[justFaces].num_recvs) {
-	printf("Wrong msg send/recv number does not match send %d recvs %d for proc %d level %d id %d\n",
-        level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs, MYTHREAD, level->depth, id);
-  }
-#endif
 
   _timeStart = CycleTime();
-
 #ifdef USE_UPCXX
-  #ifndef UPCXX_AM
-    #ifdef USE_SUBCOMM
-      MPI_Barrier(level->MPI_COMM_ALLREDUCE);
-    #else
-      upcxx::barrier();
-    #endif
-  #else
-    #ifdef USE_SUBCOMM
-//      if (level->num_my_boxes == 0) MPI_Barrier(level->MPI_COMM_ALLREDUCE);
-    #endif
-  #endif
-
+#ifndef UPCXX_AM
+#ifdef USE_SUBCOMM
+  MPI_Barrier(level->MPI_COMM_ALLREDUCE);
+#else
+  upcxx::barrier();
+#endif
+#endif
 #endif  
   _timeEnd = CycleTime();
-  level->cycles.ghostZone_recv += (_timeEnd-_timeStart);
+  level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
 
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer], NULL, 3);}
+  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);}
   _timeEnd = CycleTime();
   level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[0])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[0];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer], NULL, 2);}
+  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[0];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);}
   _timeEnd = CycleTime();
   level->cycles.ghostZone_pack += (_timeEnd-_timeStart);
 
- 
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 
@@ -175,20 +109,9 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     }
 #endif
   }
-
 #endif
   _timeEnd = CycleTime();
   level->cycles.ghostZone_send += (_timeEnd-_timeStart);
-
-
-/****  move temporarily for testing
-  // exchange locally... try and hide within Isend latency... 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer], NULL, 3);}
-  _timeEnd = CycleTime();
-  level->cycles.ghostZone_local += (_timeEnd-_timeStart);
-****/
 
   // wait for MPI to finish...
   _timeStart = CycleTime();
@@ -199,9 +122,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
     int rid = level->exchange_ghosts[justFaces].send_ranks[n];
     
-    if (is_memory_shared_with(rid)) {
-      // unpack buffer
-    } else {
+    if (!is_memory_shared_with(rid)) {
       int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
       async_after(rid, &copy_e[n], &data_e[n])(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
@@ -225,10 +146,10 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   }
 
   _timeEnd = CycleTime();
-  level->cycles.blas3 += (_timeEnd-_timeStart);
+  level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
 
 
-#else
+#else  // UPCXX_AM
 
   async_copy_fence();
 #ifdef USE_SUBCOMM
@@ -237,6 +158,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   upcxx::barrier();
 #endif
 #endif
+
 #endif
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);

@@ -8,49 +8,34 @@
 // Two solutions now: 1. use a barrier at beginning 2. diable unpacking inside handler
 // This is method 2.
 
-void cb_unpack_int(int n, int srcid, int depth_f, int id_f, int pcl, int id_c, int depth_c) {
+void cb_unpack_int(int srcid, int pos, int depth_f, int id_f, int pcl, double prescale_f) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
 
   level_type *level_f;
-  level_type *level_c;
-  double prescale_f;
   int buffer;
-  double *buf;
 
   _timeStart = CycleTime();
 
   level_f = all_grids->levels[depth_f];
-  level_c = all_grids->levels[depth_c];
-  if (pcl == 0) prescale_f = level_f->prescale_fc;
-  else prescale_f = level_f->prescale_fl;
 
-  int i;
   size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f*2+pcl);
   int *p = (int *) &upc_rflag[nth];
-  for (i = 0; i < level_f->interpolation.num_recvs; i++) {
-     if (level_f->interpolation.recv_ranks[i] == srcid) {
-        if (p[i] != 0) {
-          printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, upc_rflag[nth+i].get());
-        }
-        else {
-          p[i] =1;
-        }
-        break;
-     }
+  if (p[pos] != 0) {
+    printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, p[pos]);
+  }
+  else {
+    p[pos] =1;
   }
 
-  assert(n > 0);
-  buf = level_f->interpolation.recv_buffers[i];
-
-  int bstart = level_f->interpolation.sblock2[i];
-  int bend   = level_f->interpolation.sblock2[i+1];
+  int bstart = level_f->interpolation.sblock2[pos];
+  int bend   = level_f->interpolation.sblock2[pos+1];
 
   if (pcl == 1) {
 //    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
     for(buffer=bstart;buffer<bend;buffer++){
-      IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer], buf, 0);
+      IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);
     }
   }
 
@@ -81,19 +66,11 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
   double * __restrict__ write = block->write.ptr;
   if(block->read.box >=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
     box_type *lbox = (box_type *) block->read.boxgp;
     global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
     read_jStride = lbox->jStride;
     read_kStride = lbox->kStride;
-#else
-    box_type *lbox = &(level_c->my_boxes[block->read.box]);   
-    read = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-    read_jStride = lbox->jStride;
-    read_kStride = lbox->kStride;
-#endif  // UPCXX_SHARED
-
 #else   // USE_UPCXX
      read = level_c->my_boxes[ block->read.box].vectors[id_c] + level_c->my_boxes[ block->read.box].ghosts*(1+level_c->my_boxes[ block->read.box].jStride+level_c->my_boxes[ block->read.box].kStride);
      read_jStride = level_c->my_boxes[block->read.box ].jStride;
@@ -102,19 +79,11 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
   }
   if(block->write.box>=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
     box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
-#else
-    box_type *lbox = &(level_f->my_boxes[block->write.box]);  
-    write = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-    write_jStride = lbox->jStride;
-    write_kStride = lbox->kStride;
-#endif // UPCXX_SHARED
-
 #else  // USE_UPCXX
     write = level_f->my_boxes[block->write.box].vectors[id_f] + level_f->my_boxes[block->write.box].ghosts*(1+level_f->my_boxes[block->write.box].jStride+level_f->my_boxes[block->write.box].kStride);
     write_jStride = level_f->my_boxes[block->write.box].jStride;
@@ -147,11 +116,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   event copy_e[27], data_e[27];
 #endif
 
-#ifdef UPCXX_AM
-  // not clear how to pass double to AM now, temporal approach, fix later
-  level_f->prescale_fc = prescale_f;
-#endif
-
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
 #ifndef UPCXX_AM
@@ -163,7 +127,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #endif
 #endif
   _timeEnd = CycleTime();
-  level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
+  level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
 
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
@@ -206,15 +170,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_send += (_timeEnd-_timeStart);
 
-/****
-  // perform local interpolation... try and hide within Isend latency... 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
-****/
-
   // wait for MPI to finish...
   _timeStart = CycleTime();
 
@@ -224,13 +179,11 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   for(n=0;n<level_c->interpolation.num_sends;n++){
     int rid = level_c->interpolation.send_ranks[n];
 
-    if (is_memory_shared_with(rid)) {
-      // unpack buffer
-    } else {
+    if (!is_memory_shared_with(rid)) {
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, cnt, level_c->my_rank,
-                  level_f->depth, id_f, 0, id_c, level_c->depth);
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, level_c->my_rank, pos,
+                  level_f->depth, id_f, 0, prescale_f);
     }
   }
 
@@ -245,7 +198,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
-    gasnet_AMPoll();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     p[n] = 0;
@@ -267,7 +219,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   // unpack MPI receive buffers
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->interpolation.num_blocks[2])
-  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer],NULL,0);}
+  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
 

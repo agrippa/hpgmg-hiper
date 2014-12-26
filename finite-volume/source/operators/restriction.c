@@ -6,7 +6,7 @@
 
 extern mg_type *all_grids;
 
-void cb_unpack_res(int n, int srcid, int depth_f, int id_f, int type, int id_c, int depth_c) {
+void cb_unpack_res(int srcid, int pos, int type, int depth_f, int id_c, int depth_c) {
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
@@ -24,31 +24,23 @@ void cb_unpack_res(int n, int srcid, int depth_f, int id_f, int type, int id_c, 
   int i;
   size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(type+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
   int *p = (int *) &upc_rflag[nth];
-  for (i = 0; i < level_c->restriction[type].num_recvs; i++) {
-     if (level_c->restriction[type].recv_ranks[i] == srcid) {
-        if (p[i] != 0) {
-	  printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, upc_rflag[nth+i].get());
-	}
-	else {
-	  p[i] =1;
-	}
-	break;
-     }
+  if (p[pos] != 0) {
+    printf("Wrong in Ping Res Handler Proc %d recv msg from %d for val %d\n", MYTHREAD, srcid, p[pos]);
   }
-  assert(n > 0);
+  else {
+    p[pos] =1;
+  }
 
-  buf = level_c->restriction[type].recv_buffers[i];
+  int bstart = level_c->restriction[type].sblock2[pos];
+  int bend   = level_c->restriction[type].sblock2[pos+1];
 
-  int bstart = level_c->restriction[type].sblock2[i];
-  int bend   = level_c->restriction[type].sblock2[i+1];
-
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
+  //  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
   for(buffer=bstart;buffer<bend;buffer++){
-    CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer], buf, 10);
+    CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer]);
   }
 
   _timeEnd = CycleTime();
-  level_f->cycles.restriction_unpack += (_timeEnd-_timeStart);
+  level_c->cycles.restriction_unpack += (_timeEnd-_timeStart);
 
 }
 
@@ -74,19 +66,11 @@ static inline void RestrictBlock(level_type *level_c, int id_c, level_type *leve
   double * __restrict__ write = block->write.ptr;
   if(block->read.box >=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
      box_type *lbox = (box_type *) block->read.boxgp;
      global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
      read = (double *)gp;
      read_jStride = lbox->jStride;
      read_kStride = lbox->kStride;
-#else
-     box_type *lbox = &(level_f->my_boxes[block->read.box]);     
-     read = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-     read_jStride = lbox->jStride;
-     read_kStride = lbox->kStride;
-#endif // UPCXX_SHARED
-
 #else  // USE_UPCXX
      read = level_f->my_boxes[ block->read.box].vectors[id_f] + level_f->my_boxes[ block->read.box].ghosts*(1+level_f->my_boxes[ block->read.box].jStride+level_f->my_boxes[ block->read.box].kStride);
      read_jStride = level_f->my_boxes[block->read.box ].jStride;
@@ -95,19 +79,11 @@ static inline void RestrictBlock(level_type *level_c, int id_c, level_type *leve
   }
   if(block->write.box>=0){
 #ifdef USE_UPCXX
-#ifdef UPCXX_SHARED
     box_type *lbox = (box_type *) block->write.boxgp;
     global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
-#else
-    box_type *lbox = &(level_c->my_boxes[block->write.box]); 
-    write = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
-    write_jStride = lbox->jStride;
-    write_kStride = lbox->kStride;
-#endif  // UPCXX_SHARED
-
 #else   // USE_UPCXX
     write = level_c->my_boxes[block->write.box].vectors[id_c] + level_c->my_boxes[block->write.box].ghosts*(1+level_c->my_boxes[block->write.box].jStride+level_c->my_boxes[block->write.box].kStride);
     write_jStride = level_c->my_boxes[block->write.box].jStride;
@@ -184,7 +160,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 #ifdef USE_UPCXX
 #ifndef UPCXX_AM
 #ifdef USE_SUBCOMM
-  // do we need barrier from both level ?
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
   upcxx::barrier();
@@ -192,7 +167,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 #endif
 #endif
   _timeEnd = CycleTime();
-  level_f->cycles.restriction_recv += (_timeEnd-_timeStart);
+  level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
 
   // perform local restriction[restrictionType]... try and hide within Isend latency... 
   _timeStart = CycleTime();
@@ -237,29 +212,18 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   _timeEnd = CycleTime();
   level_f->cycles.restriction_send += (_timeEnd-_timeStart);
 
-/*****
-  // perform local restriction[restrictionType]... try and hide within Isend latency... 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[1])
-  for(buffer=0;buffer<level_f->restriction[restrictionType].num_blocks[1];buffer++){RestrictBlock(level_c,id_c,level_f,id_f,&level_f->restriction[restrictionType].blocks[1][buffer],restrictionType);}
-  _timeEnd = CycleTime();
-  level_f->cycles.restriction_local += (_timeEnd-_timeStart);
-*****/
-
   // wait for MPI to finish...
   _timeStart = CycleTime();
+#ifdef USE_UPCXX
 #ifdef UPCXX_AM
 
   for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
     int rid = level_f->restriction[restrictionType].send_ranks[n];
 
-    if (is_memory_shared_with(rid)) {
-      // unpack buffer
-    } else {
+    if (!is_memory_shared_with(rid)) {
       int cnt = level_f->restriction[restrictionType].send_sizes[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_res, cnt, level_f->my_rank, 
-		  level_f->depth, id_f, restrictionType, id_c, level_c->depth);
+      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_res, level_f->my_rank, pos, restrictionType, level_f->depth, id_c, level_c->depth);
     }
   }
 
@@ -279,17 +243,15 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     p[n] = 0;
   }
 
-#endif
+#else
 
-#ifdef USE_UPCXX
-#ifndef UPCXX_AM
   async_copy_fence();
 #ifdef USE_SUBCOMM
   MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
 #else
   upcxx::barrier();
 #endif
-#else
+
 #endif
 #endif
 
