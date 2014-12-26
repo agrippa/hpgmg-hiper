@@ -69,7 +69,8 @@ typedef struct {
     int     * __restrict__       recv_sizes;	//   size of each MPI recv buffer...       recv_sizes[neighbor]
     int     * __restrict__       send_sizes;	//   size of each MPI send buffer...       send_sizes[neighbor]
 #ifdef USE_UPCXX
-    volatile int     *rflag[VECTORS_RESERVED*2];
+    global_ptr<int>     rflag;
+    global_ptr<int>     *match_rflag; 
     volatile int     *sflag;
     int              *send_match_pos;
     int              * __restrict__         sblock2, eblock2;  // start and end position in blocks[2] for each neighbor

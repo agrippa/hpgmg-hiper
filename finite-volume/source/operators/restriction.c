@@ -22,13 +22,13 @@ void cb_unpack_res(int srcid, int pos, int type, int depth_f, int id_c, int dept
   level_c = all_grids->levels[depth_c];
 
   int i;
-  size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(type+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
-  int *p = (int *) &upc_rflag[nth];
-  if (p[pos] != 0) {
-    printf("Wrong in Ping Res Handler Proc %d recv msg from %d for val %d\n", MYTHREAD, srcid, p[pos]);
+  size_t nth = MAX_NBGS*id_c;
+  int *p = (int *) level_c->rflag;
+  if (p[nth+pos] != 0) {
+    printf("Wrong in Ping Res Handler Proc %d recv msg from %d for val %d\n", MYTHREAD, srcid, p[pos+nth]);
   }
   else {
-    p[pos] =1;
+    p[nth+pos] =1;
   }
 
   int bstart = level_c->restriction[type].sblock2[pos];
@@ -200,8 +200,8 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c + pos;
-      int *p = (int *) &upc_rflag[nth]; *p = 1;
+      size_t nth = MAX_NBGS*id_c;
+      int *p = (int *) level_f->restriction[restrictionType].match_rflag[n]; *(p+nth+pos) = 1;
       nshm++;
     }
 
@@ -229,18 +229,18 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
   async_wait();
 
-  size_t nth = MAX_TLVG*(size_t)level_c->my_rank + MAX_LVG*(restrictionType+2) + MAX_VG*level_c->depth + MAX_NBGS*id_c;
-  int *p = (int *) &upc_rflag[nth];
+  size_t nth = MAX_NBGS*id_c;
+  int *p = (int *) level_c->restriction[restrictionType].rflag;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-      if (upc_rflag[nth+n]==1) arrived++;
+      if (level_c->restriction[restrictionType].rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_c->restriction[restrictionType].num_recvs) break;
     upcxx::advance();
   }
   for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
-    p[n] = 0;
+    p[nth+n] = 0;
   }
 
 #else

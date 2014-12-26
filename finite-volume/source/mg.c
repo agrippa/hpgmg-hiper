@@ -219,6 +219,7 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.global_send_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));   
     all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
     all_grids->levels[level]->interpolation.send_match_pos = (int *)malloc(numFineRanks*sizeof(int));
+    all_grids->levels[level]->interpolation.match_rflag    = allocate< global_ptr<int> >(level->my_rank, numFineRanks);
 #endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);exit(0);}
@@ -415,10 +416,8 @@ void build_interpolation(mg_type *all_grids){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
-    for (int nn = 0; nn < VECTORS_RESERVED*2; nn++) {
-      all_grids->levels[level]->interpolation.rflag[nn]         =     (volatile int*)malloc(numCoarseRanks * sizeof(int));
-      memset((void *)all_grids->levels[level]->interpolation.rflag[nn], 0, numCoarseRanks * sizeof(int));
-    }
+    all_grids->levels[level]->interpolation.rflag         =     allocate<int>(MYTHREAD, MAX_VG);
+    memset((void *)all_grids->levels[level]->interpolation.rflag, 0, MAX_VG * sizeof(int));
 #endif
     all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
@@ -578,6 +577,7 @@ void build_interpolation(mg_type *all_grids){
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct->global_recv_buffers[neighbor];
         upc_int_info[MYTHREAD * THREADS + nid] = neighbor;
       }
+      upc_rflag_ptr[MYTHREAD] = ct->rflag;
     }
     upcxx::barrier();
     if (all_grids->levels[level+1]->num_my_boxes>0){
@@ -586,6 +586,7 @@ void build_interpolation(mg_type *all_grids){
 	int nid = ct1->send_ranks[neighbor];
 	ct1->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
         ct1->send_match_pos[neighbor] = upc_int_info[THREADS*nid + MYTHREAD];
+	ct1->match_rflag[neighbor] = upc_rflag_ptr[nid];
       }
     }
     upcxx::barrier();
@@ -688,6 +689,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
     all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
     all_grids->levels[level]->restriction[restrictionType].send_match_pos = (int*)malloc(numCoarseRanks*sizeof(int));
+    all_grids->levels[level]->restriction[restrictionType].match_rflag    = allocate< global_ptr<int> >(level->my_rank, numCoarseRanks);
+
 #endif
 
     if(numCoarseRanks>0){
@@ -918,10 +921,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
     all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
-    for (int nn = 0; nn < VECTORS_RESERVED; nn++) {
-      all_grids->levels[level]->restriction[restrictionType].rflag[nn]         =     (volatile int*) malloc(numFineRanks * sizeof(int));
-      memset((void *)all_grids->levels[level]->restriction[restrictionType].rflag[nn], 0, numFineRanks * sizeof(int));
-    }
+    all_grids->levels[level]->restriction[restrictionType].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
+    memset((void *)all_grids->levels[level]->restriction[restrictionType].rflag, 0, MAX_VG *sizeof(int));
 #endif
     all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif
@@ -1097,6 +1098,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 	upc_buf_info[MYTHREAD * THREADS + nid] = ct1->global_recv_buffers[neighbor];
         upc_int_info[MYTHREAD * THREADS + nid] = neighbor;
       }
+      upc_rflag_ptr[MYTHREAD] = ct1->rflag;
     }
     upcxx::barrier();
     if (all_grids->levels[level]->num_my_boxes>0){
@@ -1105,6 +1107,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 	int nid = ct->send_ranks[neighbor];
 	ct->global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
         ct->send_match_pos[neighbor] = upc_int_info[THREADS*nid + MYTHREAD];
+	ct->match_rflag[neighbor] = upc_rflag_ptr[nid];
       }
     }
     upcxx::barrier();

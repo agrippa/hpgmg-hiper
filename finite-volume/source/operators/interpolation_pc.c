@@ -20,13 +20,13 @@ void cb_unpack_int(int srcid, int pos, int depth_f, int id_f, double prescale_f)
 
   level_f = all_grids->levels[depth_f];
 
-  size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f);
-  int *p = (int *) &upc_rflag[nth];
-  if (p[pos] != 0) {
-    printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, p[pos]);
+  size_t nth = MAX_NBGS*id_f;
+  int *p = (int *) level_f->interpolation.rflag;
+  if (p[nth+pos] != 0) {
+    printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, p[nth+pos]);
   }
   else {
-    p[pos] =1;
+    p[nth+pos] =1;
   }
 
   int bstart = level_f->interpolation.sblock2[pos];
@@ -158,8 +158,8 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*(id_f) + pos;
-      int *p = (int *) &upc_rflag[nth]; *p = 1;
+      size_t nth = MAX_NBGS* id_f;
+      int *p = (int *) level_c->interpolation.match_rflag[n]; *(p+nth+pos) = 1;
       nshm++;
     }
 #endif
@@ -187,18 +187,18 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   async_wait();
 
-  size_t nth = MAX_TLVG*(size_t)level_f->my_rank + MAX_LVG*6 + MAX_VG*level_f->depth + MAX_NBGS*id_f;
-  int *p = (int *) &upc_rflag[nth];
+  size_t nth = MAX_NBGS*id_f;
+  int *p = (int *) level_f->interpolation.rflag;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-      if (upc_rflag[nth+n]==1) arrived++;
+      if (level_f->interpolation.rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
     upcxx::advance();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
-    p[n] = 0;
+    p[nth+n] = 0;
   }
 
 #else

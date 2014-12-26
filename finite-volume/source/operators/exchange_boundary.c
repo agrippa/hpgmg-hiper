@@ -19,13 +19,13 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
   _timeStart = CycleTime();
 
   int i;
-  size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*justFaces + MAX_VG*depth + MAX_NBGS*id;
-  int *p = (int *) &upc_rflag[nth];
-  if (p[pos] != 0) {
-    printf("Wrong in Ping Handler Proc %d recv msg from %d for id %d val %d\n", MYTHREAD, srcid, id, p[pos]);
+  size_t nth = id * MAX_NBGS;
+  int *p = (int *) (level->exchange_ghosts[justFaces].rflag;
+  if (p[nth+pos] != 0) {
+    printf("Wrong in Ping Handler Proc %d recv msg from %d for id %d val %d\n", MYTHREAD, srcid, id, p[nth+pos]);
   }
   else {
-    p[pos] = 1; // upc_rflag[nth+i] =1;
+    p[nth+pos] = 1; // upc_rflag[nth+i] =1;
   }
 
   int bstart = level->exchange_ghosts[justFaces].sblock2[pos];
@@ -103,8 +103,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     } else {
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
-      size_t nth = MAX_TLVG*(size_t)rid + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
-      int *p = (int *)&upc_rflag[nth+pos]; *p = 1; // upc_rflag[nth+pos] = 1;
+      size_t nth = MAX_NBGS * id;
+      int *p = (int *)level->exchange_ghosts[justFaces].match_rflag[n]; *(p+nth+pos) = 1; // upc_rflag[nth+pos] = 1;
       nshm++;
     }
 #endif
@@ -131,18 +131,18 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   async_wait();
 
-  size_t nth = MAX_TLVG*(size_t)level->my_rank + MAX_LVG*justFaces + MAX_VG*level->depth + MAX_NBGS*id;
-  int *p = (int *) &upc_rflag[nth];
+  size_t nth = MAX_NBGS * id;
+  int *p = (int *) level->exchange_ghosts[justFaces].rflag;
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-      if (upc_rflag[nth + n] == 1) arrived++;
+      if (level->exchange_ghosts[justFaces].rflag[nth + n] == 1) arrived++;
     }
     if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
     upcxx::advance();
   }
   for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-    p[n] = 0;  //upc_rflag[nth+n] = 0;
+    p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
   }
 
   _timeEnd = CycleTime();

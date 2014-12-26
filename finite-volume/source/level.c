@@ -562,6 +562,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].global_send_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
   level->exchange_ghosts[justFaces].global_match_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
   level->exchange_ghosts[justFaces].send_match_pos = (int *)malloc(numSendRanks*sizeof(int));
+  level->exchange_ghosts[justFaces].match_rflag    = allocate< global_ptr<int> >(level->my_rank, numSendRanks);
 #endif
   if(numSendRanks>0){
   if(level->exchange_ghosts[justFaces].send_ranks  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].send_ranks\n",justFaces);exit(0);}
@@ -799,10 +800,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef USE_UPCXX
 #ifdef UPCXX_AM
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
-  for (int nn = 0; nn < VECTORS_RESERVED; nn++) {
-    level->exchange_ghosts[justFaces].rflag[nn]         =     (volatile int*)malloc(numRecvRanks * sizeof(int));
-    memset((void *)level->exchange_ghosts[justFaces].rflag[nn], 0, numRecvRanks * sizeof(int));
-  }
+  level->exchange_ghosts[justFaces].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
+  memset((void *)level->exchange_ghosts[justFaces].rflag, 0, MAX_VG * sizeof(int));
 #endif
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif
@@ -925,12 +924,16 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     upc_buf_info[MYTHREAD * THREADS + nid] = level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
     upc_int_info[MYTHREAD * THREADS + nid] = neighbor;
   }
+  upc_rflag_ptr[level->my_rank] = level->exchange_ghosts[justFaces].rflag;
   upcxx::barrier();
+
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_sends; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].send_ranks[neighbor];
     level->exchange_ghosts[justFaces].global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
     level->exchange_ghosts[justFaces].send_match_pos[neighbor] = upc_int_info[THREADS*nid + MYTHREAD];
+    level->exchange_ghosts[justFaces].match_rflags[neighbor] = upc_rflag_ptr[nid];
   }
+  
   upcxx::barrier();  
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

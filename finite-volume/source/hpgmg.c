@@ -60,6 +60,8 @@ shared_array< global_ptr<mg_type>, 1> upc_grids;
 level_type *finest_level;
 #endif
 
+shared_array< global_ptr<int>, 1> upc_rflag_ptr;
+
 // sync is moved here from communicator, a little ugly
 shared_array< int, 1 > upc_rflag;
 
@@ -206,7 +208,8 @@ int main(int argc, char **argv){
   upc_box_info.init(boxes_in_i*boxes_in_i*boxes_in_i,1);
   upc_grids.init(THREADS, 1);
   upc_grids[MYTHREAD] = allocate<mg_type>(MYTHREAD, 1);
-
+  
+  upc_rflag_ptr.init(THREADS, 1);
   upc_rflag.init(MAX_TLVG * THREADS, MAX_TLVG);
   int *itmp = (int *) &upc_rflag[MAX_TLVG * (size_t)MYTHREAD];
   memset(itmp, 0, MAX_TLVG*sizeof(int));
