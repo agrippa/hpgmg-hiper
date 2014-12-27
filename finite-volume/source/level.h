@@ -58,6 +58,7 @@ typedef struct {
 #ifdef USE_UPCXX
 extern shared_array< global_ptr<double>, 1 > upc_buf_info;
 extern shared_array< int, 1 > upc_rflag;
+extern shared_array< global_ptr<int>, 1> upc_rflag_ptr;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------

@@ -931,7 +931,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     int nid = level->exchange_ghosts[justFaces].send_ranks[neighbor];
     level->exchange_ghosts[justFaces].global_match_buffers[neighbor] = upc_buf_info[THREADS*nid + MYTHREAD];
     level->exchange_ghosts[justFaces].send_match_pos[neighbor] = upc_int_info[THREADS*nid + MYTHREAD];
-    level->exchange_ghosts[justFaces].match_rflags[neighbor] = upc_rflag_ptr[nid];
+    level->exchange_ghosts[justFaces].match_rflag[neighbor] = upc_rflag_ptr[nid];
   }
   
   upcxx::barrier();  

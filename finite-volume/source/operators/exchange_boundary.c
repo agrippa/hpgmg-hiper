@@ -20,7 +20,7 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
 
   int i;
   size_t nth = id * MAX_NBGS;
-  int *p = (int *) (level->exchange_ghosts[justFaces].rflag;
+  int *p = (int *) level->exchange_ghosts[justFaces].rflag;
   if (p[nth+pos] != 0) {
     printf("Wrong in Ping Handler Proc %d recv msg from %d for id %d val %d\n", MYTHREAD, srcid, id, p[nth+pos]);
   }

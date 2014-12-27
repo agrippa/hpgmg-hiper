@@ -23,7 +23,7 @@ void cb_unpack_res(int srcid, int pos, int type, int depth_f, int id_c, int dept
 
   int i;
   size_t nth = MAX_NBGS*id_c;
-  int *p = (int *) level_c->rflag;
+  int *p = (int *) level_c->restriction[type].rflag;
   if (p[nth+pos] != 0) {
     printf("Wrong in Ping Res Handler Proc %d recv msg from %d for val %d\n", MYTHREAD, srcid, p[pos+nth]);
   }
@@ -201,7 +201,10 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
       size_t nth = MAX_NBGS*id_c;
+
+//      cout << "AA proc " << MYTHREAD << " set for " << rid << " addr " << level_f->restriction[restrictionType].match_rflag[n] <<  " for pos " << pos << endl;
       int *p = (int *) level_f->restriction[restrictionType].match_rflag[n]; *(p+nth+pos) = 1;
+//      cout << "AB proc " << MYTHREAD << " set for " << rid << " addr " << level_f->restriction[restrictionType].match_rflag[n] <<  " pos " << n << " p " << p << endl;
       nshm++;
     }
 
