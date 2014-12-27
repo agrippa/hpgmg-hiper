@@ -202,9 +202,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
       size_t nth = MAX_NBGS*id_c;
 
-//      cout << "AA proc " << MYTHREAD << " set for " << rid << " addr " << level_f->restriction[restrictionType].match_rflag[n] <<  " for pos " << pos << endl;
       int *p = (int *) level_f->restriction[restrictionType].match_rflag[n]; *(p+nth+pos) = 1;
-//      cout << "AB proc " << MYTHREAD << " set for " << rid << " addr " << level_f->restriction[restrictionType].match_rflag[n] <<  " pos " << n << " p " << p << endl;
       nshm++;
     }
 
@@ -233,7 +231,10 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   async_wait();
 
   size_t nth = MAX_NBGS*id_c;
+
+  if (level_c->restriction[restrictionType].num_recvs > 0) {
   int *p = (int *) level_c->restriction[restrictionType].rflag;
+
   while (1) {
     int arrived = 0;
     for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
@@ -246,6 +247,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     p[nth+n] = 0;
   }
 
+  }
 #else
 
   async_copy_fence();
@@ -262,4 +264,5 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
 
   level_f->cycles.restriction_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
+
 }

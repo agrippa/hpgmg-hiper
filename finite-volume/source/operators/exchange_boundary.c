@@ -131,6 +131,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   async_wait();
 
+  if (level->exchange_ghosts[justFaces].num_recvs > 0) {
   size_t nth = MAX_NBGS * id;
   int *p = (int *) level->exchange_ghosts[justFaces].rflag;
   while (1) {
@@ -143,6 +144,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   }
   for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
     p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
+  }
+
   }
 
   _timeEnd = CycleTime();

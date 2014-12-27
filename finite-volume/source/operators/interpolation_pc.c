@@ -187,6 +187,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   async_wait();
 
+  if (level_f->interpolation.num_recvs > 0) {
   size_t nth = MAX_NBGS*id_f;
   int *p = (int *) level_f->interpolation.rflag;
   while (1) {
@@ -199,6 +200,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     p[nth+n] = 0;
+  }
   }
 
 #else
