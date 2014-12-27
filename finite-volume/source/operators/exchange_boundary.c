@@ -148,10 +148,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   }
 
-  _timeEnd = CycleTime();
-  level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
-
-
 #else  // UPCXX_AM
 
   async_copy_fence();
