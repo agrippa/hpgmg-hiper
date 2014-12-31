@@ -418,6 +418,7 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
     all_grids->levels[level]->interpolation.rflag         =     allocate<int>(MYTHREAD, MAX_VG);
     memset((void *)all_grids->levels[level]->interpolation.rflag, 0, MAX_VG * sizeof(int));
+    memset((void *)all_grids->levels[level]->interpolation.sblock2, 0, sizeof(int)*(numCoarseRanks+2));
 #endif
     all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
@@ -513,40 +514,26 @@ void build_interpolation(mg_type *all_grids){
 #ifdef UPCXX_AM
   // setup start and end position for each receiver
   
-    if (all_grids->levels[level]->interpolation.num_recvs > 0) {
-    int curpos = 0;
-    int curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
-    all_grids->levels[level]->interpolation.sblock2[curpos] = 0;
-#ifdef UPCXX_SHARED
-    while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->interpolation.num_recvs-1) {
-    all_grids->levels[level]->interpolation.sblock2[++curpos] = 0;
-    curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
-  }
-#endif
-    for(int buffer=1;buffer<all_grids->levels[level]->interpolation.num_blocks[2];buffer++){
+    if (all_grids->levels[level]->interpolation.num_blocks[2] > 0) {
+      int curpos = 0;
+      int curproc = all_grids->levels[level]->interpolation.blocks[2][0].read.box * (-1) -1;
+      while (all_grids->levels[level]->interpolation.recv_ranks[curpos] != curproc && curpos < all_grids->levels[level]->interpolation.num_recvs) curpos++;
+      all_grids->levels[level]->interpolation.sblock2[curpos] = 0;   // already initialized to 0, just be safe
+
+      for(int buffer=1;buffer<all_grids->levels[level]->interpolation.num_blocks[2];buffer++){
       if (all_grids->levels[level]->interpolation.blocks[2][buffer].read.box != -1-curproc) {
-         all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
-         curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
-#ifdef UPCXX_SHARED
-	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->interpolation.num_recvs) {
-	   all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
-	   curproc = all_grids->levels[level]->interpolation.recv_ranks[curpos];
-	 }
-#endif
+          all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
+          curproc = all_grids->levels[level]->interpolation.blocks[2][buffer].read.box * (-1) -1;
+          while (curproc != all_grids->levels[level]->interpolation.recv_ranks[curpos]) {
+            all_grids->levels[level]->interpolation.sblock2[++curpos] = buffer;
+          }
       }
     }
-
     for (int i = curpos+1; i <= all_grids->levels[level]->interpolation.num_recvs; i++) {
       all_grids->levels[level]->interpolation.sblock2[i] = all_grids->levels[level]->interpolation.num_blocks[2];
     }
+  }
 
-/******
-    if (all_grids->levels[level]->interpolation.num_recvs > 0 && curpos+1 != all_grids->levels[level]->interpolation.num_recvs) {
-      printf("ErrorI: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->interpolation.num_recvs, all_grids->levels[level]->depth);
-    }
-******/
-
-    }
 #endif
 
   } // recv/unpack
@@ -923,6 +910,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
     memset((void *)all_grids->levels[level]->restriction[restrictionType].rflag, 0, MAX_VG *sizeof(int));
+    memset((void *)all_grids->levels[level]->restriction[restrictionType].sblock2, 0, sizeof(int)*(numFineRanks+2));
 #endif
     all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif
@@ -1037,39 +1025,29 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef UPCXX_AM
   // setup start and end position for each receiver
   
-    if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0) {
-    int curpos = 0;
-    int curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
-    all_grids->levels[level]->restriction[restrictionType].sblock2[curpos] = 0;
-#ifdef UPCXX_SHARED
-    while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs-1) {
-    all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = 0;
-    curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
-  }
-#endif
-    for(int buffer=1;buffer<all_grids->levels[level]->restriction[restrictionType].num_blocks[2];buffer++){
+  if (all_grids->levels[level]->restriction[restrictionType].num_blocks[2] > 0) {
+      int curpos = 0;
+      int curproc = all_grids->levels[level]->restriction[restrictionType].blocks[2][0].read.box * (-1) -1;
+      while (all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos] != curproc &&
+             curpos < all_grids->levels[level]->interpolation.num_recvs) curpos++;
+      all_grids->levels[level]->restriction[restrictionType].sblock2[curpos] = 0;   // already initialized to 0, just be safe
+
+      for(int buffer=1;buffer<all_grids->levels[level]->restriction[restrictionType].num_blocks[2];buffer++){
       if (all_grids->levels[level]->restriction[restrictionType].blocks[2][buffer].read.box != -1-curproc) {
-         all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
-         curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
-#ifdef UPCXX_SHARED
-	 while (is_memory_shared_with(curproc) && curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs) {
-	   all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
-	   curproc = all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos];
-	 }
-#endif
+          all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
+          curproc = all_grids->levels[level]->restriction[restrictionType].blocks[2][buffer].read.box * (-1) -1;
+          while (curproc != all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos]) {
+            all_grids->levels[level]->restriction[restrictionType].sblock2[++curpos] = buffer;
+          }
       }
     }
-
     for (int i = curpos+1; i <= all_grids->levels[level]->restriction[restrictionType].num_recvs; i++) {
       all_grids->levels[level]->restriction[restrictionType].sblock2[i] = all_grids->levels[level]->restriction[restrictionType].num_blocks[2];
     }
 
-    if (all_grids->levels[level]->restriction[restrictionType].num_recvs > 0 && curpos+1 != all_grids->levels[level]->restriction[restrictionType].num_recvs) {
-      printf("ErrorR: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, all_grids->levels[level]->restriction[restrictionType].num_recvs, all_grids->levels[level]->depth);
-    }
+  }
 #endif
 
-    }
   } // recv/unpack
 
 

@@ -802,6 +802,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
   level->exchange_ghosts[justFaces].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
   memset((void *)level->exchange_ghosts[justFaces].rflag, 0, MAX_VG * sizeof(int));
+  memset((void *)level->exchange_ghosts[justFaces].sblock2, 0, sizeof(int)*(numRecvRanks+2));
 #endif
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif
@@ -971,37 +972,27 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       (b->read.box >= 0) ? level->rank_of_box[b->read.box] : -1, b->write.box, level->rank_of_box[b->write.box]);  
   }
 *****/
-  if (level->exchange_ghosts[justFaces].num_recvs > 0) {
-  int curpos = 0;
-  level->exchange_ghosts[justFaces].sblock2[curpos] = 0;
-  int curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
-#ifdef UPCXX_SHARED
-  while (is_memory_shared_with(curproc) && curpos < level->exchange_ghosts[justFaces].num_recvs-1) {
-    level->exchange_ghosts[justFaces].sblock2[++curpos] = 0;
-    curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
-  }
-#endif
-  for(int buffer=1;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
-      if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-curproc) {
-	  level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
-          curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
-#ifdef UPCXX_SHARED
-	  while (is_memory_shared_with(curproc) && curpos < level->exchange_ghosts[justFaces].num_recvs) {
-	    level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
-	    curproc = level->exchange_ghosts[justFaces].recv_ranks[curpos];
-	  }
-#endif	 
-      }
-  }
-  for (int i = curpos+1; i <= level->exchange_ghosts[justFaces].num_recvs; i++) {
-    level->exchange_ghosts[justFaces].sblock2[i] = level->exchange_ghosts[justFaces].num_blocks[2];
-  }
+  if (level->exchange_ghosts[justFaces].num_blocks[2] > 0) {
+    int curpos = 0;
+    int curproc = level->exchange_ghosts[justFaces].blocks[2][0].read.box * (-1) -1;
+    while (level->exchange_ghosts[justFaces].recv_ranks[curpos] != curproc && curpos < level->exchange_ghosts[justFaces].num_recvs) curpos++;
+    level->exchange_ghosts[justFaces].sblock2[curpos] = 0;   // already initialized to 0, just be safe
+
+    for(int buffer=1;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
+        if (level->exchange_ghosts[justFaces].blocks[2][buffer].read.box != -1-curproc) {
+            level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
+            curproc = level->exchange_ghosts[justFaces].blocks[2][buffer].read.box * (-1) -1;
+            while (curproc != level->exchange_ghosts[justFaces].recv_ranks[curpos]) {
+              level->exchange_ghosts[justFaces].sblock2[++curpos] = buffer;
+            }
+        }
+    }
+
+    for (int i = curpos+1; i <= level->exchange_ghosts[justFaces].num_recvs; i++) {
+      level->exchange_ghosts[justFaces].sblock2[i] = level->exchange_ghosts[justFaces].num_blocks[2];
+    }
 
 /*****
-  if (level->exchange_ghosts[justFaces].num_recvs > 0 && curpos+1 != level->exchange_ghosts[justFaces].num_recvs) {
-    printf("ErrorE: Proc %d in build_exchange current %d not equal num recvs %d in level %d\n", MYTHREAD, curpos+1, level->exchange_ghosts[justFaces].num_recvs, level->depth);
-  }
-
   {
     communicator_type *c = &level->exchange_ghosts[justFaces];
     for (int i = 0; i < c->num_recvs; i++) {
