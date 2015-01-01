@@ -1029,7 +1029,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       int curpos = 0;
       int curproc = all_grids->levels[level]->restriction[restrictionType].blocks[2][0].read.box * (-1) -1;
       while (all_grids->levels[level]->restriction[restrictionType].recv_ranks[curpos] != curproc &&
-             curpos < all_grids->levels[level]->interpolation.num_recvs) curpos++;
+             curpos < all_grids->levels[level]->restriction[restrictionType].num_recvs) curpos++;
       all_grids->levels[level]->restriction[restrictionType].sblock2[curpos] = 0;   // already initialized to 0, just be safe
 
       for(int buffer=1;buffer<all_grids->levels[level]->restriction[restrictionType].num_blocks[2];buffer++){
