@@ -20,7 +20,7 @@ void cb_unpack_int(int srcid, int pos, int depth_f, int id_f, double prescale_f)
 
   level_f = all_grids->levels[depth_f];
 
-  size_t nth = MAX_NBGS*id_f;
+  size_t nth = MAX_NBGS*id_f;  nth = 0;
   int *p = (int *) level_f->interpolation.rflag;
   if (p[nth+pos] != 0) {
     printf("Wrong in Ping Res Handler Proc %d recv msg from %d for id_f %d val %d\n", MYTHREAD, srcid, id_f, p[nth+pos]);
@@ -158,7 +158,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      size_t nth = MAX_NBGS* id_f;
+      size_t nth = MAX_NBGS* id_f; nth = 0;
       int *p = (int *) level_c->interpolation.match_rflag[n]; *(p+nth+pos) = 1;
       nshm++;
     }
@@ -188,7 +188,7 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   async_wait();
 
   if (level_f->interpolation.num_recvs > 0) {
-  size_t nth = MAX_NBGS*id_f;
+  size_t nth = MAX_NBGS*id_f; nth = 0;
   int *p = (int *) level_f->interpolation.rflag;
   while (1) {
     int arrived = 0;

@@ -143,7 +143,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      size_t nth = MAX_NBGS* id_f;
+      size_t nth = MAX_NBGS* id_f; nth = 0;
       int *p = (int *) level_c->interpolation.match_rflag[n]; *(p+nth+pos) = 1;
       nshm++;
     }
@@ -173,7 +173,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   async_wait();
 
   if (level_f->interpolation.num_recvs > 0) {
-  size_t nth = MAX_NBGS*id_f;
+  size_t nth = MAX_NBGS*id_f;  nth = 0;
   int *p = (int *) level_f->interpolation.rflag;
   while (1) {
     int arrived = 0;
