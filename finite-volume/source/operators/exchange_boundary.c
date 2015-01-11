@@ -96,7 +96,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
 #else
     if (!is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
-      upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],&level->exchange_ghosts[justFaces].copy_e[n]);
+      event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
+      upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],copy_e);
     } else {
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
@@ -123,7 +124,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
       event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
-      event* date_e = &level->exchange_ghosts[justFaces].data_e[n];
+      event* data_e = &level->exchange_ghosts[justFaces].data_e[n];
       async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
     }     
   }

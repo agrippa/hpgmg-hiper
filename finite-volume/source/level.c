@@ -563,8 +563,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].global_match_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
   level->exchange_ghosts[justFaces].send_match_pos = (int *)malloc(numSendRanks*sizeof(int));
   level->exchange_ghosts[justFaces].match_rflag    = allocate< global_ptr<int> >(level->my_rank, numSendRanks);
-  level->exchange_ghosts[justFaces].copy_e = (event *) malloc(numSendRanks * sizeof(event));
-  level->exchange_ghosts[justFaces].data_e = (event *) malloc(numSendRanks * sizeof(event));
+  level->exchange_ghosts[justFaces].copy_e = new event[numSendRanks];
+  level->exchange_ghosts[justFaces].data_e = new event[numSendRanks];
 #endif
   if(numSendRanks>0){
   if(level->exchange_ghosts[justFaces].send_ranks  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].send_ranks\n",justFaces);exit(0);}
