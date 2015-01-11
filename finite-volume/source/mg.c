@@ -143,13 +143,15 @@ void build_interpolation(mg_type *all_grids){
   all_grids->levels[level]->interpolation.blocks[0]           = NULL;
   all_grids->levels[level]->interpolation.blocks[1]           = NULL;
   all_grids->levels[level]->interpolation.blocks[2]           = NULL;
+  all_grids->levels[level]->interpolation.blocks[3]           = NULL;
   all_grids->levels[level]->interpolation.num_blocks[0]       = 0;
   all_grids->levels[level]->interpolation.num_blocks[1]       = 0;
   all_grids->levels[level]->interpolation.num_blocks[2]       = 0;
+  all_grids->levels[level]->interpolation.num_blocks[3]       = 0;
   all_grids->levels[level]->interpolation.allocated_blocks[0] = 0;
   all_grids->levels[level]->interpolation.allocated_blocks[1] = 0;
   all_grids->levels[level]->interpolation.allocated_blocks[2] = 0;
-
+  all_grids->levels[level]->interpolation.allocated_blocks[3] = 0;
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // construct pack, send(to level-1), and local...
@@ -323,6 +325,8 @@ void build_interpolation(mg_type *all_grids){
 	  int jStride = all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride;
 	  int kStride = all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride;
 #endif
+
+	  if (fineBoxes[fineBox].recvRank == all_grids->levels[level]->my_rank) {
         // local interpolations...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[1]),&(all_grids->levels[level]->interpolation.allocated_blocks[1]),&(all_grids->levels[level]->interpolation.num_blocks[1]),
           /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
@@ -353,7 +357,40 @@ void build_interpolation(mg_type *all_grids){
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
           /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
-        );
+			     );}
+	  else {
+        append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[3]),&(all_grids->levels[level]->interpolation.allocated_blocks[3]),&(all_grids->levels[level]->interpolation.num_blocks[3]),
+          /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
+          /* dim.j         = */ all_grids->levels[level-1]->box_dim/2,
+          /* dim.k         = */ all_grids->levels[level-1]->box_dim/2,
+#ifdef UPCXX_SHARED
+          /* read.boxgp    = */ send_boxgp,
+#endif
+          /* read.box      = */ fineBoxes[fineBox].sendBoxID,
+          /* read.ptr      = */ NULL,
+          /* read.i        = */ fineBoxes[fineBox].i,
+          /* read.j        = */ fineBoxes[fineBox].j,
+          /* read.k        = */ fineBoxes[fineBox].k,
+          /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().jStride,
+          /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
+          /* read.scale    = */ 1,
+#ifdef UPCXX_SHARED
+          /* write.boxgp   = */ recv_boxgp,
+#endif
+          /* write.box     = */ fineBoxes[fineBox].recvBoxID,
+          /* write.ptr     = */ NULL,
+          /* write.i       = */ 0,
+          /* write.j       = */ 0,
+          /* write.k       = */ 0,
+	  /* write.jStride = */ jStride, //all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().jStride,
+	  /* write.kStride = */ kStride, //all_grids->levels[level-1]->my_boxes[fineBoxes[fineBox].recvBox].get().kStride,
+          /* write.scale   = */ 2,
+          /* blockcopy_i   = */ 10000, // don't tile i dimension
+          /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
+          /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
+			     );
+
+	  }
       }
     } // local to local interpolation
 
@@ -605,13 +642,15 @@ void build_restriction(mg_type *all_grids, int restrictionType){
   all_grids->levels[level]->restriction[restrictionType].blocks[0]           = NULL;
   all_grids->levels[level]->restriction[restrictionType].blocks[1]           = NULL;
   all_grids->levels[level]->restriction[restrictionType].blocks[2]           = NULL;
+  all_grids->levels[level]->restriction[restrictionType].blocks[3]           = NULL;
   all_grids->levels[level]->restriction[restrictionType].allocated_blocks[0] = 0;
   all_grids->levels[level]->restriction[restrictionType].allocated_blocks[1] = 0;
   all_grids->levels[level]->restriction[restrictionType].allocated_blocks[2] = 0;
+  all_grids->levels[level]->restriction[restrictionType].allocated_blocks[3] = 0;
   all_grids->levels[level]->restriction[restrictionType].num_blocks[0]       = 0; // number of unpack/insert operations  = number of boxes on level+1 that I don't own and restrict to 
   all_grids->levels[level]->restriction[restrictionType].num_blocks[1]       = 0; // number of unpack/insert operations  = number of boxes on level+1 that I own and restrict to
   all_grids->levels[level]->restriction[restrictionType].num_blocks[2]       = 0; // number of unpack/insert operations  = number of boxes on level-1 that I don't own that restrict to me
-
+  all_grids->levels[level]->restriction[restrictionType].num_blocks[3]       = 0;
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // construct pack, send, and local...
@@ -803,6 +842,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           int kStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride;
 
 #endif
+
+	  if (coarseBoxes[coarseBox].recvRank==all_grids->levels[level]->my_rank) {
         // restrict to local...
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[1]),
                               &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[1]),
@@ -835,7 +876,42 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* blockcopy_i   = */ 10000, // don't tile i dimension
           /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
           /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
-        );
+			      );}
+	  else {
+        append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[3]),
+                              &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[3]),
+                              &(all_grids->levels[level]->restriction[restrictionType].num_blocks[3]),
+          /* dim.i         = */ restrict_dim_i, 
+          /* dim.j         = */ restrict_dim_j, 
+          /* dim.k         = */ restrict_dim_k, 
+#ifdef UPCXX_SHARED
+          /* read.box      = */ send_boxgp,
+#endif
+          /* read.box      = */ coarseBoxes[coarseBox].sendBoxID,
+          /* read.ptr      = */ NULL,
+          /* read.i        = */ 0, 
+          /* read.j        = */ 0,
+          /* read.k        = */ 0,
+          /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().jStride,
+          /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().kStride,
+          /* read.scale    = */ 2,
+#ifdef UPCXX_SHARED
+          /* write.boxgp   = */ recv_boxgp,
+#endif
+          /* write.box     = */ coarseBoxes[coarseBox].recvBoxID,
+          /* write.ptr     = */ NULL,
+          /* write.i       = */ coarseBoxes[coarseBox].i,
+          /* write.j       = */ coarseBoxes[coarseBox].j,
+          /* write.k       = */ coarseBoxes[coarseBox].k,
+	  /* write.jStride = */ jStride, //all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride,
+	  /* write.kStride = */ kStride, //all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride,
+          /* write.scale   = */ 1,
+          /* blockcopy_i   = */ 10000, // don't tile i dimension
+          /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
+          /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
+			      );
+
+	  }
       }
     } // local to local
 

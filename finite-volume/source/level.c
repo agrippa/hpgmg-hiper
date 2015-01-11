@@ -466,6 +466,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].num_blocks[0] = 0;
   level->exchange_ghosts[justFaces].num_blocks[1] = 0;
   level->exchange_ghosts[justFaces].num_blocks[2] = 0;
+  level->exchange_ghosts[justFaces].num_blocks[3] = 0;
 
   int CommunicateThisDir[27];
   int n;for(n=0;n<27;n++)CommunicateThisDir[n]=1;CommunicateThisDir[13]=0;
@@ -576,10 +577,13 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   }
   level->exchange_ghosts[justFaces].blocks[0] = NULL;
   level->exchange_ghosts[justFaces].blocks[1] = NULL;
+  level->exchange_ghosts[justFaces].blocks[3] = NULL;
   level->exchange_ghosts[justFaces].num_blocks[0] = 0;
   level->exchange_ghosts[justFaces].num_blocks[1] = 0;
+  level->exchange_ghosts[justFaces].num_blocks[3] = 0;
   level->exchange_ghosts[justFaces].allocated_blocks[0] = 0;
   level->exchange_ghosts[justFaces].allocated_blocks[1] = 0;
+  level->exchange_ghosts[justFaces].allocated_blocks[3] = 0;
   for(stage=0;stage<=1;stage++){
     // stage=0... traverse the list and calculate the buffer sizes
     // stage=1... allocate MPI send buffers, traverse the list, and populate the unpack/local lists...
@@ -653,7 +657,9 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         int jStride = level->my_boxes[ghostsToSend[ghost].recvBox].get().jStride;
         int kStride = level->my_boxes[ghostsToSend[ghost].recvBox].get().kStride;
 #endif
-	  append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[1]),&(level->exchange_ghosts[justFaces].allocated_blocks[1]),&(level->exchange_ghosts[justFaces].num_blocks[1]),
+
+	if (level->my_rank == ghostsToSend[ghost].recvRank) {
+	append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[1]),&(level->exchange_ghosts[justFaces].allocated_blocks[1]),&(level->exchange_ghosts[justFaces].num_blocks[1]),
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
@@ -682,7 +688,41 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* blockcopy_i   = */ 10000, // don't tile i dimension
         /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
         /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
-			       ); }
+			     ); }
+	else {
+	append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[3]),&(level->exchange_ghosts[justFaces].allocated_blocks[3]),&(level->exchange_ghosts[justFaces].num_blocks[3]),
+        /* dim.i         = */ dim_i,
+        /* dim.j         = */ dim_j,
+        /* dim.k         = */ dim_k,
+#ifdef UPCXX_SHARED
+        /* read.boxgp    = */ send_boxgp,
+#endif
+        /* read.box      = */ ghostsToSend[ghost].sendBoxID,
+        /* read.ptr      = */ NULL,
+        /* read.i        = */ send_i,
+        /* read.j        = */ send_j,
+        /* read.k        = */ send_k,
+        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
+        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
+        /* read.scale    = */ 1,
+#ifdef UPCXX_SHARED
+        /* write.boxgp   = */ recv_boxgp,
+#endif
+        /* write.box     = */ ghostsToSend[ghost].recvBoxID,
+        /* write.ptr     = */ NULL,
+        /* write.i       = */ recv_i,
+        /* write.j       = */ recv_j,
+        /* write.k       = */ recv_k,
+	/* write.jStride = */ jStride, //level->my_boxes[ghostsToSend[ghost].recvBox].get().jStride,
+	/* write.kStride = */ kStride, //level->my_boxes[ghostsToSend[ghost].recvBox].get().kStride,
+        /* write.scale   = */ 1,
+        /* blockcopy_i   = */ 10000, // don't tile i dimension
+        /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
+        /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
+			     ); 
+	} // if (level->my_rank = rece_rank)
+
+	}
       else // append to the MPI pack list...
       append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[0]),&(level->exchange_ghosts[justFaces].allocated_blocks[0]),&(level->exchange_ghosts[justFaces].num_blocks[0]),
         /* dim.i         = */ dim_i,
@@ -713,7 +753,40 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* blockcopy_i   = */ 10000, // don't tile i dimension
         /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
         /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
-      );}
+      );
+	else
+      append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[0]),&(level->exchange_ghosts[justFaces].allocated_blocks[0]),&(level->exchange_ghosts[justFaces].num_blocks[0]),
+        /* dim.i         = */ dim_i,
+        /* dim.j         = */ dim_j,
+        /* dim.k         = */ dim_k,
+#ifdef UPCXX_SHARED
+        /* read.boxgp    = */ send_boxgp,
+#endif
+        /* read.box      = */ ghostsToSend[ghost].sendBoxID,
+        /* read.ptr      = */ NULL,
+        /* read.i        = */ send_i,
+        /* read.j        = */ send_j,
+        /* read.k        = */ send_k,
+        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
+        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
+        /* read.scale    = */ 1,
+#ifdef UPCXX_SHARED
+        /* write.boxgp   = */ recv_boxgp,
+#endif			    
+        /* write.box     = */ -1,
+        /* write.ptr     = */ level->exchange_ghosts[justFaces].send_buffers[neighbor], // NOTE, 1. count _sizes, 2. allocate _buffers, 3. populate blocks
+        /* write.i       = */ level->exchange_ghosts[justFaces].send_sizes[neighbor], // current offset in the MPI send buffer
+        /* write.j       = */ 0,
+        /* write.k       = */ 0,
+        /* write.jStride = */ dim_i,       // contiguous block
+        /* write.kStride = */ dim_i*dim_j, // contiguous block
+        /* write.scale   = */ 1,
+        /* blockcopy_i   = */ 10000, // don't tile i dimension
+        /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
+        /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
+      );
+
+      }
       if(neighbor>=0)level->exchange_ghosts[justFaces].send_sizes[neighbor]+=dim_i*dim_j*dim_k;
     } // ghost for-loop
   } // stage for-loop
