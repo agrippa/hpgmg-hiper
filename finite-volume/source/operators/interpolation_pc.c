@@ -110,9 +110,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   int my_tag = (level_f->tag<<4) | 0x6;
   int buffer=0;
   int n;
-#ifdef USE_UPCXX
-  event copy_e[27], data_e[27];
-#endif
 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
@@ -154,7 +151,8 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
 #else
     if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
-      upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], &copy_e[n]);
+      event* copy_e = level_c->interpolation.copy_e[n];
+      upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
@@ -180,7 +178,9 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     if (!is_memory_shared_with(rid)) {
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_int, level_c->my_rank, pos,
+      event* copy_e = level_c->interpolation.copy_e[n];
+      event* data_e = level_c->interpolation.data_e[n];
+      async_after(rid, copy_e, data_e)(cb_unpack_int, level_c->my_rank, pos,
                   level_f->depth, id_f, prescale_f);
     }
   }

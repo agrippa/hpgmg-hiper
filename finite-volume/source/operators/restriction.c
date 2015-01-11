@@ -152,9 +152,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   int buffer=0;
   int n;
   int my_tag = (level_f->tag<<4) | 0x5;
-#ifdef USE_UPCXX
-  event copy_e[27], data_e[27];
-#endif
 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
@@ -196,7 +193,8 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n]);    
 #else
     if (!is_memory_shared_with(level_f->restriction[restrictionType].send_ranks[n])) {
-      upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], &copy_e[n]);
+      event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
+      upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], copy_e);
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
@@ -224,7 +222,9 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     if (!is_memory_shared_with(rid)) {
       int cnt = level_f->restriction[restrictionType].send_sizes[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      async_after(rid, &copy_e[n], &data_e[n])(cb_unpack_res, level_f->my_rank, pos, restrictionType, level_f->depth, id_c, level_c->depth);
+      event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
+      event* data_e = &level_f->restriction[restrictionType].data_e[n];
+      async_after(rid, copy_e, data_e)(cb_unpack_res, level_f->my_rank, pos, restrictionType, level_f->depth, id_c, level_c->depth);
     }
   }
 

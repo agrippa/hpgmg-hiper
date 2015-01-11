@@ -79,6 +79,9 @@ typedef struct {
     global_ptr<double>        *global_recv_buffers;
     global_ptr<double>        *global_send_buffers;
     global_ptr<double>        *global_match_buffers;
+
+    event            *copy_e;
+    event            *data_e;
 #endif
     double ** __restrict__     recv_buffers;	//   MPI recv buffer for each neighbor...  recv_buffers[neighbor][ recv_sizes[neighbor] ]
     double ** __restrict__     send_buffers;	//   MPI send buffer for each neighbor...  send_buffers[neighbor][ send_sizes[neighbor] ]

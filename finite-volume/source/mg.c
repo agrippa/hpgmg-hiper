@@ -220,6 +220,8 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
     all_grids->levels[level]->interpolation.send_match_pos = (int *)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->interpolation.match_rflag    = allocate< global_ptr<int> >(MYTHREAD, numFineRanks);
+    all_grids->levels[level]->interpolation.copy_e = (event *)malloc(numFineRanks * sizeof(event));
+    all_grids->levels[level]->interpolation.data_e = (event *)malloc(numFineRanks * sizeof(event));
 #endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);exit(0);}
@@ -677,7 +679,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
     all_grids->levels[level]->restriction[restrictionType].send_match_pos = (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].match_rflag    = allocate< global_ptr<int> >(MYTHREAD, numCoarseRanks);
-
+    all_grids->levels[level]->restriction[restrictionType].copy_e = (event *)malloc(numCoarseRanks * sizeof(event));
+    all_grids->levels[level]->restriction[restrictionType].data_e = (event *)malloc(numCoarseRanks * sizeof(event));
 #endif
 
     if(numCoarseRanks>0){
