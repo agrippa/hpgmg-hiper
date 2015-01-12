@@ -1,6 +1,4 @@
-// shan
-// 1. add depth in level_type
-//
+
 //------------------------------------------------------------------------------------------------------------------------------
 // Copyright Notice 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -30,6 +28,12 @@
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
+// HPGMG-UPCXX: 
+// Converted from MPI implementation, sycchronized up to Dec 20, 2014
+// Using point-2-point synchronization and shared memory support
+// MPI is still needed to perform collective functions, such as MPI_Allreduce
+// If there is any problem, please contact hshan@lbl.gov
+//------------------------------------------------------------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -51,20 +55,12 @@
 //------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef USE_UPCXX
-// these arrays only used temporarily
+// these arrays only used temporarily for communicator setup
 shared_array< int, 1> upc_int_info;
-shared_array< global_ptr<double>, 1 > upc_buf_info;
-shared_array< global_ptr<box_type>, 1> upc_box_info;
-shared_array< global_ptr<mg_type>, 1> upc_grids;
-#ifdef UPCXX_AM
-level_type *finest_level;
-#endif
-
-shared_array< global_ptr<int>, 1> upc_rflag_ptr;
-
-// sync is moved here from communicator, a little ugly
-shared_array< int, 1 > upc_rflag;
-
+shared_array< global_ptr<double>,   1 > upc_buf_info;
+shared_array< global_ptr<box_type>, 1 > upc_box_info;
+shared_array< global_ptr<mg_type>,  1 > upc_grids;
+shared_array< global_ptr<int>,      1 > upc_rflag_ptr;
 #endif
 
 mg_type *all_grids;
@@ -227,34 +223,49 @@ int main(int argc, char **argv){
   int ghosts=stencil_get_radius();
 #ifdef USE_UPCXX
   fine_grid.depth = 0;
-  finest_level = &fine_grid;
   all_grids = (mg_type *) upc_grids[MYTHREAD].get();
   all_grids->levels = (level_type**)malloc(MAX_LEVELS*sizeof(level_type*));
   if(all_grids->levels == NULL){fprintf(stderr,"malloc failed - MGBuild/all_grids->levels\n");exit(0);}
   all_grids->num_levels=1;
-  all_grids->levels[0] = finest_level;
+  all_grids->levels[0] = &fine_grid;
 #endif
   create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,bc,my_rank,num_tasks);
-  //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Periodic
-  //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_PERIODIC ,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=0.0;double b=1.0; //   Poisson w/Periodic
-  //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_DIRICHLET,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=2.0;double b=1.0; // Helmholtz w/Dirichlet
-  //create_level(&fine_grid,boxes_in_i,box_dim,ghosts,VECTORS_RESERVED,BC_DIRICHLET,my_rank,num_tasks);double h0=1.0/( (double)boxes_in_i*(double)box_dim );double a=0.0;double b=1.0; //   Poisson w/Dirichlet
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   #ifdef USE_HELMHOLTZ
-  double a=2.0;double b=1.0; // Helmholtz
+  double a=1.0;double b=1.0; // Helmholtz
   if(my_rank==0)fprintf(stdout,"  Creating Helmholtz (a=%f, b=%f) test problem\n",a,b);
   #else
   double a=0.0;double b=1.0; // Poisson
   if(my_rank==0)fprintf(stdout,"  Creating Poisson (a=%f, b=%f) test problem\n",a,b);
   #endif
   double h0=1.0/( (double)boxes_in_i*(double)box_dim );
-  initialize_problem(&fine_grid,h0,a,b);
-  rebuild_operator(&fine_grid,NULL,a,b); // i.e. calculate Dinv and lambda_max
+
+  initialize_problem(&fine_grid,h0,a,b); // calculate VECTOR_ALPHA, VECTOR_BETA, and VECTOR_UTRUE
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  if( ((a==0.0)||(fine_grid.alpha_is_zero==1) ) && (fine_grid.boundary_condition.type == BC_PERIODIC)){
+    // Poisson w/ periodic BC's... 
+    // nominally, u shifted by any constant is still a valid solution.  
+    // However, by convention, we assume u sums to zero.
+    double average_value_of_u = mean(&fine_grid,VECTOR_UTRUE);
+    if(my_rank==0){fprintf(stdout,"  average value of u_true = %20.12e... shifting u_true to ensure it sums to zero...\n",average_value_of_u);}
+    shift_vector(&fine_grid,VECTOR_UTRUE,VECTOR_UTRUE,-average_value_of_u);
+  }
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  apply_op(&fine_grid,VECTOR_F,VECTOR_UTRUE,a,b); // by construction, f = A(u_true)
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  if(fine_grid.boundary_condition.type == BC_PERIODIC){
+    double average_value_of_f = mean(&fine_grid,VECTOR_F);
+    if(average_value_of_f!=0.0){
+      if(my_rank==0){fprintf(stderr,"  WARNING... Periodic boundary conditions, but f does not sum to zero... mean(f)=%e\n",average_value_of_f);}
+      //shift_vector(&fine_grid,VECTOR_F,VECTOR_F,-average_value_of_f);
+    }
+  }
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   // shan: move to global
   // mg_type all_grids;
 
   int minCoarseDim = 1;
+  rebuild_operator(&fine_grid,NULL,a,b); // i.e. calculate Dinv and lambda_max
   MGBuild(all_grids,&fine_grid,a,b,minCoarseDim); // build the Multigrid Hierarchy 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
      int     doTiming;
@@ -267,7 +278,7 @@ int main(int argc, char **argv){
     #endif
 
     #ifdef USE_MPI
-    double minTime   = 20.0; // minimum time in seconds that the benchmark should run
+    double minTime   = 30.0; // minimum time in seconds that the benchmark should run
     double startTime = MPI_Wtime();
     if(doTiming==1){
       if((minTime/timePerSolve)>minSolves)minSolves=(minTime/timePerSolve); // if one needs to do more than minSolves to run for minTime, change minSolves

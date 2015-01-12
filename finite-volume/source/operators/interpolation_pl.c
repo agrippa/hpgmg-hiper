@@ -54,9 +54,9 @@ static inline void InterpolateBlock_PL(level_type *level_f, int id_f, double pre
  
  
   int i,j,k;
-  for(k=0;k<write_dim_k;k++){
-  for(j=0;j<write_dim_j;j++){
-  for(i=0;i<write_dim_i;i++){
+  for(k=0;k<write_dim_k;k++){int delta_k=-read_kStride;if(k&0x1)delta_k=read_kStride;
+  for(j=0;j<write_dim_j;j++){int delta_j=-read_jStride;if(j&0x1)delta_j=read_jStride;
+  for(i=0;i<write_dim_i;i++){int delta_i=           -1;if(i&0x1)delta_i=           1; // i.e. even points look backwards while odd points look forward
     int write_ijk = ((i   )+write_i) + (((j   )+write_j)*write_jStride) + (((k   )+write_k)*write_kStride);
     int  read_ijk = ((i>>1)+ read_i) + (((j>>1)+ read_j)* read_jStride) + (((k>>1)+ read_k)* read_kStride);
     //
@@ -66,9 +66,6 @@ static inline void InterpolateBlock_PL(level_type *level_f, int id_f, double pre
     //
     // CAREFUL !!!  you must guarantee you zero'd the MPI buffers(write[]) and destination boxes at some point to avoid 0.0*NaN or 0.0*inf
     // piecewise linear interpolation... NOTE, BC's must have been previously applied
-    int delta_i=           -1;if(i&0x1)delta_i=           1; // i.e. even points look backwards while odd points look forward
-    int delta_j=-read_jStride;if(j&0x1)delta_j=read_jStride;
-    int delta_k=-read_kStride;if(k&0x1)delta_k=read_kStride;
     write[write_ijk] = prescale_f*write[write_ijk] + 
         0.421875*read[read_ijk                        ] +
         0.140625*read[read_ijk                +delta_k] +
@@ -87,7 +84,7 @@ static inline void InterpolateBlock_PL(level_type *level_f, int id_f, double pre
 // perform a (inter-level) piecewise linear interpolation
 void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_type *level_c, int id_c){
   exchange_boundary(level_c,id_c,0);
-   apply_BCs_linear(level_c,id_c);
+   apply_BCs_linear(level_c,id_c,0);
 
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;

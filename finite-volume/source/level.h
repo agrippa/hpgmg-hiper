@@ -43,7 +43,8 @@ using namespace upcxx;
 struct box_type;
 
 typedef struct {
-  struct {int i, j, k;}dim;			// dimensions of the block to copy
+  int subtype;                  // e.g. used to calculate normal to domain for BC's
+  struct {int i, j, k;}dim;     // dimensions of the block to copy
 #ifdef UPCXX_SHARED
   struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; global_ptr<box_type> boxgp;}read,write;
 #else
@@ -126,7 +127,6 @@ typedef struct {
   int tag;					// tag each level uniquely... FIX... replace with sub commuicator
   struct {int i, j, k;}boxes_in;		// total number of boxes in i,j,k across this level
   struct {int i, j, k;}dim;			// global dimensions at this level (NOTE: dim.i == boxes_in.i * box_dim)
-  int domain_boundary_condition;		//
   int * rank_of_box;				// 3D array containing rank of each box.  i-major ordering
   int    num_my_boxes;				//           number of boxes owned by this rank
 #ifdef USE_UPCXX
@@ -138,6 +138,14 @@ typedef struct {
   int       allocated_blocks;			//       number of blocks allocated by this rank (note, this represents a flattening of the box/cell hierarchy to facilitate threading)
   int          num_my_blocks;			//       number of blocks     owned by this rank (note, this represents a flattening of the box/cell hierarchy to facilitate threading)
   blockCopy_type * my_blocks;			// pointer to array of blocks owned by this rank (note, this represents a flattening of the box/cell hierarchy to facilitate threading)
+
+  struct {
+    int                type;                    // BC_PERIODIC or BC_DIRICHLET
+    int    allocated_blocks[2];                 // number of blocks allocated (not necessarily used) for boundary conditions on this level for [0=all,1=justFaces]
+    int          num_blocks[2];                 // number of blocks used for boundary conditions on this level for [0=all,1=justFaces]
+    blockCopy_type * blocks[2];                 // pointer to array of blocks used for boundary conditions on this level for [0=all,1=justFaces]
+  } boundary_condition;                         // boundary conditions on this level
+
   communicator_type exchange_ghosts[2];		// mini program that performs a neighbor ghost zone exchange for [0=all,1=justFaces]
   communicator_type restriction[4];		// mini program that performs restriction and agglomeration for [0=cell centered, 1=i-face, 2=j-face, 3-k-face]
   communicator_type interpolation;		// mini program that performs interpolation and dissemination...
@@ -218,7 +226,8 @@ void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *
 #endif
 
                           int write_box, double* write_ptr, int write_i, int write_j, int write_k, int write_jStride, int write_kStride, int write_scale,
-                          int my_blockcopy_tile_i, int my_blockcopy_tile_j, int my_blockcopy_tile_k
+                          int my_blockcopy_tile_i, int my_blockcopy_tile_j, int my_blockcopy_tile_k,
+                          int subtype
                          );
 //------------------------------------------------------------------------------------------------------------------------------
 #endif
