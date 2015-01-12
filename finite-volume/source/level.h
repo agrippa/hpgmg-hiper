@@ -165,6 +165,7 @@ typedef struct {
     uint64_t   restriction_total;
     uint64_t   restriction_pack;
     uint64_t   restriction_local;
+    uint64_t   restriction_shm;
     uint64_t   restriction_unpack;
     uint64_t   restriction_recv;
     uint64_t   restriction_send;
@@ -173,6 +174,7 @@ typedef struct {
     uint64_t interpolation_total;
     uint64_t interpolation_pack;
     uint64_t interpolation_local;
+    uint64_t interpolation_shm;
     uint64_t interpolation_unpack;
     uint64_t interpolation_recv;
     uint64_t interpolation_send;
@@ -181,6 +183,7 @@ typedef struct {
     uint64_t     ghostZone_total;
     uint64_t     ghostZone_pack;
     uint64_t     ghostZone_local;
+    uint64_t     ghostZone_shm;
     uint64_t     ghostZone_unpack;
     uint64_t     ghostZone_recv;
     uint64_t     ghostZone_send;

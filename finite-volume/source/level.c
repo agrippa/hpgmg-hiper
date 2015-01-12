@@ -754,37 +754,6 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
         /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
       );
-	else
-      append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[0]),&(level->exchange_ghosts[justFaces].allocated_blocks[0]),&(level->exchange_ghosts[justFaces].num_blocks[0]),
-        /* dim.i         = */ dim_i,
-        /* dim.j         = */ dim_j,
-        /* dim.k         = */ dim_k,
-#ifdef UPCXX_SHARED
-        /* read.boxgp    = */ send_boxgp,
-#endif
-        /* read.box      = */ ghostsToSend[ghost].sendBoxID,
-        /* read.ptr      = */ NULL,
-        /* read.i        = */ send_i,
-        /* read.j        = */ send_j,
-        /* read.k        = */ send_k,
-        /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
-        /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
-        /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
-        /* write.boxgp   = */ recv_boxgp,
-#endif			    
-        /* write.box     = */ -1,
-        /* write.ptr     = */ level->exchange_ghosts[justFaces].send_buffers[neighbor], // NOTE, 1. count _sizes, 2. allocate _buffers, 3. populate blocks
-        /* write.i       = */ level->exchange_ghosts[justFaces].send_sizes[neighbor], // current offset in the MPI send buffer
-        /* write.j       = */ 0,
-        /* write.k       = */ 0,
-        /* write.jStride = */ dim_i,       // contiguous block
-        /* write.kStride = */ dim_i*dim_j, // contiguous block
-        /* write.scale   = */ 1,
-        /* blockcopy_i   = */ 10000, // don't tile i dimension
-        /* blockcopy_j   = */ BLOCKCOPY_TILE_J, // default
-        /* blockcopy_k   = */ BLOCKCOPY_TILE_K  // default
-      );
 
       }
       if(neighbor>=0)level->exchange_ghosts[justFaces].send_sizes[neighbor]+=dim_i*dim_j*dim_k;
@@ -1347,6 +1316,7 @@ void reset_level_timers(level_type *level){
   level->cycles.restriction_total       = 0;
   level->cycles.restriction_pack        = 0;
   level->cycles.restriction_local       = 0;
+  level->cycles.restriction_shm         = 0;
   level->cycles.restriction_unpack      = 0;
   level->cycles.restriction_recv        = 0;
   level->cycles.restriction_send        = 0;
@@ -1354,6 +1324,7 @@ void reset_level_timers(level_type *level){
   level->cycles.interpolation_total     = 0;
   level->cycles.interpolation_pack      = 0;
   level->cycles.interpolation_local     = 0;
+  level->cycles.interpolation_shm       = 0;
   level->cycles.interpolation_unpack    = 0;
   level->cycles.interpolation_recv      = 0;
   level->cycles.interpolation_send      = 0;
@@ -1361,6 +1332,7 @@ void reset_level_timers(level_type *level){
   level->cycles.ghostZone_total         = 0;
   level->cycles.ghostZone_pack          = 0;
   level->cycles.ghostZone_local         = 0;
+  level->cycles.ghostZone_shm           = 0;
   level->cycles.ghostZone_unpack        = 0;
   level->cycles.ghostZone_recv          = 0;
   level->cycles.ghostZone_send          = 0;
@@ -1386,6 +1358,7 @@ void max_level_timers(level_type *level){
   temp=level->cycles.restriction_total;   MPI_Allreduce(&temp,&level->cycles.restriction_total   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.restriction_pack;    MPI_Allreduce(&temp,&level->cycles.restriction_pack    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.restriction_local;   MPI_Allreduce(&temp,&level->cycles.restriction_local   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_shm  ;   MPI_Allreduce(&temp,&level->cycles.restriction_shm     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.restriction_unpack;  MPI_Allreduce(&temp,&level->cycles.restriction_unpack  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.restriction_recv;    MPI_Allreduce(&temp,&level->cycles.restriction_recv    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.restriction_send;    MPI_Allreduce(&temp,&level->cycles.restriction_send    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
@@ -1393,6 +1366,7 @@ void max_level_timers(level_type *level){
   temp=level->cycles.interpolation_total; MPI_Allreduce(&temp,&level->cycles.interpolation_total ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.interpolation_pack;  MPI_Allreduce(&temp,&level->cycles.interpolation_pack  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.interpolation_local; MPI_Allreduce(&temp,&level->cycles.interpolation_local ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_shm;   MPI_Allreduce(&temp,&level->cycles.interpolation_shm   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.interpolation_unpack;MPI_Allreduce(&temp,&level->cycles.interpolation_unpack,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.interpolation_recv;  MPI_Allreduce(&temp,&level->cycles.interpolation_recv  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.interpolation_send;  MPI_Allreduce(&temp,&level->cycles.interpolation_send  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
@@ -1400,6 +1374,7 @@ void max_level_timers(level_type *level){
   temp=level->cycles.ghostZone_total;     MPI_Allreduce(&temp,&level->cycles.ghostZone_total     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.ghostZone_pack;      MPI_Allreduce(&temp,&level->cycles.ghostZone_pack      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.ghostZone_local;     MPI_Allreduce(&temp,&level->cycles.ghostZone_local     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_shm;       MPI_Allreduce(&temp,&level->cycles.ghostZone_shm       ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.ghostZone_unpack;    MPI_Allreduce(&temp,&level->cycles.ghostZone_unpack    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.ghostZone_recv;      MPI_Allreduce(&temp,&level->cycles.ghostZone_recv      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   temp=level->cycles.ghostZone_send;      MPI_Allreduce(&temp,&level->cycles.ghostZone_send      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);

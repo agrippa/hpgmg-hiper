@@ -78,6 +78,7 @@ void MGPrintTiming(mg_type *all_grids){
   total=0;printf("Boundary Conditions       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.boundary_conditions;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("Restriction               ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_total;    total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("  local restriction       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_local;    total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  shm   restriction       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_shm;    total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #ifdef USE_MPI
   total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_pack;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.restriction_unpack;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
@@ -87,6 +88,7 @@ void MGPrintTiming(mg_type *all_grids){
   #endif
   total=0;printf("Interpolation             ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_total;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("  local interpolation     ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_local;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  shm   interpolation     ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_shm;  total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #ifdef USE_MPI
   total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_pack;   total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.interpolation_unpack; total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
@@ -96,6 +98,7 @@ void MGPrintTiming(mg_type *all_grids){
   #endif
   total=0;printf("Ghost Zone Exchange       ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_total;      total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("  local exchange          ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_local;      total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
+  total=0;printf("  shm   exchange          ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_shm;      total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   #ifdef USE_MPI
   total=0;printf("  pack MPI buffers        ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_pack;       total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
   total=0;printf("  unpack MPI buffers      ");for(level=0;level<(num_levels  );level++){thislev=scale*(double)all_grids->levels[level]->cycles.ghostZone_unpack;     total+=thislev;printf("%12.6f ",thislev);}printf("%12.6f\n",total);
