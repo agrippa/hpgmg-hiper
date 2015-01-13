@@ -85,7 +85,7 @@ def makefile(args):
         m.append('UPCXX_DIR = %s' % args.upcxx_dir)
         m.append('include $(UPCXX_DIR)/include/upcxx.mak')
         m.append('VPATH=$(UPCXX_DIR)/include')
-        m.append('HPGMG_CFLAGS += -DUSE_UPCXX=1 -DUPCXX_AM')
+        m.append('HPGMG_CFLAGS += -DUSE_UPCXX=1')
         m.append('HPGMG_CPPFLAGS += $(UPCXX_CXXFLAGS)')
         m.append('HPGMG_LDFLAGS += $(UPCXX_LDFLAGS)')
         m.append('HPGMG_LDLIBS += $(UPCXX_LDLIBS)')

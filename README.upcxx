@@ -1,0 +1,27 @@
+
+HPGMG-UPCXX is converted from MPI version into upcxx.
+https://bitbucket.org/hpgmg/hpgmg/overview.
+It synchronize with public hpgmg up to Dec. 20, 2014.
+
+UPCXX implementation maintains major data structures of its MPI equivalent.
+The main difference lies in the communciation: ghost exchange, restriction, and interpolation.
+The communication buffer is allocated in global address space.
+In addition, the box data is also allocated in global address space.
+Therefore, we can directly access box data directly.
+
+To compile the code, you have to first configure the code as MPI version does.
+But you need define UPCXX_DIR, the upcxx installation directory.
+Using "configure --help" for more detail information.
+
+For example:
+
+On NERSC Edison using intel compiler:
+./configure --upcxx-dir "UPCXX INSTALL DIR" --CC CC --CFLAGS "-std=c++0x -openmp -fp-model strict" --no-fe
+
+Running the code is exactly the same as the MPI program.
+There are two command line parameters: 
+
+a.out  box_size  number_of_target_boxes_per_process. 
+
+If there is any problem, please send email to hshan@lbl.gov
+
