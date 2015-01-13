@@ -88,19 +88,20 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
 
   int box;
   for(box=0;box<level->num_my_boxes;box++){
-    memset(level->my_boxes[box].vectors[VECTOR_ALPHA ],0,level->my_boxes[box].volume*sizeof(double));
-    memset(level->my_boxes[box].vectors[VECTOR_BETA_I],0,level->my_boxes[box].volume*sizeof(double));
-    memset(level->my_boxes[box].vectors[VECTOR_BETA_J],0,level->my_boxes[box].volume*sizeof(double));
-    memset(level->my_boxes[box].vectors[VECTOR_BETA_K],0,level->my_boxes[box].volume*sizeof(double));
-    memset(level->my_boxes[box].vectors[VECTOR_UTRUE ],0,level->my_boxes[box].volume*sizeof(double));
-    memset(level->my_boxes[box].vectors[VECTOR_F     ],0,level->my_boxes[box].volume*sizeof(double));
+    box_type *lbox = &level->my_boxes[box];
+    memset(lbox->vectors[VECTOR_ALPHA ].get(),0,lbox->volume*sizeof(double));
+    memset(lbox->vectors[VECTOR_BETA_I].get(),0,lbox->volume*sizeof(double));
+    memset(lbox->vectors[VECTOR_BETA_J].get(),0,lbox->volume*sizeof(double));
+    memset(lbox->vectors[VECTOR_BETA_K].get(),0,lbox->volume*sizeof(double));
+    memset(lbox->vectors[VECTOR_UTRUE ].get(),0,lbox->volume*sizeof(double));
+    memset(lbox->vectors[VECTOR_F     ].get(),0,lbox->volume*sizeof(double));
     int i,j,k;
-    const int jStride = level->my_boxes[box].jStride;
-    const int kStride = level->my_boxes[box].kStride;
-    const int  ghosts = level->my_boxes[box].ghosts;
-    const int   dim_i = level->my_boxes[box].dim;
-    const int   dim_j = level->my_boxes[box].dim;
-    const int   dim_k = level->my_boxes[box].dim;
+    const int jStride = lbox->jStride;
+    const int kStride = lbox->kStride;
+    const int  ghosts = lbox->ghosts;
+    const int   dim_i = lbox->dim;
+    const int   dim_j = lbox->dim;
+    const int   dim_k = lbox->dim;
     #ifdef _OPENMP
     #pragma omp parallel for private(k,j,i) collapse(3)
     #endif
@@ -112,9 +113,9 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
       // i.e. the value of an array element is the average value of the function over the cell (finite volume)
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
       int ijk = (i+ghosts) + (j+ghosts)*jStride + (k+ghosts)*kStride;
-      double x = hLevel*( (double)(i+level->my_boxes[box].low.i) + 0.5 ); // +0.5 to get to the center of cell
-      double y = hLevel*( (double)(j+level->my_boxes[box].low.j) + 0.5 );
-      double z = hLevel*( (double)(k+level->my_boxes[box].low.k) + 0.5 );
+      double x = hLevel*( (double)(i+lbox->low.i) + 0.5 ); // +0.5 to get to the center of cell
+      double y = hLevel*( (double)(j+lbox->low.j) + 0.5 );
+      double z = hLevel*( (double)(k+lbox->low.k) + 0.5 );
       double A,B,Bx,By,Bz,Bi,Bj,Bk;
       double U,Ux,Uy,Uz,Uxx,Uyy,Uzz;
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -136,12 +137,12 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
       evaluateU(x,y,z,&U,&Ux,&Uy,&Uz,&Uxx,&Uyy,&Uzz, (level->boundary_condition.type == BC_PERIODIC) );
       double F = a*A*U - b*( (Bx*Ux + By*Uy + Bz*Uz)  +  B*(Uxx + Uyy + Uzz) );
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      level->my_boxes[box].vectors[VECTOR_BETA_I][ijk] = Bi;
-      level->my_boxes[box].vectors[VECTOR_BETA_J][ijk] = Bj;
-      level->my_boxes[box].vectors[VECTOR_BETA_K][ijk] = Bk;
-      level->my_boxes[box].vectors[VECTOR_ALPHA ][ijk] = A;
-      level->my_boxes[box].vectors[VECTOR_UTRUE ][ijk] = U;
-      level->my_boxes[box].vectors[VECTOR_F     ][ijk] = F;
+      memberof(level->my_boxes[box],vectors)[VECTOR_BETA_I][ijk] = Bi;
+      memberof(level->my_boxes[box],vectors)[VECTOR_BETA_J][ijk] = Bj;
+      memberof(level->my_boxes[box],vectors)[VECTOR_BETA_K][ijk] = Bk;
+      memberof(level->my_boxes[box],vectors)[VECTOR_ALPHA ][ijk] = A;
+      memberof(level->my_boxes[box],vectors)[VECTOR_UTRUE ][ijk] = U;
+      memberof(level->my_boxes[box],vectors)[VECTOR_F     ][ijk] = F;
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     }}}
   }

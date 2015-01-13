@@ -455,9 +455,10 @@ void build_boundary_conditions(level_type *level, int justFaces){
     int regionIsOutside=0;
     int normal = 13; // normal effectively defines the normal vector to the domain for this region... 
                      // this addition is necessary for linearly interpolated BC's as a box's corner is not necessarily a domain's corner
-    int myBox_i = level->my_boxes[box].low.i / level->box_dim;
-    int myBox_j = level->my_boxes[box].low.j / level->box_dim;
-    int myBox_k = level->my_boxes[box].low.k / level->box_dim;
+    box_type* lbox = &(level->my_boxes[box]);
+    int myBox_i = lbox->low.i / level->box_dim;
+    int myBox_j = lbox->low.j / level->box_dim;
+    int myBox_k = lbox->low.k / level->box_dim;
     int neighborBox_i = (  myBox_i + di );
     int neighborBox_j = (  myBox_j + dj );
     int neighborBox_k = (  myBox_k + dk );
@@ -493,21 +494,27 @@ void build_boundary_conditions(level_type *level, int justFaces){
       /* dim.i         = */ dim_i,
       /* dim.j         = */ dim_j,
       /* dim.k         = */ dim_k,
+#ifdef UPCXX_SHARED
+      /* read.boxgp    = */ &level->my_boxes[box],
+#endif
       /* read.box      = */ box,
       /* read.ptr      = */ NULL,
       /* read.i        = */ block_i,
       /* read.j        = */ block_j,
       /* read.k        = */ block_k,
-      /* read.jStride  = */ level->my_boxes[box].jStride,
-      /* read.kStride  = */ level->my_boxes[box].kStride,
+      /* read.jStride  = */ lbox->jStride,
+      /* read.kStride  = */ lbox->kStride,
       /* read.scale    = */ 1,
+#ifdef UPCXX_SHARED
+      /* write.boxgp   = */ &level->my_boxes[box],
+#endif
       /* write.box     = */ box,
       /* write.ptr     = */ NULL,
       /* write.i       = */ block_i,
       /* write.j       = */ block_j,
       /* write.k       = */ block_k,
-      /* write.jStride = */ level->my_boxes[box].jStride,
-      /* write.kStride = */ level->my_boxes[box].kStride,
+      /* write.jStride = */ lbox->jStride,
+      /* write.kStride = */ lbox->kStride,
       /* write.scale   = */ 1,
       /* blockcopy_i   = */ BLOCKCOPY_TILE_I < level->box_ghosts ? level->box_ghosts : BLOCKCOPY_TILE_I,  // BC's may never tile smaller than the ghost zone depth
       /* blockcopy_j   = */ BLOCKCOPY_TILE_J < level->box_ghosts ? level->box_ghosts : BLOCKCOPY_TILE_J,  // BC's may never tile smaller than the ghost zone depth
