@@ -27,7 +27,6 @@ void matmul(level_type * level, double *C, int * id_A, int * id_B, int rows, int
     for(box=0;box<level->num_my_boxes;box++){
       int i,j,k;
 
-#ifdef USE_UPCXX
       box_type *lbox = &(level->my_boxes[box]);
       const int jStride = lbox->jStride;
       const int kStride = lbox->kStride;
@@ -35,15 +34,7 @@ void matmul(level_type * level, double *C, int * id_A, int * id_B, int rows, int
       const int     dim = lbox->dim;
       double * __restrict__ grid_a = lbox->vectors[id_A[mm]] + ghosts*(1+jStride+kStride); // i.e. [0] = first non ghost zone point
       double * __restrict__ grid_b = lbox->vectors[id_B[nn]] + ghosts*(1+jStride+kStride);
-#else
 
-      const int jStride = level->my_boxes[box].jStride;
-      const int kStride = level->my_boxes[box].kStride;
-      const int  ghosts = level->my_boxes[box].ghosts;
-      const int     dim = level->my_boxes[box].dim;
-      double * __restrict__ grid_a = level->my_boxes[box].vectors[id_A[mm]] + ghosts*(1+jStride+kStride); // i.e. [0] = first non ghost zone point
-      double * __restrict__ grid_b = level->my_boxes[box].vectors[id_B[nn]] + ghosts*(1+jStride+kStride); 
-#endif
       double a_dot_b_box = 0.0;
       for(k=0;k<dim;k++){
       for(j=0;j<dim;j++){

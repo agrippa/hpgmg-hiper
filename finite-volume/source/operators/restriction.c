@@ -153,19 +153,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   int n;
   int my_tag = (level_f->tag<<4) | 0x5;
 
-  _timeStart = CycleTime();
-#ifdef USE_UPCXX
-#ifndef UPCXX_AM
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#endif
-#endif
-  _timeEnd = CycleTime();
-  level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
-
   // perform local restriction[restrictionType]... try and hide within Isend latency... 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[3])
@@ -189,9 +176,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     global_ptr<double> p1, p2;
     p1 = level_f->restriction[restrictionType].global_send_buffers[n];
     p2 = level_f->restriction[restrictionType].global_match_buffers[n];
-#ifndef UPCXX_AM
-    upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n]);    
-#else
+
     if (!is_memory_shared_with(level_f->restriction[restrictionType].send_ranks[n])) {
       event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
       upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], copy_e);
@@ -203,8 +188,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
       int *p = (int *) level_f->restriction[restrictionType].match_rflag[n]; *(p+nth+pos) = 1;
       nshm++;
     }
-
-#endif
 
   }
 #endif
@@ -221,7 +204,6 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // wait for MPI to finish...
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
-#ifdef UPCXX_AM
 
   for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
     int rid = level_f->restriction[restrictionType].send_ranks[n];
@@ -255,16 +237,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   }
 
   }
-#else
 
-  async_copy_fence();
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-
-#endif
 #endif
 
   _timeEnd = CycleTime();

@@ -29,7 +29,7 @@
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
 // HPGMG-UPCXX: 
-// Converted from MPI implementation, sycchronized up to Dec 20, 2014
+// Converted from MPI implementation, sycchronized up to Dec 20, 2014.
 // Using point-2-point synchronization and shared memory support
 // MPI is still needed to perform collective functions, such as MPI_Allreduce
 // If there is any problem, please contact hshan@lbl.gov
@@ -56,14 +56,14 @@
 
 #ifdef USE_UPCXX
 // these arrays only used temporarily for communicator setup
-shared_array< int, 1> upc_int_info;
+shared_array< int,                  1 > upc_int_info;
 shared_array< global_ptr<double>,   1 > upc_buf_info;
 shared_array< global_ptr<box_type>, 1 > upc_box_info;
 shared_array< global_ptr<mg_type>,  1 > upc_grids;
 shared_array< global_ptr<int>,      1 > upc_rflag_ptr;
 #endif
 
-mg_type *all_grids;
+mg_type *all_grids;  // to be consistent with MPI version
 
 int main(int argc, char **argv){
   int my_rank=0;
@@ -75,7 +75,7 @@ int main(int argc, char **argv){
   upcxx::init(&argc, &argv);
   num_tasks = THREADS;
   my_rank = MYTHREAD;
-  if (my_rank == 0) printf("Using UPCXX AM2 SHM: Total %d processes\n", num_tasks);
+  if (my_rank == 0) printf("Using UPCXX P2P SHM: Total %d processes\n", num_tasks);
 #endif
 
 #ifdef _OPENMP
@@ -204,10 +204,8 @@ int main(int argc, char **argv){
   upc_box_info.init(boxes_in_i*boxes_in_i*boxes_in_i,1);
   upc_grids.init(THREADS, 1);
   upc_grids[MYTHREAD] = allocate<mg_type>(MYTHREAD, 1);
-  
   upc_rflag_ptr.init(THREADS, 1);
-  
-  barrier();
+  upcxx::barrier();
 #endif
 
   // create the fine level...
@@ -219,7 +217,7 @@ int main(int argc, char **argv){
   level_type fine_grid;
   int ghosts=stencil_get_radius();
 #ifdef USE_UPCXX
-  fine_grid.depth = 0;
+  fine_grid.depth = 0;   //Using depth to represent the levels
   all_grids = (mg_type *) upc_grids[MYTHREAD].get();
   all_grids->levels = (level_type**)malloc(MAX_LEVELS*sizeof(level_type*));
   if(all_grids->levels == NULL){fprintf(stderr,"malloc failed - MGBuild/all_grids->levels\n");exit(0);}
@@ -258,8 +256,7 @@ int main(int argc, char **argv){
     }
   }
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  // shan: move to global
-  // mg_type all_grids;
+  // mg_type all_grids;   // moved to global variable: will be used in communication
 
   int minCoarseDim = 1;
   rebuild_operator(&fine_grid,NULL,a,b); // i.e. calculate Dinv and lambda_max

@@ -370,11 +370,11 @@ void print_decomposition(level_type *level){
 #endif
 void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *num_blocks,
                           int dim_i, int dim_j, int dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 			  global_ptr<box_type> read_boxgp,
 #endif
                           int  read_box, double*  read_ptr, int  read_i, int  read_j, int  read_k, int  read_jStride, int  read_kStride, int  read_scale,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 			  global_ptr<box_type> write_boxgp,
 #endif
                           int write_box, double* write_ptr, int write_i, int write_j, int write_k, int write_jStride, int write_kStride, int write_scale,
@@ -407,7 +407,7 @@ void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *
     (*blocks)[*num_blocks].dim.i         = dim_i_mod;
     (*blocks)[*num_blocks].dim.j         = dim_j_mod;
     (*blocks)[*num_blocks].dim.k         = dim_k_mod;
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
     (*blocks)[*num_blocks].read.boxgp    = read_boxgp;
 #endif
     (*blocks)[*num_blocks].read.box      = read_box;
@@ -417,7 +417,7 @@ void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *
     (*blocks)[*num_blocks].read.k        = read_k + read_scale*kk;
     (*blocks)[*num_blocks].read.jStride  = read_jStride;
     (*blocks)[*num_blocks].read.kStride  = read_kStride;
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
     (*blocks)[*num_blocks].write.boxgp   = write_boxgp;
 #endif
     (*blocks)[*num_blocks].write.box     = write_box;
@@ -494,7 +494,7 @@ void build_boundary_conditions(level_type *level, int justFaces){
       /* dim.i         = */ dim_i,
       /* dim.j         = */ dim_j,
       /* dim.k         = */ dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       /* read.boxgp    = */ &level->my_boxes[box],
 #endif
       /* read.box      = */ box,
@@ -505,7 +505,7 @@ void build_boundary_conditions(level_type *level, int justFaces){
       /* read.jStride  = */ lbox->jStride,
       /* read.kStride  = */ lbox->kStride,
       /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       /* write.boxgp   = */ &level->my_boxes[box],
 #endif
       /* write.box     = */ box,
@@ -603,18 +603,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(di=-1;di<=1;di++){
       int dir = 13+di+3*dj+9*dk;if(CommunicateThisDir[dir]){
 
-#ifdef USE_UPCXX
       box_type* lbox = &(level->my_boxes[sendBox]); 
       int       myBoxID = lbox->global_box_id;
       int       myBox_i = lbox->low.i / level->box_dim;
       int       myBox_j = lbox->low.j / level->box_dim;
       int       myBox_k = lbox->low.k / level->box_dim;
-#else
-      int       myBoxID = level->my_boxes[sendBox].global_box_id;
-      int       myBox_i = level->my_boxes[sendBox].low.i / level->box_dim;
-      int       myBox_j = level->my_boxes[sendBox].low.j / level->box_dim;
-      int       myBox_k = level->my_boxes[sendBox].low.k / level->box_dim;
-#endif
 
       int neighborBoxID = -1;
       if(level->boundary_condition.type == BC_PERIODIC){
@@ -738,7 +731,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
  
       // determine if this ghost requires a pack or local exchange 
       int LocalExchange; // 0 = pack list, 1 = local exchange list
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       if (!upcxx::is_memory_shared_with(ghostsToSend[ghost].recvRank)) {
 #else
       if(ghostsToSend[ghost].recvRank != level->my_rank){
@@ -751,18 +744,18 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       }
    
       if(stage==1){ 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         global_ptr<box_type> send_boxgp = level->addr_of_box[ghostsToSend[ghost].sendBoxID];
         global_ptr<box_type> recv_boxgp = level->addr_of_box[ghostsToSend[ghost].recvBoxID];
 #endif
 	if(LocalExchange) {// append to the local exchange list...
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         box_type *lbox = (box_type *)recv_boxgp;
         int jStride = lbox->jStride;
         int kStride = lbox->kStride;
 #else
-        int jStride = level->my_boxes[ghostsToSend[ghost].recvBox].get().jStride;
-        int kStride = level->my_boxes[ghostsToSend[ghost].recvBox].get().kStride;
+        int jStride = level->my_boxes[ghostsToSend[ghost].recvBox].jStride;
+        int kStride = level->my_boxes[ghostsToSend[ghost].recvBox].kStride;
 #endif
 
 	if (level->my_rank == ghostsToSend[ghost].recvRank) {
@@ -770,7 +763,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         /* read.boxgp    = */ send_boxgp,
 #endif
         /* read.box      = */ ghostsToSend[ghost].sendBoxID,
@@ -781,7 +774,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
         /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
         /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         /* write.boxgp   = */ recv_boxgp,
 #endif
         /* write.box     = */ ghostsToSend[ghost].recvBoxID,
@@ -802,7 +795,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         /* read.boxgp    = */ send_boxgp,
 #endif
         /* read.box      = */ ghostsToSend[ghost].sendBoxID,
@@ -813,7 +806,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
         /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
         /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         /* write.boxgp   = */ recv_boxgp,
 #endif
         /* write.box     = */ ghostsToSend[ghost].recvBoxID,
@@ -837,7 +830,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* dim.i         = */ dim_i,
         /* dim.j         = */ dim_j,
         /* dim.k         = */ dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         /* read.boxgp    = */ send_boxgp,
 #endif
         /* read.box      = */ ghostsToSend[ghost].sendBoxID,
@@ -848,7 +841,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
         /* read.jStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().jStride,
         /* read.kStride  = */ level->my_boxes[ghostsToSend[ghost].sendBox].get().kStride,
         /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
         /* write.boxgp   = */ recv_boxgp,
 #endif			    
         /* write.box     = */ -1,
@@ -893,19 +886,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(di=-1;di<=1;di++){
       int dir = 13+di+3*dj+9*dk;if(CommunicateThisDir[dir]){
 
-#ifdef USE_UPCXX
       box_type* lbox = &(level->my_boxes[recvBox]);
       int       myBoxID = lbox->global_box_id;
       int       myBox_i = lbox->low.i / level->box_dim;
       int       myBox_j = lbox->low.j / level->box_dim;
       int       myBox_k = lbox->low.k / level->box_dim;
-#else
-
-      int       myBoxID = level->my_boxes[recvBox].global_box_id;
-      int       myBox_i = level->my_boxes[recvBox].low.i / level->box_dim;
-      int       myBox_j = level->my_boxes[recvBox].low.j / level->box_dim;
-      int       myBox_k = level->my_boxes[recvBox].low.k / level->box_dim;
-#endif
 
       int neighborBoxID = -1;
       //if(1){
@@ -952,12 +937,10 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].recv_sizes    =     (int*)malloc(numRecvRanks*sizeof(int));
   level->exchange_ghosts[justFaces].recv_buffers  = (double**)malloc(numRecvRanks*sizeof(double*));
 #ifdef USE_UPCXX
-#ifdef UPCXX_AM
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
   level->exchange_ghosts[justFaces].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
   memset((void *)level->exchange_ghosts[justFaces].rflag, 0, MAX_VG * sizeof(int));
   memset((void *)level->exchange_ghosts[justFaces].sblock2, 0, sizeof(int)*(numRecvRanks+2));
-#endif
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif
   if(numRecvRanks>0){
@@ -980,12 +963,9 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef USE_UPCXX
 	level->exchange_ghosts[justFaces].global_recv_buffers[neighbor] = allocate<double>(MYTHREAD, level->exchange_ghosts[justFaces].recv_sizes[neighbor]);
 	level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double *)level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
-#ifdef DEBUG
-        printf("Proc %d Recv buffer nbr %d is %d buf %p\n", MYTHREAD, neighbor, level->exchange_ghosts[justFaces].recv_ranks[neighbor], level->exchange_ghosts[justFaces].recv_buffers[neighbor]); 
-#endif
 #else
-             level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
-          if(level->exchange_ghosts[justFaces].recv_sizes[neighbor]>0)
+	level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
+	if(level->exchange_ghosts[justFaces].recv_sizes[neighbor]>0)
           if(level->exchange_ghosts[justFaces].recv_buffers[neighbor]==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].recv_buffers[neighbor]\n",justFaces);exit(0);}
 #endif
 	  if (level->exchange_ghosts[justFaces].recv_sizes[neighbor] > 0)
@@ -1020,12 +1000,12 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       }
  
       // determine if this ghost requires a pack or local exchange 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       if (is_memory_shared_with(ghostsToRecv[ghost].sendRank)) continue;
 #endif
       neighbor=0;while(level->exchange_ghosts[justFaces].recv_ranks[neighbor] != ghostsToRecv[ghost].sendRank)neighbor++;
       if(stage==1) {
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	global_ptr<box_type> send_boxgp = level->addr_of_box[ghostsToRecv[ghost].sendBoxID];
 	global_ptr<box_type> recv_boxgp = level->addr_of_box[ghostsToRecv[ghost].recvBoxID];
 #endif
@@ -1033,7 +1013,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       /*dim.i         = */ dim_i,
       /*dim.j         = */ dim_j,
       /*dim.k         = */ dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       /*read.boxgp    = */ send_boxgp,
 #endif			     
       /*read.box      = */ (-1)*ghostsToRecv[ghost].sendRank-1,  // shan -1,
@@ -1044,7 +1024,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       /*read.jStride  = */ dim_i,       // contiguous block
       /*read.kStride  = */ dim_i*dim_j, // contiguous block
       /*read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       /*write.box     = */ recv_boxgp,
 #endif
       /*write.box     = */ ghostsToRecv[ghost].recvBoxID,
@@ -1094,39 +1074,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // malloc MPI requests/status arrays
-#elif USE_MPI
-  level->exchange_ghosts[justFaces].requests = (MPI_Request*)malloc((level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs)*sizeof(MPI_Request));
-  level->exchange_ghosts[justFaces].status   = (MPI_Status *)malloc((level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs)*sizeof(MPI_Status ));
-  if((level->exchange_ghosts[justFaces].num_sends+level->exchange_ghosts[justFaces].num_recvs)>0){
-  if(level->exchange_ghosts[justFaces].requests==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].requests\n",justFaces);exit(0);}
-  if(level->exchange_ghosts[justFaces].status  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].status\n",justFaces);exit(0);}
-  }
 #endif
 
-#ifdef DEBUG
-  printf("SUM Proc %d level %d faces %d boxes %d nsend %d nrecv %d\n", MYTHREAD, level->depth, justFaces, level->num_my_boxes,
-          level->exchange_ghosts[justFaces].num_sends, level->exchange_ghosts[justFaces].num_recvs); 
-  for (int i = 0; i < level->exchange_ghosts[justFaces].num_recvs; i++) {
-    printf("ELEM Proc %d level %d faces %d nrecv %d pos %d rank %d\n", MYTHREAD, level->depth, justFaces, level->exchange_ghosts[justFaces].num_recvs,
-	    i, level->exchange_ghosts[justFaces].recv_ranks[i]);
-  }
-  for (int i = 0; i < level->exchange_ghosts[justFaces].num_sends; i++) {
-    printf("ELEM Proc %d level %d faces %d nsend %d pos %d rank %d\n", MYTHREAD, level->depth, justFaces, level->exchange_ghosts[justFaces].num_sends,
-            i, level->exchange_ghosts[justFaces].send_ranks[i]);
-  }
-#endif
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  // if (MYTHREAD < 2 && level->depth < 2) print_communicator(7,level->my_rank,0,&level->exchange_ghosts[justFaces]);
-
-#ifdef UPCXX_AM
+#ifdef USE_UPCXX
   // setup start and end position for each receiver
-/*****
-  for(int buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){
-     blockCopy_type *b = &level->exchange_ghosts[justFaces].blocks[2][buffer];
-     printf("BB2 proc %d level %d face %d pos %d rbox %d (%d) wbox %d (%d) \n", level->my_rank, level->depth, justFaces, buffer, b->read.box,
-      (b->read.box >= 0) ? level->rank_of_box[b->read.box] : -1, b->write.box, level->rank_of_box[b->write.box]);  
-  }
-*****/
+
   if (level->exchange_ghosts[justFaces].num_blocks[2] > 0) {
     int curpos = 0;
     int curproc = level->exchange_ghosts[justFaces].blocks[2][0].read.box * (-1) -1;
@@ -1146,16 +1098,6 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for (int i = curpos+1; i <= level->exchange_ghosts[justFaces].num_recvs; i++) {
       level->exchange_ghosts[justFaces].sblock2[i] = level->exchange_ghosts[justFaces].num_blocks[2];
     }
-
-/*****
-  {
-    communicator_type *c = &level->exchange_ghosts[justFaces];
-    for (int i = 0; i < c->num_recvs; i++) {
-      printf("SB face %d proc %d level %d pos %d sb (%d - %d) out of %d ngr %d out of %d\n", justFaces, level->my_rank, level->depth, i, c->sblock2[i],
-          c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
-    }
-  }
-*****/
 
   }
 #endif
@@ -1274,7 +1216,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   }}}}
 
 #ifdef USE_UPCXX
-  // NOTE: dumb implementation now
+  // NOTE: this may removed later
   upcxx::barrier();
   for (i = 0; i < level->boxes_in.i*level->boxes_in.j*level->boxes_in.k; i++)
     level->addr_of_box[i] = upc_box_info[i];
@@ -1283,14 +1225,14 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
 
   // Build and auxilarlly data structure that flattens boxes into blocks...
   for(box=0;box<level->num_my_boxes;box++){
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
     global_ptr<box_type> boxgp = level->addr_of_box[level->my_boxes[box].get().global_box_id];
 #endif
     append_block_to_list(&(level->my_blocks),&(level->allocated_blocks),&(level->num_my_blocks),
       /* dim.i         = */ level->my_boxes[box].get().dim,
       /* dim.j         = */ level->my_boxes[box].get().dim,
       /* dim.k         = */ level->my_boxes[box].get().dim,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       /* read.boxgp    = */ boxgp,
 #endif
       /* read.box      = */ box,
@@ -1301,7 +1243,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
       /* read.jStride  = */ level->my_boxes[box].get().jStride,
       /* read.kStride  = */ level->my_boxes[box].get().kStride,
       /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       /* write.boxgp   = */ boxgp,
 #endif
       /* write.box     = */ box,
@@ -1405,15 +1347,6 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   #endif
   if(my_rank==0){fprintf(stdout,"  Calculating boxes per process... target=%0.3f, max=%d\n",(double)TotalBoxes/(double)num_ranks,BoxesPerProcess);}
 
-/*******
-  for (int i = 0; i < level->boxes_in.i * level->boxes_in.j * level->boxes_in.k; i++) {
-    bool shr = is_memory_shared_with(level->rank_of_box[i]);
-    cout << "AAA proc " << level->my_rank << " box " << i << " rank " << level->rank_of_box[i] << " addr " << level->addr_of_box[i] << " shared " << shr << endl;
-  }
-  cout << "BBB proc " << level->my_rank << " level " << level->depth << " nsend " << level->exchange_ghosts[0].num_sends << " nrecv " << 
-       level->exchange_ghosts[0].num_recvs << " block " <<
-       level->exchange_ghosts[0].num_blocks[0] << " " << level->exchange_ghosts[0].num_blocks[1] << " " << level->exchange_ghosts[0].num_blocks[2] << endl;
-*******/
 }
 
 

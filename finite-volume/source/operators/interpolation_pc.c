@@ -111,19 +111,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   int buffer=0;
   int n;
 
-  _timeStart = CycleTime();
-#ifdef USE_UPCXX
-#ifndef UPCXX_AM
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#endif
-#endif
-  _timeEnd = CycleTime();
-  level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
-
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[3])
@@ -147,9 +134,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
     global_ptr<double> p1, p2;
     p1 = level_c->interpolation.global_send_buffers[n];
     p2 = level_c->interpolation.global_match_buffers[n];
-#ifndef UPCXX_AM
-    upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n]);
-#else
     if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
       event* copy_e = &level_c->interpolation.copy_e[n];
       upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
@@ -160,7 +144,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
       int *p = (int *) level_c->interpolation.match_rflag[n]; *(p+nth+pos) = 1;
       nshm++;
     }
-#endif
   }
 #endif
   _timeEnd = CycleTime();
@@ -177,7 +160,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   _timeStart = CycleTime();
 
 #ifdef USE_UPCXX
-#ifdef UPCXX_AM
 
   for(n=0;n<level_c->interpolation.num_sends;n++){
     int rid = level_c->interpolation.send_ranks[n];
@@ -210,15 +192,6 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   }
   }
 
-#else
-
-  async_copy_fence();
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level_f->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#endif
 #endif
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);

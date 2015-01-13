@@ -24,7 +24,9 @@
 #include "solvers.h"
 #include "mg.h"
 
+#ifdef USE_UPCXX
 extern shared_array< int, 1> upc_int_info;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
@@ -172,18 +174,13 @@ void build_interpolation(mg_type *all_grids){
     int coarseBox;
     for(coarseBox=0;coarseBox<all_grids->levels[level]->num_my_boxes;coarseBox++){
       int bi,bj,bk;
-#ifdef USE_UPCXX
+
       box_type *lbox = &(all_grids->levels[level]->my_boxes[coarseBox]);
       int   coarseBoxID = lbox->global_box_id;
       int   coarseBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   coarseBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
       int   coarseBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
-#else
-      int   coarseBoxID = all_grids->levels[level]->my_boxes[coarseBox].global_box_id;
-      int   coarseBox_i = all_grids->levels[level]->my_boxes[coarseBox].low.i / all_grids->levels[level]->box_dim;
-      int   coarseBox_j = all_grids->levels[level]->my_boxes[coarseBox].low.j / all_grids->levels[level]->box_dim;
-      int   coarseBox_k = all_grids->levels[level]->my_boxes[coarseBox].low.k / all_grids->levels[level]->box_dim;
-#endif
+
       for(bk=0;bk<all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;bk++){
       for(bj=0;bj<all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;bj++){
       for(bi=0;bi<all_grids->levels[level-1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;bi++){
@@ -259,7 +256,7 @@ void build_interpolation(mg_type *all_grids){
 #endif
       all_grids->levels[level]->interpolation.send_buffers[neighbor] = all_send_buffers;
 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       if(upcxx::is_memory_shared_with(fineRanks[neighbor])) {
         all_grids->levels[level]->interpolation.send_ranks[neighbor] = fineRanks[neighbor];
         all_grids->levels[level]->interpolation.send_sizes[neighbor] = offset;
@@ -270,7 +267,7 @@ void build_interpolation(mg_type *all_grids){
 
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)
 	if(fineBoxes[fineBox].recvRank==fineRanks[neighbor]){
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].sendBoxID];
 	  global_ptr<box_type> recv_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
 #endif
@@ -279,7 +276,7 @@ void build_interpolation(mg_type *all_grids){
           /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
           /* dim.j         = */ all_grids->levels[level-1]->box_dim/2,
           /* dim.k         = */ all_grids->levels[level-1]->box_dim/2,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* read.boxgp    = */ send_boxgp,
 #endif
           /* read.box      = */ fineBoxes[fineBox].sendBoxID,
@@ -290,7 +287,7 @@ void build_interpolation(mg_type *all_grids){
           /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().jStride,
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ -1,
@@ -317,7 +314,7 @@ void build_interpolation(mg_type *all_grids){
     } // neighbor
     {
       int fineBox;
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(upcxx::is_memory_shared_with(fineBoxes[fineBox].recvRank)){
 	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].sendBoxID];
 	  global_ptr<box_type> recv_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
@@ -336,7 +333,7 @@ void build_interpolation(mg_type *all_grids){
           /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
           /* dim.j         = */ all_grids->levels[level-1]->box_dim/2,
           /* dim.k         = */ all_grids->levels[level-1]->box_dim/2,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* read.boxgp    = */ send_boxgp,
 #endif
           /* read.box      = */ fineBoxes[fineBox].sendBoxID,
@@ -347,7 +344,7 @@ void build_interpolation(mg_type *all_grids){
           /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().jStride,
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ fineBoxes[fineBox].recvBoxID,
@@ -368,7 +365,7 @@ void build_interpolation(mg_type *all_grids){
           /* dim.i         = */ all_grids->levels[level-1]->box_dim/2,
           /* dim.j         = */ all_grids->levels[level-1]->box_dim/2,
           /* dim.k         = */ all_grids->levels[level-1]->box_dim/2,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* read.boxgp    = */ send_boxgp,
 #endif
           /* read.box      = */ fineBoxes[fineBox].sendBoxID,
@@ -379,7 +376,7 @@ void build_interpolation(mg_type *all_grids){
           /* read.jStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().jStride,
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[fineBoxes[fineBox].sendBox].get().kStride,
           /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ fineBoxes[fineBox].recvBoxID,
@@ -417,18 +414,13 @@ void build_interpolation(mg_type *all_grids){
         numCoarseBoxes       = 0;
     int fineBox;
     for(fineBox=0;fineBox<all_grids->levels[level]->num_my_boxes;fineBox++){
-#ifdef USE_UPCXX
+
       box_type *lbox = &(all_grids->levels[level]->my_boxes[fineBox]);
       int   fineBoxID = lbox->global_box_id;
       int   fineBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   fineBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
       int   fineBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
-#else
-      int   fineBoxID = all_grids->levels[level]->my_boxes[fineBox].global_box_id;
-      int   fineBox_i = all_grids->levels[level]->my_boxes[fineBox].low.i / all_grids->levels[level]->box_dim;
-      int   fineBox_j = all_grids->levels[level]->my_boxes[fineBox].low.j / all_grids->levels[level]->box_dim;
-      int   fineBox_k = all_grids->levels[level]->my_boxes[fineBox].low.k / all_grids->levels[level]->box_dim;
-#endif
+
       int coarseBox_i = fineBox_i*all_grids->levels[level+1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;
       int coarseBox_j = fineBox_j*all_grids->levels[level+1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;
       int coarseBox_k = fineBox_k*all_grids->levels[level+1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;
@@ -459,12 +451,10 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.recv_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->interpolation.recv_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
 #ifdef USE_UPCXX
-#ifdef UPCXX_AM
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
     all_grids->levels[level]->interpolation.rflag         =     allocate<int>(MYTHREAD, MAX_VG);
     memset((void *)all_grids->levels[level]->interpolation.rflag, 0, MAX_VG * sizeof(int));
     memset((void *)all_grids->levels[level]->interpolation.sblock2, 0, sizeof(int)*(numCoarseRanks+2));
-#endif
     all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
     if(numCoarseRanks>0){
@@ -496,7 +486,6 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.recv_buffers[neighbor] = all_recv_buffers;
 #ifdef USE_UPCXX
       all_grids->levels[level]->interpolation.global_recv_buffers[neighbor] = my_recv_buffers;
-#ifdef UPCXX_SHARED
       if(is_memory_shared_with(coarseRanks[neighbor])) {
         all_grids->levels[level]->interpolation.recv_ranks[neighbor] = coarseRanks[neighbor];
         all_grids->levels[level]->interpolation.recv_sizes[neighbor] = offset;
@@ -504,10 +493,9 @@ void build_interpolation(mg_type *all_grids){
 	continue;
       }
 #endif
-#endif
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)
 	if(coarseBoxes[coarseBox].sendRank==coarseRanks[neighbor]){
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	  global_ptr<box_type> send_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
 	  global_ptr<box_type> recv_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
 #endif
@@ -516,7 +504,7 @@ void build_interpolation(mg_type *all_grids){
           /* dim.i         = */ all_grids->levels[level]->box_dim,
           /* dim.j         = */ all_grids->levels[level]->box_dim,
           /* dim.k         = */ all_grids->levels[level]->box_dim,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	  /* read.boxgp    = */ send_boxgp,
 #endif
 	  /* read.box      = */ (-1)*coarseBoxes[coarseBox].sendRank-1, //shan -1,
@@ -527,7 +515,7 @@ void build_interpolation(mg_type *all_grids){
           /* read.jStride  = */ all_grids->levels[level]->box_dim,
           /* read.kStride  = */ all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim,
           /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ coarseBoxes[coarseBox].recvBoxID,
@@ -557,7 +545,7 @@ void build_interpolation(mg_type *all_grids){
     free(coarseBoxes);
     free(coarseRanks);
 
-#ifdef UPCXX_AM
+#ifdef USE_UPCXX
   // setup start and end position for each receiver
   
     if (all_grids->levels[level]->interpolation.num_blocks[2] > 0) {
@@ -583,16 +571,6 @@ void build_interpolation(mg_type *all_grids){
 #endif
 
   } // recv/unpack
-
-
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  //MPI_Barrier(MPI_COMM_WORLD);
-  //if(all_grids->my_rank==0){printf("================================================================================\n");}
-  //print_communicator(0x7,all_grids->my_rank,level,&all_grids->levels[level]->interpolation);
-  //if((all_grids->my_rank==0)&&(level==all_grids->num_levels-1))print_communicator(2,all_grids->my_rank,level,&all_grids->levels[level]->interpolation);
-  //MPI_Barrier(MPI_COMM_WORLD);
-  } // all levels
-
 
 #ifdef USE_UPCXX
   upcxx::barrier();
@@ -623,18 +601,6 @@ void build_interpolation(mg_type *all_grids){
       }
     }
     upcxx::barrier();
-  }
-
-#elif USE_MPI
-  for(level=0;level<all_grids->num_levels;level++){
-    all_grids->levels[level]->interpolation.requests = NULL;
-    all_grids->levels[level]->interpolation.status   = NULL;
-    if(level<all_grids->num_levels-1){  // i.e. bottom never calls interpolation()
-    // by convention, level_f allocates a combined array of requests for both level_f recvs and level_c sends...
-    int nMessages = all_grids->levels[level+1]->interpolation.num_sends + all_grids->levels[level]->interpolation.num_recvs;
-    all_grids->levels[level]->interpolation.requests = (MPI_Request*)malloc(nMessages*sizeof(MPI_Request));
-    all_grids->levels[level]->interpolation.status   = (MPI_Status *)malloc(nMessages*sizeof(MPI_Status ));
-    }
   }
 #endif
 }
@@ -675,18 +641,13 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     int numCoarseBoxesRemote = 0;
     int fineBox;
     for(fineBox=0;fineBox<all_grids->levels[level]->num_my_boxes;fineBox++){
-#ifdef USE_UPCXX
+
       box_type *lbox = &(all_grids->levels[level]->my_boxes[fineBox]);
       int   fineBoxID = lbox->global_box_id;
       int   fineBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   fineBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
       int   fineBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
-#else
-      int   fineBoxID = all_grids->levels[level]->my_boxes[fineBox].global_box_id;
-      int   fineBox_i = all_grids->levels[level]->my_boxes[fineBox].low.i / all_grids->levels[level]->box_dim;
-      int   fineBox_j = all_grids->levels[level]->my_boxes[fineBox].low.j / all_grids->levels[level]->box_dim;
-      int   fineBox_k = all_grids->levels[level]->my_boxes[fineBox].low.k / all_grids->levels[level]->box_dim;
-#endif
+
       int coarseBox_i = fineBox_i*all_grids->levels[level+1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;
       int coarseBox_j = fineBox_j*all_grids->levels[level+1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;
       int coarseBox_k = fineBox_k*all_grids->levels[level+1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;
@@ -776,7 +737,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #endif
       all_grids->levels[level]->restriction[restrictionType].send_buffers[neighbor] = all_send_buffers;
 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       if(upcxx::is_memory_shared_with(coarseRanks[neighbor])) {
         all_grids->levels[level]->restriction[restrictionType].send_ranks[neighbor] = coarseRanks[neighbor];
         all_grids->levels[level]->restriction[restrictionType].send_sizes[neighbor] = offset;
@@ -788,7 +749,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)
 	if(coarseBoxes[coarseBox].recvRank==coarseRanks[neighbor]){
         // restrict to MPI send buffer...
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
 	  global_ptr<box_type> recv_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
 #endif
@@ -798,7 +759,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* dim.i         = */ restrict_dim_i, 
           /* dim.j         = */ restrict_dim_j, 
           /* dim.k         = */ restrict_dim_k, 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* read.boxgp    = */ send_boxgp,
 #endif
           /* read.box      = */ coarseBoxes[coarseBox].sendBoxID,
@@ -809,7 +770,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().jStride,
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().kStride,
           /* read.scale    = */ 2,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ -1,
@@ -838,7 +799,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     // for construct the local restriction list... 
     {
       int coarseBox;
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(upcxx::is_memory_shared_with(coarseBoxes[coarseBox].recvRank)){
 	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
 	  global_ptr<box_type> recv_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
@@ -847,8 +808,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 	  int kStride = lbox->kStride;
 #else
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(coarseBoxes[coarseBox].recvRank==all_grids->levels[level+1]->my_rank){
-          int jStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().jStride;
-          int kStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].get().kStride;
+          int jStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].jStride;
+          int kStride = all_grids->levels[level+1]->my_boxes[coarseBoxes[coarseBox].recvBox].kStride;
 
 #endif
 
@@ -860,7 +821,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* dim.i         = */ restrict_dim_i, 
           /* dim.j         = */ restrict_dim_j, 
           /* dim.k         = */ restrict_dim_k, 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* read.box      = */ send_boxgp,
 #endif
           /* read.box      = */ coarseBoxes[coarseBox].sendBoxID,
@@ -871,7 +832,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().jStride,
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().kStride,
           /* read.scale    = */ 2,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ coarseBoxes[coarseBox].recvBoxID,
@@ -895,7 +856,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* dim.i         = */ restrict_dim_i, 
           /* dim.j         = */ restrict_dim_j, 
           /* dim.k         = */ restrict_dim_k, 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* read.box      = */ send_boxgp,
 #endif
           /* read.box      = */ coarseBoxes[coarseBox].sendBoxID,
@@ -906,7 +867,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* read.jStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().jStride,
           /* read.kStride  = */ all_grids->levels[level]->my_boxes[coarseBoxes[coarseBox].sendBox].get().kStride,
           /* read.scale    = */ 2,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ coarseBoxes[coarseBox].recvBoxID,
@@ -950,18 +911,13 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     int coarseBox;
     for(coarseBox=0;coarseBox<all_grids->levels[level]->num_my_boxes;coarseBox++){
       int bi,bj,bk;
-#ifdef USE_UPCXX
+
       box_type *lbox = &(all_grids->levels[level]->my_boxes[coarseBox]);
       int   coarseBoxID = lbox->global_box_id;
       int   coarseBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   coarseBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
       int   coarseBox_k = lbox->low.k / all_grids->levels[level]->box_dim;
-#else
-      int   coarseBoxID = all_grids->levels[level]->my_boxes[coarseBox].global_box_id;
-      int   coarseBox_i = all_grids->levels[level]->my_boxes[coarseBox].low.i / all_grids->levels[level]->box_dim;
-      int   coarseBox_j = all_grids->levels[level]->my_boxes[coarseBox].low.j / all_grids->levels[level]->box_dim;
-      int   coarseBox_k = all_grids->levels[level]->my_boxes[coarseBox].low.k / all_grids->levels[level]->box_dim;
-#endif
+
       for(bk=0;bk<all_grids->levels[level-1]->boxes_in.k/all_grids->levels[level]->boxes_in.k;bk++){
       for(bj=0;bj<all_grids->levels[level-1]->boxes_in.j/all_grids->levels[level]->boxes_in.j;bj++){
       for(bi=0;bi<all_grids->levels[level-1]->boxes_in.i/all_grids->levels[level]->boxes_in.i;bi++){
@@ -998,12 +954,10 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].recv_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
 #ifdef USE_UPCXX
-#ifdef UPCXX_AM
     all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
     memset((void *)all_grids->levels[level]->restriction[restrictionType].rflag, 0, MAX_VG *sizeof(int));
     memset((void *)all_grids->levels[level]->restriction[restrictionType].sblock2, 0, sizeof(int)*(numFineRanks+2));
-#endif
     all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif
     if(numFineRanks>0){
@@ -1054,7 +1008,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #endif
       all_grids->levels[level]->restriction[restrictionType].recv_buffers[neighbor] = all_recv_buffers;
 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
       if (is_memory_shared_with(fineRanks[neighbor])) {
         all_grids->levels[level]->restriction[restrictionType].recv_ranks[neighbor] = fineRanks[neighbor];
         all_grids->levels[level]->restriction[restrictionType].recv_sizes[neighbor] = offset;
@@ -1064,7 +1018,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #endif
       for(fineBox=0;fineBox<numFineBoxesRemote;fineBox++)if(fineBoxes[fineBox].sendRank==fineRanks[neighbor]){
         // unpack MPI recv buffer...
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	global_ptr<box_type> send_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].sendBoxID];
 	global_ptr<box_type> recv_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].recvBoxID];
 #endif
@@ -1074,7 +1028,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* dim.i         = */ restrict_dim_i, 
           /* dim.j         = */ restrict_dim_j, 
           /* dim.k         = */ restrict_dim_k, 
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 	  /* read.boxgp    = */ send_boxgp,
 #endif
           /* read.box      = */ (-1)*fineBoxes[fineBox].sendRank-1,  //shan -1,
@@ -1085,7 +1039,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
           /* read.jStride  = */ restrict_dim_i,
           /* read.kStride  = */ restrict_dim_i*restrict_dim_j, 
           /* read.scale    = */ 1,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
           /* write.boxgp   = */ recv_boxgp,
 #endif
           /* write.box     = */ fineBoxes[fineBox].recvBoxID,
@@ -1115,7 +1069,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     free(fineBoxes);
     free(fineRanks);
 
-#ifdef UPCXX_AM
+#ifdef USE_UPCXX
   // setup start and end position for each receiver
   
   if (all_grids->levels[level]->restriction[restrictionType].num_blocks[2] > 0) {
@@ -1143,15 +1097,6 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 
   } // recv/unpack
 
-
-
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  //MPI_Barrier(MPI_COMM_WORLD);
-  //if(all_grids->my_rank==0){printf("================================================================================\n");}
-  //if(                         (level==all_grids->num_levels-2))print_communicator(2,all_grids->my_rank,level,&all_grids->levels[level]->restriction);
-  //if((all_grids->my_rank==0))print_communicator(4,all_grids->my_rank,level,&all_grids->levels[level]->restriction);
-  //MPI_Barrier(MPI_COMM_WORLD);
-  } // level loop
 
 #ifdef USE_UPCXX
   upcxx::barrier();
@@ -1182,17 +1127,6 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       }
     }
     upcxx::barrier();
-  }
-#elif USE_MPI
-  for(level=0;level<all_grids->num_levels;level++){
-    all_grids->levels[level]->restriction[restrictionType].requests = NULL;
-    all_grids->levels[level]->restriction[restrictionType].status   = NULL;
-    if(level<all_grids->num_levels-1){ // bottom never calls restriction()
-    // by convention, level_f allocates a combined array of requests for both level_f sends and level_c recvs...
-    int nMessages = all_grids->levels[level+1]->restriction[restrictionType].num_recvs + all_grids->levels[level]->restriction[restrictionType].num_sends;
-    all_grids->levels[level]->restriction[restrictionType].requests = (MPI_Request*)malloc(nMessages*sizeof(MPI_Request));
-    all_grids->levels[level]->restriction[restrictionType].status   = (MPI_Status *)malloc(nMessages*sizeof(MPI_Status ));
-    }
   }
 #endif
 
@@ -1350,45 +1284,6 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   build_restriction(all_grids,RESTRICT_FACE_K); // face-centered, normal to k
   build_interpolation(all_grids);
 
-/*****
-  {
-  printf("There are %d levels\n", all_grids->num_levels);
-    for (int lev = 0; lev < all_grids->num_levels;lev++) {
-     level_type *l = all_grids->levels[lev];
-     communicator_type *c = &l->restriction[0];
-     printf("LEVEL depth is %d should be %d nrecv %d\n", l->depth, lev, c->num_recvs);
-     for (int i = 0; i < c->num_recvs; i++) {
-      printf("SBR proc %d level %d pos %d sb (%d -- %d) out of %d ngr %d out of %d\n", l->my_rank, l->depth, i, c->sblock2[i],
-          c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
-     }}
-
-    for (int lev = 0; lev < all_grids->num_levels;lev++) {
-     level_type *l = all_grids->levels[lev];
-     communicator_type *c = &l->interpolation;
-     for (int i = 0; i < c->num_recvs; i++) {
-      printf("SBI proc %d level %d pos %d sb (%d -- %d) out of %d ngr %d out of %d\n", l->my_rank, l->depth, i, c->sblock2[i],
-          c->sblock2[i+1], c->num_blocks[2], c->recv_ranks[i], c->num_recvs);
-     }}
-
-  }
-
-  {
-    for (int lev = 0; lev < all_grids->num_levels;lev++) {
-      level_type *l = all_grids->levels[lev];
-      cout << "RES proc " << l->my_rank << " level " << l->depth << " nsend " << l->exchange_ghosts[0].num_sends << " nrecv " <<
-       l->exchange_ghosts[0].num_recvs << " block " << l->exchange_ghosts[0].num_blocks[0] << " " << 
-       l->exchange_ghosts[0].num_blocks[1] << " " << l->exchange_ghosts[0].num_blocks[2] << endl;
-    }
-
-    for (int lev = 0; lev < all_grids->num_levels;lev++) {
-      level_type *l = all_grids->levels[lev];
-      cout << "INT proc " << l->my_rank << " level " << l->depth << " nsend " << l->interpolation.num_sends << " nrecv " <<
-       l->interpolation.num_recvs << " block " << l->interpolation.num_blocks[0] << " " << 
-       l->interpolation.num_blocks[1] << " " << l->interpolation.num_blocks[2] << endl;
-    }
-  }
-*****/
-
   // build subcommunicators...
   #ifdef USE_MPI
   #ifdef USE_SUBCOMM
@@ -1401,14 +1296,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     MPI_Comm_split(MPI_COMM_WORLD,all_grids->levels[level]->active,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE);
     int SIZE;
     MPI_Comm_size(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &SIZE);
-#ifdef DEBUG
-    cout << "WORLD SIZE IS " << SIZE << " in level " << level << " for proc " << MYTHREAD <<  " with boxes " << all_grids->levels[level]->num_my_boxes << endl << endl;
-    if (all_grids->levels[level]->num_my_boxes == 0 && all_grids->levels[level]->active==1) {
-      int ll;
-      for(ll=level+1;ll<all_grids->num_levels;ll++) {if(all_grids->levels[ll]->num_my_boxes>0) break;}
-      printf("Special for proc %d in level %d box is 0 but active in level %d boxes %d\n", MYTHREAD, level, ll, all_grids->levels[ll]->num_my_boxes);
-    } 
-#endif
+
     double comm_split_end = MPI_Wtime();
     double comm_split_time_send = comm_split_end-comm_split_start;
     double comm_split_time = 0;

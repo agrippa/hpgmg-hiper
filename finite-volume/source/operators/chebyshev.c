@@ -59,7 +59,6 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
       const int khi = level->my_blocks[block].dim.k + klo;
       int i,j,k;
 
-#ifdef USE_UPCXX
       box_type *lbox = &(level->my_boxes[box]);
       const int jStride = lbox->jStride;
       const int kStride = lbox->kStride;
@@ -84,30 +83,6 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
                                     x_nm1  = lbox->vectors[         x_id] + ghosts*(1+jStride+kStride); 
                                     x_np1  = lbox->vectors[         x_id] + ghosts*(1+jStride+kStride);}
 
-#else
-      const int ghosts = level->box_ghosts;
-      const int jStride = level->my_boxes[box].jStride;
-      const int kStride = level->my_boxes[box].kStride;
-      const double h2inv = 1.0/(level->h*level->h);
-      const double * __restrict__ rhs      = level->my_boxes[box].vectors[       rhs_id] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ alpha    = level->my_boxes[box].vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ beta_i   = level->my_boxes[box].vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ beta_j   = level->my_boxes[box].vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ beta_k   = level->my_boxes[box].vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ Dinv     = level->my_boxes[box].vectors[VECTOR_DINV  ] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ valid    = level->my_boxes[box].vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride); // cell is inside the domain
-
-            double * __restrict__ x_np1;
-      const double * __restrict__ x_n;
-      const double * __restrict__ x_nm1;
-                       if((s&1)==0){x_n    = level->my_boxes[box].vectors[         x_id] + ghosts*(1+jStride+kStride);
-                                    x_nm1  = level->my_boxes[box].vectors[VECTOR_TEMP  ] + ghosts*(1+jStride+kStride); 
-                                    x_np1  = level->my_boxes[box].vectors[VECTOR_TEMP  ] + ghosts*(1+jStride+kStride);}
-                               else{x_n    = level->my_boxes[box].vectors[VECTOR_TEMP  ] + ghosts*(1+jStride+kStride);
-                                    x_nm1  = level->my_boxes[box].vectors[         x_id] + ghosts*(1+jStride+kStride); 
-                                    x_np1  = level->my_boxes[box].vectors[         x_id] + ghosts*(1+jStride+kStride);}
-
-#endif
 
       const double c1 = chebyshev_c1[s%CHEBYSHEV_DEGREE]; // limit polynomial to degree CHEBYSHEV_DEGREE.
       const double c2 = chebyshev_c2[s%CHEBYSHEV_DEGREE]; // limit polynomial to degree CHEBYSHEV_DEGREE.

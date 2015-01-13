@@ -45,7 +45,7 @@ struct box_type;
 typedef struct {
   int subtype;                  // e.g. used to calculate normal to domain for BC's
   struct {int i, j, k;}dim;     // dimensions of the block to copy
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
   struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; global_ptr<box_type> boxgp;}read,write;
 #else
   struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr;}read,write;
@@ -58,7 +58,6 @@ typedef struct {
 
 #ifdef USE_UPCXX
 extern shared_array< global_ptr<double>, 1 > upc_buf_info;
-extern shared_array< int, 1 > upc_rflag;
 extern shared_array< global_ptr<int>, 1> upc_rflag_ptr;
 #endif
 
@@ -71,21 +70,23 @@ typedef struct {
     int     * __restrict__       recv_sizes;	//   size of each MPI recv buffer...       recv_sizes[neighbor]
     int     * __restrict__       send_sizes;	//   size of each MPI send buffer...       send_sizes[neighbor]
 #ifdef USE_UPCXX
-    global_ptr<int>     rflag;
-    global_ptr<int>     *match_rflag; 
-    volatile int     *sflag;
-    int              *send_match_pos;
+    global_ptr<int>     rflag;                  //   message recv flag
+    global_ptr<int>     *match_rflag;           //   address of neighbor's recv flag
+    int                 *send_match_pos;        //   my position in receiver's recv list
     int              * __restrict__         sblock2, eblock2;  // start and end position in blocks[2] for each neighbor
 
-    global_ptr<double>        *global_recv_buffers;
-    global_ptr<double>        *global_send_buffers;
-    global_ptr<double>        *global_match_buffers;
+    global_ptr<double>        *global_recv_buffers;    // allocate buffer in global address
+    global_ptr<double>        *global_send_buffers;    // allocate buffer in global address
+    global_ptr<double>        *global_match_buffers;   // record neighbor's recv buffer address
 
-    event            *copy_e;
-    event            *data_e;
+    event            *copy_e;                   //   events used for p2p synchronization      
+    event            *data_e;                   //   events used for p2p synchronization 
 #endif
     double ** __restrict__     recv_buffers;	//   MPI recv buffer for each neighbor...  recv_buffers[neighbor][ recv_sizes[neighbor] ]
     double ** __restrict__     send_buffers;	//   MPI send buffer for each neighbor...  send_buffers[neighbor][ send_sizes[neighbor] ]
+
+  // shan: add one more block list for on node shared memory data access
+
     int                 allocated_blocks[4];	//   number of blocks allocated (not necessarily used) each list...
     int                       num_blocks[4];	//   number of blocks in each list...        num_blocks[pack,local,unpack]
     blockCopy_type *              blocks[4];	//   list of block copies...                     blocks[pack,local,unpack]
@@ -101,8 +102,8 @@ typedef struct box_type {
   int                jStride,kStride,volume;	// useful for offsets
   int                            numVectors;	//
 #ifdef USE_UPCXX
-  global_ptr<global_ptr<double> >   vectors;
-  global_ptr<double>           vectors_base;
+  global_ptr<global_ptr<double> >   vectors;    // allocate buffer in global address
+  global_ptr<double>           vectors_base;    // allocate buffer in global address
 #else
   double   ** __restrict__          vectors;	// vectors[c] = pointer to 3D array for vector c
   double    * __restrict__     vectors_base;    // pointer used for malloc/free.  vectors[c] are shifted from this for alignment
@@ -114,8 +115,6 @@ typedef struct box_type {
 typedef struct {
 #ifdef USE_UPCXX
   int depth;
-  double prescale_fc;
-  double prescale_fl;
 #endif
   double h;					// grid spacing at this level
   int active;					// I am an active process (I have work to do on this or subsequent levels)
@@ -130,8 +129,8 @@ typedef struct {
   int * rank_of_box;				// 3D array containing rank of each box.  i-major ordering
   int    num_my_boxes;				//           number of boxes owned by this rank
 #ifdef USE_UPCXX
-  global_ptr<box_type> *addr_of_box;
-  global_ptr<box_type> my_boxes;
+  global_ptr<box_type> *addr_of_box;            // global address for all box, can be removed later
+  global_ptr<box_type> my_boxes;                // global address
 #else
   box_type * my_boxes;				// pointer to array of boxes owned by this rank
 #endif
@@ -217,11 +216,11 @@ void   max_level_timers(level_type *level);
 int qsortInt(const void *a, const void *b);
 void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *num_blocks,
                           int dim_i, int dim_j, int dim_k,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
 			  global_ptr<box_type> read_boxgp,
 #endif
                           int  read_box, double*  read_ptr, int  read_i, int  read_j, int  read_k, int  read_jStride, int  read_kStride, int  read_scale,
-#ifdef UPCXX_SHARED
+#ifdef USE_UPCXX
                           global_ptr<box_type> write_boxgp,
 #endif
 

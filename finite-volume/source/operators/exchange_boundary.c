@@ -56,19 +56,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
 
-  _timeStart = CycleTime();
-#ifdef USE_UPCXX
-#ifndef UPCXX_AM
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#endif
-#endif  
-  _timeEnd = CycleTime();
-  level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
-
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[3])
@@ -86,15 +73,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 
-#ifdef USE_UPCXX
   int nshm = 0; 
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
     global_ptr<double> p1, p2;
     p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
     p2 = level->exchange_ghosts[justFaces].global_match_buffers[n];
-#ifndef UPCXX_AM
-    upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n]);
-#else
     if (!is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
       event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
       upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],copy_e);
@@ -105,9 +88,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       int *p = (int *)level->exchange_ghosts[justFaces].match_rflag[n]; *(p+nth+pos) = 1; // upc_rflag[nth+pos] = 1;
       nshm++;
     }
-#endif
   }
-#endif
+
   _timeEnd = CycleTime();
   level->cycles.ghostZone_send += (_timeEnd-_timeStart);
 
@@ -120,9 +102,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // wait for MPI to finish...
   _timeStart = CycleTime();
-
-#ifdef USE_UPCXX
-#ifdef UPCXX_AM
 
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
     int rid = level->exchange_ghosts[justFaces].send_ranks[n];
@@ -155,17 +134,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   }
 
-#else  // UPCXX_AM
-
-  async_copy_fence();
-#ifdef USE_SUBCOMM
-  MPI_Barrier(level->MPI_COMM_ALLREDUCE);
-#else
-  upcxx::barrier();
-#endif
-#endif
-
-#endif
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
  
