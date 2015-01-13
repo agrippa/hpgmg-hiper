@@ -13,6 +13,7 @@
 #include "defines.h"
 #include "level.h"
 #include "operators.h"
+#include "mg.h"
 //------------------------------------------------------------------------------------------------------------------------------
 #define MyPragma(a) _Pragma(#a)
 //------------------------------------------------------------------------------------------------------------------------------
@@ -134,18 +135,19 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
     const int jhi = level->my_blocks[block].dim.j + jlo;
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
-    const int jStride = level->my_boxes[box].jStride;
-    const int kStride = level->my_boxes[box].kStride;
-    const int  ghosts = level->my_boxes[box].ghosts;
-    const int     dim = level->my_boxes[box].dim;
+    box_type *lbox = &level->my_boxes[box];
+    const int jStride = lbox->jStride;
+    const int kStride = lbox->kStride;
+    const int  ghosts = lbox->ghosts;
+    const int     dim = lbox->dim;
     double h2inv = 1.0/(level->h*level->h);
-    double * __restrict__ alpha  = level->my_boxes[box].vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride);
-    double * __restrict__ beta_i = level->my_boxes[box].vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride);
-    double * __restrict__ beta_j = level->my_boxes[box].vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride);
-    double * __restrict__ beta_k = level->my_boxes[box].vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride);
-    double * __restrict__   Dinv = level->my_boxes[box].vectors[VECTOR_DINV  ] + ghosts*(1+jStride+kStride);
-    double * __restrict__  L1inv = level->my_boxes[box].vectors[VECTOR_L1INV ] + ghosts*(1+jStride+kStride);
-    double * __restrict__  valid = level->my_boxes[box].vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride);
+    double * __restrict__ alpha  = lbox->vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride);
+    double * __restrict__ beta_i = lbox->vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride);
+    double * __restrict__ beta_j = lbox->vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride);
+    double * __restrict__ beta_k = lbox->vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride);
+    double * __restrict__   Dinv = lbox->vectors[VECTOR_DINV  ] + ghosts*(1+jStride+kStride);
+    double * __restrict__  L1inv = lbox->vectors[VECTOR_L1INV ] + ghosts*(1+jStride+kStride);
+    double * __restrict__  valid = lbox->vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride);
     double block_eigenvalue = -1e9;
 
     for(k=klo;k<khi;k++){
