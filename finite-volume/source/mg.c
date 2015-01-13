@@ -572,6 +572,8 @@ void build_interpolation(mg_type *all_grids){
 
   } // recv/unpack
 
+  } // all levels
+
 #ifdef USE_UPCXX
   upcxx::barrier();
   // compute the global_match_buffers for upcxx::async_copy()
@@ -1097,6 +1099,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 
   } // recv/unpack
 
+  } // all levels
 
 #ifdef USE_UPCXX
   upcxx::barrier();
