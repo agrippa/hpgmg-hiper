@@ -134,7 +134,7 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
   box->vectors_base = upcxx::allocate<double>(MYTHREAD, malloc_size);
                memory_allocated += malloc_size;
   if((box->numVectors>0)&&(box->vectors_base==NULL)){fprintf(stderr,"malloc failed - create_box/box->vectors_base\n");exit(0);}
-  double * tmpbuf = box->vectors_base;
+  double * tmpbuf = (double *)box->vectors_base;
   int num = 0;
   memset(tmpbuf,0,malloc_size*sizeof(double)); // zero to avoid 0.0*NaN or 0.0*Inf
   while( (uint64_t)(tmpbuf+box->ghosts*(1+box->jStride+box->kStride)) & (BOX_ALIGN_1ST_CELL-1) ){tmpbuf++; num++;} // allign first *non-ghost* zone element of first component to page boundary...
@@ -213,8 +213,8 @@ void add_vectors_to_box(box_type *box, int numAdditionalVectors){
 
 //------------------------------------------------------------------------------------------------------------------------------
 void destroy_box(box_type *box){
-  free(box->vectors_base); // single allocate with pointer arithmetic...
-  free(box->vectors);
+  free((void *)box->vectors_base); // single allocate with pointer arithmetic...
+  free((void *)box->vectors);
 }
 
 
@@ -455,7 +455,7 @@ void build_boundary_conditions(level_type *level, int justFaces){
     int regionIsOutside=0;
     int normal = 13; // normal effectively defines the normal vector to the domain for this region... 
                      // this addition is necessary for linearly interpolated BC's as a box's corner is not necessarily a domain's corner
-    box_type* lbox = &(level->my_boxes[box]);
+    box_type* lbox = (box_type *)&(level->my_boxes[box]);
     int myBox_i = lbox->low.i / level->box_dim;
     int myBox_j = lbox->low.j / level->box_dim;
     int myBox_k = lbox->low.k / level->box_dim;
@@ -603,7 +603,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(di=-1;di<=1;di++){
       int dir = 13+di+3*dj+9*dk;if(CommunicateThisDir[dir]){
 
-      box_type* lbox = &(level->my_boxes[sendBox]); 
+      box_type* lbox = (box_type *)&(level->my_boxes[sendBox]); 
       int       myBoxID = lbox->global_box_id;
       int       myBox_i = lbox->low.i / level->box_dim;
       int       myBox_j = lbox->low.j / level->box_dim;
@@ -663,7 +663,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].global_send_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
   level->exchange_ghosts[justFaces].global_match_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
   level->exchange_ghosts[justFaces].send_match_pos = (int *)malloc(numSendRanks*sizeof(int));
-  level->exchange_ghosts[justFaces].match_rflag    = allocate< global_ptr<int> >(level->my_rank, numSendRanks);
+  level->exchange_ghosts[justFaces].match_rflag    = (upcxx::global_ptr<int> *)allocate< global_ptr<int> >(level->my_rank, numSendRanks);
   level->exchange_ghosts[justFaces].copy_e = new event[numSendRanks];
   level->exchange_ghosts[justFaces].data_e = new event[numSendRanks];
 #endif
@@ -886,7 +886,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(di=-1;di<=1;di++){
       int dir = 13+di+3*dj+9*dk;if(CommunicateThisDir[dir]){
 
-      box_type* lbox = &(level->my_boxes[recvBox]);
+      box_type* lbox = (box_type *)&(level->my_boxes[recvBox]);
       int       myBoxID = lbox->global_box_id;
       int       myBox_i = lbox->low.i / level->box_dim;
       int       myBox_j = lbox->low.j / level->box_dim;
@@ -1198,10 +1198,10 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
     int kStride = level->boxes_in.i*level->boxes_in.j;
     int b=i + j*jStride + k*kStride;
     if(level->rank_of_box[b]==level->my_rank){
-      level->memory_allocated += create_box(&level->my_boxes[box],level->box_vectors,level->box_dim,level->box_ghosts);
+      level->memory_allocated += create_box((box_type *)&level->my_boxes[box],level->box_vectors,level->box_dim,level->box_ghosts);
 #ifdef USE_UPCXX
       upc_box_info[b] = &level->my_boxes[box];
-      box_type* lbox = &(level->my_boxes[box]);
+      box_type* lbox = (box_type *)&(level->my_boxes[box]);
       lbox->low.i = i*level->box_dim;
       lbox->low.j = j*level->box_dim;
       lbox->low.k = k*level->box_dim;
@@ -1434,6 +1434,6 @@ void max_level_timers(level_type *level){
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 void destroy_level(level_type *level){
   int box;
-  for(box=0;box<level->num_my_boxes;box++)destroy_box(&level->my_boxes[box]);
+  for(box=0;box<level->num_my_boxes;box++) destroy_box((box_type *)&level->my_boxes[box]);
   free(level->rank_of_box);
 }

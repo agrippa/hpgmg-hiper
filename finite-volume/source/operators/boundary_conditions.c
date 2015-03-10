@@ -47,10 +47,10 @@ void apply_BCs_linear(level_type * level, int x_id, int justFaces){
     const int normal = 26-level->boundary_condition.blocks[justFaces][buffer].subtype; // invert the normal vector
  
     // hard code for box to box BC's 
-    box_type *lbox = &level->my_boxes[box];
+    box_type *lbox = (box_type *)&level->my_boxes[box];
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
-    double * __restrict__  x = lbox->vectors[x_id] + lbox->ghosts*(1+jStride+kStride);
+    double * __restrict__  x = (double *)(lbox->vectors[x_id] + lbox->ghosts*(1+jStride+kStride));
 
     // convert normal vector into pointer offsets...
     const int di = (((normal % 3)  )-1);
@@ -117,10 +117,10 @@ void apply_BCs_quadratic(level_type * level, int x_id, int justFaces){
     const int normal = 26-level->boundary_condition.blocks[justFaces][buffer].subtype; // invert the normal vector
  
     // hard code for box to box BC's 
-    box_type *lbox = &level->my_boxes[box];
+    box_type *lbox = (box_type *)&level->my_boxes[box];
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
-    double * __restrict__  x = lbox->vectors[x_id] + lbox->ghosts*(1+jStride+kStride);
+    double * __restrict__  x = (double *)(lbox->vectors[x_id] + lbox->ghosts*(1+jStride+kStride));
 
     // convert normal vector into pointer offsets...
     const int di = (((normal % 3)  )-1)*1;

@@ -175,7 +175,7 @@ void build_interpolation(mg_type *all_grids){
     for(coarseBox=0;coarseBox<all_grids->levels[level]->num_my_boxes;coarseBox++){
       int bi,bj,bk;
 
-      box_type *lbox = &(all_grids->levels[level]->my_boxes[coarseBox]);
+      box_type *lbox = (box_type *)&(all_grids->levels[level]->my_boxes[coarseBox]);
       int   coarseBoxID = lbox->global_box_id;
       int   coarseBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   coarseBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
@@ -221,7 +221,7 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.global_send_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));   
     all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
     all_grids->levels[level]->interpolation.send_match_pos = (int *)malloc(numFineRanks*sizeof(int));
-    all_grids->levels[level]->interpolation.match_rflag    = allocate< global_ptr<int> >(MYTHREAD, numFineRanks);
+    all_grids->levels[level]->interpolation.match_rflag    = (upcxx::global_ptr<int> *)allocate< global_ptr<int> >(MYTHREAD, numFineRanks);
     all_grids->levels[level]->interpolation.copy_e = new event[numFineRanks];
     all_grids->levels[level]->interpolation.data_e = new event[numFineRanks];
 #endif
@@ -415,7 +415,7 @@ void build_interpolation(mg_type *all_grids){
     int fineBox;
     for(fineBox=0;fineBox<all_grids->levels[level]->num_my_boxes;fineBox++){
 
-      box_type *lbox = &(all_grids->levels[level]->my_boxes[fineBox]);
+      box_type *lbox = (box_type *)&(all_grids->levels[level]->my_boxes[fineBox]);
       int   fineBoxID = lbox->global_box_id;
       int   fineBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   fineBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
@@ -644,7 +644,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     int fineBox;
     for(fineBox=0;fineBox<all_grids->levels[level]->num_my_boxes;fineBox++){
 
-      box_type *lbox = &(all_grids->levels[level]->my_boxes[fineBox]);
+      box_type *lbox = (box_type *)&(all_grids->levels[level]->my_boxes[fineBox]);
       int   fineBoxID = lbox->global_box_id;
       int   fineBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   fineBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
@@ -687,7 +687,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
     all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
     all_grids->levels[level]->restriction[restrictionType].send_match_pos = (int*)malloc(numCoarseRanks*sizeof(int));
-    all_grids->levels[level]->restriction[restrictionType].match_rflag    = allocate< global_ptr<int> >(MYTHREAD, numCoarseRanks);
+    all_grids->levels[level]->restriction[restrictionType].match_rflag    = (upcxx::global_ptr<int> *)allocate< global_ptr<int> >(MYTHREAD, numCoarseRanks);
     all_grids->levels[level]->restriction[restrictionType].copy_e = new event[numCoarseRanks];
     all_grids->levels[level]->restriction[restrictionType].data_e = new event[numCoarseRanks];
 #endif
@@ -914,7 +914,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     for(coarseBox=0;coarseBox<all_grids->levels[level]->num_my_boxes;coarseBox++){
       int bi,bj,bk;
 
-      box_type *lbox = &(all_grids->levels[level]->my_boxes[coarseBox]);
+      box_type *lbox = (box_type *)&(all_grids->levels[level]->my_boxes[coarseBox]);
       int   coarseBoxID = lbox->global_box_id;
       int   coarseBox_i = lbox->low.i / all_grids->levels[level]->box_dim;
       int   coarseBox_j = lbox->low.j / all_grids->levels[level]->box_dim;
@@ -1274,7 +1274,7 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   all_grids->levels[level]->box_vectors += numAdditionalVectors;
   if(numAdditionalVectors){
     for(box=0;box<all_grids->levels[level]->num_my_boxes;box++){
-      add_vectors_to_box(all_grids->levels[level]->my_boxes+box,numAdditionalVectors);
+      add_vectors_to_box((box_type *)all_grids->levels[level]->my_boxes+box,numAdditionalVectors);
       all_grids->levels[level]->memory_allocated += numAdditionalVectors*all_grids->levels[level]->my_boxes[box].get().volume*sizeof(double);
     }
   }

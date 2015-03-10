@@ -25,20 +25,20 @@ void residual(level_type * level, int res_id, int x_id, int rhs_id, double a, do
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-      box_type *lbox = &(level->my_boxes[box]);
+      box_type *lbox = (box_type *)&(level->my_boxes[box]);
       const int jStride = lbox->jStride;
       const int kStride = lbox->kStride;
       const int  ghosts = lbox->ghosts;
       const int     dim = lbox->dim;
       const double h2inv = 1.0/(level->h*level->h);
-      const double * __restrict__ x      = lbox->vectors[         x_id] + ghosts*(1+jStride+kStride); // i.e. [0] = first non ghost zone point
-      const double * __restrict__ rhs    = lbox->vectors[       rhs_id] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ alpha  = lbox->vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ beta_i = lbox->vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ beta_j = lbox->vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ beta_k = lbox->vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride);
-      const double * __restrict__ valid  = lbox->vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride); // cell is inside the domain
-      double * __restrict__ res    = lbox->vectors[       res_id] + ghosts*(1+jStride+kStride);
+      const double * __restrict__ x      = (double *)(lbox->vectors[         x_id] + ghosts*(1+jStride+kStride)); // i.e. [0] = first non ghost zone point
+      const double * __restrict__ rhs    = (double *)(lbox->vectors[       rhs_id] + ghosts*(1+jStride+kStride));
+      const double * __restrict__ alpha  = (double *)(lbox->vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride));
+      const double * __restrict__ beta_i = (double *)(lbox->vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride));
+      const double * __restrict__ beta_j = (double *)(lbox->vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride));
+      const double * __restrict__ beta_k = (double *)(lbox->vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride));
+      const double * __restrict__ valid  = (double *)(lbox->vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride)); // cell is inside the domain
+      double * __restrict__ res    = (double *)(lbox->vectors[       res_id] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){

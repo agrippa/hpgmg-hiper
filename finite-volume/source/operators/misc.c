@@ -19,7 +19,7 @@ void zero_vector(level_type * level, int component_id){
           int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
@@ -33,7 +33,7 @@ void zero_vector(level_type * level, int component_id){
     if(jhi>=dim)jhi+=ghosts; 
     if(khi>=dim)khi+=ghosts; 
 
-    double * __restrict__ grid = lbox->vectors[component_id] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid = (double *)(lbox->vectors[component_id] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -62,7 +62,7 @@ void initialize_valid_region(level_type * level){
           int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
@@ -76,7 +76,7 @@ void initialize_valid_region(level_type * level){
     if(jhi>=dim)jhi+=ghosts; 
     if(khi>=dim)khi+=ghosts; 
 
-    double * __restrict__ valid = lbox->vectors[VECTOR_VALID] + ghosts*(1+jStride+kStride);
+    double * __restrict__ valid = (double *)(lbox->vectors[VECTOR_VALID] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -116,7 +116,7 @@ void initialize_grid_to_scalar(level_type * level, int component_id, double scal
           int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
@@ -130,7 +130,7 @@ void initialize_grid_to_scalar(level_type * level, int component_id, double scal
     if(jhi>=dim)jhi+=ghosts; 
     if(khi>=dim)khi+=ghosts; 
 
-    double * __restrict__ grid = lbox->vectors[component_id] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid = (double *)(lbox->vectors[component_id] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -161,15 +161,15 @@ void add_vectors(level_type * level, int id_c, double scale_a, int id_a, double 
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
     const int     dim = lbox->dim;
 
-    double * __restrict__ grid_c = lbox->vectors[id_c] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_b = lbox->vectors[id_b] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_c = (double *)(lbox->vectors[id_c] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_b = (double *)(lbox->vectors[id_b] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -199,14 +199,14 @@ void mul_vectors(level_type * level, int id_c, double scale, int id_a, int id_b)
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
 
-    double * __restrict__ grid_c = lbox->vectors[id_c] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_b = lbox->vectors[id_b] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_c = (double *)(lbox->vectors[id_c] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_b = (double *)(lbox->vectors[id_b] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -236,13 +236,13 @@ void invert_vector(level_type * level, int id_c, double scale_a, int id_a){ // c
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
 
-    double * __restrict__ grid_c = lbox->vectors[id_c] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_c = (double *)(lbox->vectors[id_c] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -272,13 +272,13 @@ void scale_vector(level_type * level, int id_c, double scale_a, int id_a){ // c[
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
 
-    double * __restrict__ grid_c = lbox->vectors[id_c] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_c = (double *)(lbox->vectors[id_c] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -310,13 +310,13 @@ double dot(level_type * level, int id_a, int id_b){
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
 
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_b = lbox->vectors[id_b] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_b = (double *)(lbox->vectors[id_b] + ghosts*(1+jStride+kStride));
 
     double a_dot_b_block = 0.0;
 
@@ -359,11 +359,11 @@ double norm(level_type * level, int component_id){ // implements the max norm
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
-    double * __restrict__ grid = lbox->vectors[component_id] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid = (double *)(lbox->vectors[component_id] + ghosts*(1+jStride+kStride));
 
     double block_norm = 0.0;
 
@@ -409,11 +409,11 @@ double mean(level_type * level, int id_a){
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
 
     double sum_block = 0.0;
 
@@ -457,12 +457,12 @@ void shift_vector(level_type * level, int id_c, int id_a, double shift_a){
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
-    double * __restrict__ grid_c = lbox->vectors[id_c] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_a = lbox->vectors[id_a] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_c = (double *)(lbox->vectors[id_c] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_a = (double *)(lbox->vectors[id_a] + ghosts*(1+jStride+kStride));
 
     for(k=klo;k<khi;k++){
     for(j=jlo;j<jhi;j++){
@@ -490,12 +490,12 @@ void project_cell_to_face(level_type * level, int id_cell, int id_face, int dir)
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type *lbox = &(level->my_boxes[box]);
+    box_type *lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
-    double * __restrict__ grid_cell = lbox->vectors[id_cell] + ghosts*(1+jStride+kStride);
-    double * __restrict__ grid_face = lbox->vectors[id_face] + ghosts*(1+jStride+kStride);
+    double * __restrict__ grid_cell = (double *)(lbox->vectors[id_cell] + ghosts*(1+jStride+kStride));
+    double * __restrict__ grid_face = (double *)(lbox->vectors[id_face] + ghosts*(1+jStride+kStride));
 
     int stride;
     switch(dir){

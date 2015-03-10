@@ -234,20 +234,20 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
     const int khi = level->my_blocks[block].dim.k + klo;
     int i,j,k;
 
-    box_type* lbox = &(level->my_boxes[box]);
+    box_type* lbox = (box_type *)&(level->my_boxes[box]);
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;
     const int  ghosts = lbox->ghosts;
     const int     dim = lbox->dim;
     double h2inv = 1.0/(level->h*level->h);
 
-    double * __restrict__ alpha  = lbox->vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride);
-    double * __restrict__ beta_i = lbox->vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride);
-    double * __restrict__ beta_j = lbox->vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride);
-    double * __restrict__ beta_k = lbox->vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride);
-    double * __restrict__   Dinv = lbox->vectors[VECTOR_DINV  ] + ghosts*(1+jStride+kStride);
-    double * __restrict__  L1inv = lbox->vectors[VECTOR_L1INV ] + ghosts*(1+jStride+kStride);
-    double * __restrict__  valid = lbox->vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride);
+    double * __restrict__ alpha  = (double *)(lbox->vectors[VECTOR_ALPHA ] + ghosts*(1+jStride+kStride));
+    double * __restrict__ beta_i = (double *)(lbox->vectors[VECTOR_BETA_I] + ghosts*(1+jStride+kStride));
+    double * __restrict__ beta_j = (double *)(lbox->vectors[VECTOR_BETA_J] + ghosts*(1+jStride+kStride));
+    double * __restrict__ beta_k = (double *)(lbox->vectors[VECTOR_BETA_K] + ghosts*(1+jStride+kStride));
+    double * __restrict__   Dinv = (double *)(lbox->vectors[VECTOR_DINV  ] + ghosts*(1+jStride+kStride));
+    double * __restrict__  L1inv = (double *)(lbox->vectors[VECTOR_L1INV ] + ghosts*(1+jStride+kStride));
+    double * __restrict__  valid = (double *)(lbox->vectors[VECTOR_VALID ] + ghosts*(1+jStride+kStride));
     double block_eigenvalue = -1e9;
 
     for(k=klo;k<khi;k++){
