@@ -453,7 +453,7 @@ void build_interpolation(mg_type *all_grids){
 #ifdef USE_UPCXX
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
     all_grids->levels[level]->interpolation.rflag         =     allocate<int>(MYTHREAD, MAX_VG);
-    memset((void *)all_grids->levels[level]->interpolation.rflag, 0, MAX_VG * sizeof(int));
+    memset((int *)all_grids->levels[level]->interpolation.rflag, 0, MAX_VG * sizeof(int));
     memset((void *)all_grids->levels[level]->interpolation.sblock2, 0, sizeof(int)*(numCoarseRanks+2));
     all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
 #endif
@@ -958,7 +958,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 #ifdef USE_UPCXX
     all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
-    memset((void *)all_grids->levels[level]->restriction[restrictionType].rflag, 0, MAX_VG *sizeof(int));
+    memset((int *)all_grids->levels[level]->restriction[restrictionType].rflag, 0, MAX_VG *sizeof(int));
     memset((void *)all_grids->levels[level]->restriction[restrictionType].sblock2, 0, sizeof(int)*(numFineRanks+2));
     all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
 #endif

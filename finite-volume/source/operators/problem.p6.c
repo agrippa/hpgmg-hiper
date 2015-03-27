@@ -89,12 +89,12 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
   int box;
   for(box=0;box<level->num_my_boxes;box++){
     box_type *lbox = (box_type *)&level->my_boxes[box];
-    memset((void *)lbox->vectors[VECTOR_ALPHA ].get(),0,lbox->volume*sizeof(double));
-    memset((void *)lbox->vectors[VECTOR_BETA_I].get(),0,lbox->volume*sizeof(double));
-    memset((void *)lbox->vectors[VECTOR_BETA_J].get(),0,lbox->volume*sizeof(double));
-    memset((void *)lbox->vectors[VECTOR_BETA_K].get(),0,lbox->volume*sizeof(double));
-    memset((void *)lbox->vectors[VECTOR_UTRUE ].get(),0,lbox->volume*sizeof(double));
-    memset((void *)lbox->vectors[VECTOR_F     ].get(),0,lbox->volume*sizeof(double));
+    memset((double *)lbox->vectors[VECTOR_ALPHA ].get(),0,lbox->volume*sizeof(double));
+    memset((double *)lbox->vectors[VECTOR_BETA_I].get(),0,lbox->volume*sizeof(double));
+    memset((double *)lbox->vectors[VECTOR_BETA_J].get(),0,lbox->volume*sizeof(double));
+    memset((double *)lbox->vectors[VECTOR_BETA_K].get(),0,lbox->volume*sizeof(double));
+    memset((double *)lbox->vectors[VECTOR_UTRUE ].get(),0,lbox->volume*sizeof(double));
+    memset((double *)lbox->vectors[VECTOR_F     ].get(),0,lbox->volume*sizeof(double));
     int i,j,k;
     const int jStride = lbox->jStride;
     const int kStride = lbox->kStride;

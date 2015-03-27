@@ -213,8 +213,8 @@ void add_vectors_to_box(box_type *box, int numAdditionalVectors){
 
 //------------------------------------------------------------------------------------------------------------------------------
 void destroy_box(box_type *box){
-  free((void *)box->vectors_base); // single allocate with pointer arithmetic...
-  free((void *)box->vectors);
+  upcxx::deallocate(box->vectors_base); // single allocate with pointer arithmetic...
+  upcxx::deallocate(box->vectors);
 }
 
 
@@ -939,7 +939,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
 #ifdef USE_UPCXX
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
   level->exchange_ghosts[justFaces].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
-  memset((void *)level->exchange_ghosts[justFaces].rflag, 0, MAX_VG * sizeof(int));
+  int *tmpp = (int *)level->exchange_ghosts[justFaces].rflag;
+  memset(tmpp, 0, MAX_VG * sizeof(int));
   memset((void *)level->exchange_ghosts[justFaces].sblock2, 0, sizeof(int)*(numRecvRanks+2));
   level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
 #endif
