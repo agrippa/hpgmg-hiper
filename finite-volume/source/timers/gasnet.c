@@ -3,12 +3,9 @@
 // SWWilliams@lbl.gov
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
-#ifdef _OPENMP
-#include "./timers/omp.c"
-#elif USE_MPI
-#include "./timers/mpi.c"
-#elif USE_UPCXX
-#include "./timers/gasnet.c"
-#else
-#error You need to include a custom timer routine
-#endif
+#include <stdint.h>
+#include <gasnet.h>
+#include <gasnet_tools.h>
+uint64_t CycleTime(){
+  return((uint64_t)(gasnett_ticks_to_ns(gasnett_ticks_now()))); // convert DP time in seconds to 64b integer nanosecond counter...
+}
