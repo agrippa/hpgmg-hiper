@@ -4,6 +4,7 @@
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
 // shan: flag = 0, the same with original; flag =1 , use src as read buffer
+#include <string.h>
 static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
   // copy 3D array from read_i,j,k of read[] to write_i,j,k in write[]
 
@@ -74,26 +75,23 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
     }}
   }else if(dim_j==1){ // don't have a 0..0 loop
     for(k=0;k<dim_k;k++){
-    for(i=0;i<dim_i;i++){
-      int  read_ijk = (i+ read_i) + ( read_j)* read_jStride + (k+ read_k)* read_kStride;
-      int write_ijk = (i+write_i) + (write_j)*write_jStride + (k+write_k)*write_kStride;
-      write[write_ijk] = read[read_ijk];
-    }}
+      int  read_ijk = (read_i) + ( read_j)* read_jStride + (k+ read_k)* read_kStride;
+      int write_ijk = (write_i) + (write_j)*write_jStride + (k+write_k)*write_kStride;
+      memcpy(write+write_ijk, read+read_ijk, dim_i * sizeof(double));
+    }
   }else if(dim_k==1){ // don't have a 0..0 loop
     for(j=0;j<dim_j;j++){
-    for(i=0;i<dim_i;i++){
-      int  read_ijk = (i+ read_i) + (j+ read_j)* read_jStride + ( read_k)* read_kStride;
-      int write_ijk = (i+write_i) + (j+write_j)*write_jStride + (write_k)*write_kStride;
-      write[write_ijk] = read[read_ijk];
-    }}
+      int  read_ijk = (read_i) + (j+ read_j)* read_jStride + ( read_k)* read_kStride;
+      int write_ijk = (write_i) + (j+write_j)*write_jStride + (write_k)*write_kStride;
+      memcpy(write+write_ijk, read+read_ijk, dim_i * sizeof(double));
+    }
   }else{ // general case...
     for(k=0;k<dim_k;k++){
     for(j=0;j<dim_j;j++){
-    for(i=0;i<dim_i;i++){
-      int  read_ijk = (i+ read_i) + (j+ read_j)* read_jStride + (k+ read_k)* read_kStride;
-      int write_ijk = (i+write_i) + (j+write_j)*write_jStride + (k+write_k)*write_kStride;
-      write[write_ijk] = read[read_ijk];
-    }}}
+      int  read_ijk = (read_i) + (j+ read_j)* read_jStride + (k+ read_k)* read_kStride;
+      int write_ijk = (write_i) + (j+write_j)*write_jStride + (k+write_k)*write_kStride;
+      memcpy(write+write_ijk, read+read_ijk, dim_i * sizeof(double));
+    }}
   }
 
 }

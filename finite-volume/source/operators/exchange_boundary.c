@@ -31,7 +31,7 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
   int bstart = level->exchange_ghosts[justFaces].sblock2[pos];
   int bend   = level->exchange_ghosts[justFaces].sblock2[pos+1];
 
-  //  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
+//  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
   for(buffer=bstart;buffer<bend;buffer++){
     CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
   }
@@ -56,13 +56,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
 
-  // exchange locally... try and hide within Isend latency... 
-  _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[3])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[3];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[3][buffer]);}
-  _timeEnd = CycleTime();
-  level->cycles.ghostZone_shm += (_timeEnd-_timeStart);
-
   // pack MPI send buffers...
   _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[0])
@@ -73,7 +66,6 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 
-  int nshm = 0; 
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
     global_ptr<double> p1, p2;
     p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
@@ -81,13 +73,13 @@ void exchange_boundary(level_type * level, int id, int justFaces){
     if (!is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
       event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
       upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],copy_e);
-    } else {
+
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
+      int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
-      size_t nth = MAX_NBGS * id;
-      int *p = (int *)level->exchange_ghosts[justFaces].match_rflag[n]; *(p+nth+pos) = 1; // upc_rflag[nth+pos] = 1;
-      nshm++;
-    }
+      event* data_e = &level->exchange_ghosts[justFaces].data_e[n];
+      async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
+    } 
   }
 
   _timeEnd = CycleTime();
@@ -95,29 +87,37 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
+  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[3])
+  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[3];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[3][buffer]);}
+  _timeEnd = CycleTime();
+  level->cycles.ghostZone_shm += (_timeEnd-_timeStart);
+
+  _timeStart = CycleTime();
+  int nshm = 0;
+  for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
+    if (is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
+      int rid = level->exchange_ghosts[justFaces].send_ranks[n];
+      int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
+      size_t nth = MAX_NBGS * id;
+      int *p = (int *)level->exchange_ghosts[justFaces].match_rflag[n]; *(p+nth+pos) = 1; // upc_rflag[nth+pos] = 1;
+      nshm++;
+    }
+  }
+  _timeEnd = CycleTime();
+  level->cycles.ghostZone_shm += (_timeEnd-_timeStart);
+
+
+  _timeStart = CycleTime();
   PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
   for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);}
   _timeEnd = CycleTime();
   level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 
-  // wait for MPI to finish...
+
+// async_wait();
+
   _timeStart = CycleTime();
-
-  for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    int rid = level->exchange_ghosts[justFaces].send_ranks[n];
-    
-    if (!is_memory_shared_with(rid)) {
-      int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
-      int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
-      event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
-      event* data_e = &level->exchange_ghosts[justFaces].data_e[n];
-      async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
-    }     
-  }
-
-  async_wait();
-
-  if (level->exchange_ghosts[justFaces].num_recvs > 0) {
+ if (level->exchange_ghosts[justFaces].num_recvs > 0) {
   size_t nth = MAX_NBGS * id;
   int *p = (int *) level->exchange_ghosts[justFaces].rflag;
   while (1) {
@@ -133,6 +133,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   }
 
   }
+
+  async_wait();
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
