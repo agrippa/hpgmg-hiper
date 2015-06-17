@@ -115,6 +115,7 @@ typedef struct box_type {
 typedef struct {
 #ifdef USE_UPCXX
   int depth;
+  team *subteam;
 #endif
   double h;					// grid spacing at this level
   int active;					// I am an active process (I have work to do on this or subsequent levels)
@@ -131,6 +132,7 @@ typedef struct {
 #ifdef USE_UPCXX
   global_ptr<box_type> *addr_of_box;            // global address for all box, can be removed later
   global_ptr<box_type> my_boxes;                // global address
+  box_type             **my_local_boxes;
 #else
   box_type * my_boxes;				// pointer to array of boxes owned by this rank
 #endif

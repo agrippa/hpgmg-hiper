@@ -137,12 +137,12 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
       evaluateU(x,y,z,&U,&Ux,&Uy,&Uz,&Uxx,&Uyy,&Uzz, (level->boundary_condition.type == BC_PERIODIC) );
       double F = a*A*U - b*( (Bx*Ux + By*Uy + Bz*Uz)  +  B*(Uxx + Uyy + Uzz) );
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      memberof(level->my_boxes[box],vectors)[VECTOR_BETA_I][ijk] = Bi;
-      memberof(level->my_boxes[box],vectors)[VECTOR_BETA_J][ijk] = Bj;
-      memberof(level->my_boxes[box],vectors)[VECTOR_BETA_K][ijk] = Bk;
-      memberof(level->my_boxes[box],vectors)[VECTOR_ALPHA ][ijk] = A;
-      memberof(level->my_boxes[box],vectors)[VECTOR_UTRUE ][ijk] = U;
-      memberof(level->my_boxes[box],vectors)[VECTOR_F     ][ijk] = F;
+      lbox->vectors[VECTOR_BETA_I][ijk] = Bi;
+      lbox->vectors[VECTOR_BETA_J][ijk] = Bj;
+      lbox->vectors[VECTOR_BETA_K][ijk] = Bk;
+      lbox->vectors[VECTOR_ALPHA ][ijk] = A;
+      lbox->vectors[VECTOR_UTRUE ][ijk] = U;
+      lbox->vectors[VECTOR_F     ][ijk] = F;
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     }}}
   }

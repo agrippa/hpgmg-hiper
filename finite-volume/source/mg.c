@@ -1300,6 +1300,11 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     int SIZE;
     MPI_Comm_size(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &SIZE);
 
+    // create upcxx team
+    int subrank;
+    MPI_Comm_rank(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &subrank);
+    team_all.split(all_grids->levels[level]->active, subrank, all_grids->levels[level]->subteam);
+
     double comm_split_end = MPI_Wtime();
     double comm_split_time_send = comm_split_end-comm_split_start;
     double comm_split_time = 0;

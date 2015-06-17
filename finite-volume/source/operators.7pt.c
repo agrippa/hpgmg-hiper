@@ -216,6 +216,8 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
   exchange_boundary(level,VECTOR_BETA_J,0);
   exchange_boundary(level,VECTOR_BETA_K,0);
 
+  level->subteam->barrier();
+
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // calculate Dinv, L1inv, and estimate the dominant Eigenvalue
   uint64_t _timeStart = CycleTime();

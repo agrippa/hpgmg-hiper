@@ -1184,6 +1184,8 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   for(box=0;box<level->boxes_in.i*level->boxes_in.j*level->boxes_in.k;box++){if(level->rank_of_box[box]==level->my_rank)level->num_my_boxes++;} 
 #ifdef USE_UPCXX
   level->my_boxes = upcxx::allocate<box_type>(MYTHREAD, level->num_my_boxes);
+  level->my_local_boxes = (box_type **)malloc(level->num_my_boxes * sizeof(box_type *));
+
   /* NOTE: add a local array to record the global address of every box, later, this array can be shrinked to neighbor boxes only */
   level->addr_of_box = (global_ptr<box_type> *)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(global_ptr<box_type>));
 #else
@@ -1203,6 +1205,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
 #ifdef USE_UPCXX
       upc_box_info[b] = &level->my_boxes[box];
       box_type* lbox = (box_type *)&(level->my_boxes[box]);
+      level->my_local_boxes[box] = lbox;
       lbox->low.i = i*level->box_dim;
       lbox->low.j = j*level->box_dim;
       lbox->low.k = k*level->box_dim;
@@ -1333,6 +1336,10 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   if(my_rank==0){fprintf(stdout,"  Duplicating MPI_COMM_WORLD...");fflush(stdout);}
   double time_start = MPI_Wtime();
   MPI_Comm_dup(MPI_COMM_WORLD,&level->MPI_COMM_ALLREDUCE);
+
+  // create upcxx barrier
+  level->subteam = &team_all;
+
   double time_end = MPI_Wtime();
   double time_in_comm_dup = 0;
   double time_in_comm_dup_send = time_end-time_start;
