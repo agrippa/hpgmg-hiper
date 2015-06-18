@@ -31,6 +31,9 @@
 #define MAX_VECS 40
 #define MAX_NBGS 128
 #define MAX_VG MAX_VECS * MAX_NBGS
+#define MYTHREAD upcxx::myrank()
+#define THREADS upcxx::ranks()
+#define memberof upcxx_memberof
 #endif
 
 #endif
