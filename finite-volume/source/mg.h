@@ -28,8 +28,11 @@ typedef struct {
   struct {
     uint64_t MGBuild; // total time spent building the coefficients...
     uint64_t MGSolve; // total time spent in MGSolve
-  }cycles;
+  }cycles, cyclesMin;
   int MGSolves_performed;
+
+  uint64_t bartime[200];
+
 } mg_type;
 
 

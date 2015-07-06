@@ -63,6 +63,8 @@ shared_array< global_ptr<mg_type>,  1 > upc_grids;
 shared_array< global_ptr<int>,      1 > upc_rflag_ptr;
 #endif
 
+void computeMin(cycles_type *cmin, cycles_type *cur, cycles_type *last);
+
 mg_type *all_grids;  // to be consistent with MPI version
 
 int main(int argc, char **argv){
@@ -208,12 +210,18 @@ int main(int argc, char **argv){
   upcxx::barrier();
 #endif
 
+  long sz = sysconf(_SC_PAGESIZE);
+  if (myrank() == 0) printf("PAGE SIZE is %d\n", sz);
+
   // create the fine level...
   #ifdef USE_PERIODIC_BC
   int bc = BC_PERIODIC;
+  if (myrank() == 0) printf("BOUNDARY: PERIODIC_BC\n");
   #else
   int bc = BC_DIRICHLET;
+  if (myrank() == 0) printf("BOUNDARY: DIRCHLET_BC\n");
   #endif
+
   level_type fine_grid;
   int ghosts=stencil_get_radius();
 #ifdef USE_UPCXX
@@ -272,7 +280,7 @@ int main(int argc, char **argv){
     #endif
 
     #ifdef USE_MPI
-    double minTime   = 30.0; // minimum time in seconds that the benchmark should run
+    double minTime   = 15.0; // minimum time in seconds that the benchmark should run
     double startTime = MPI_Wtime();
     if(doTiming==1){
       if((minTime/timePerSolve)>minSolves)minSolves=(minTime/timePerSolve); // if one needs to do more than minSolves to run for minTime, change minSolves
@@ -287,14 +295,39 @@ int main(int argc, char **argv){
 
     int numSolves =  0; // solves completed
     MGResetTimers(all_grids);
+
+    //  prepare for compute MINTIME report
+    uint64_t timeMin, time1 = 0, time2 = 0;
+    cycles_type cycles1[100];
+    memset(cycles1, 0, sizeof(cycles_type)*100);
+
     while( (numSolves<minSolves) ){
       zero_vector(all_grids->levels[0],VECTOR_U);
+
+      upcxx::barrier();
+
       #ifdef USE_FCYCLES
       FMGSolve(all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
       #else
        MGSolve(all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
       #endif
       numSolves++;
+
+      //add for MINTIME report
+      if (numSolves == 1) timeMin = all_grids->cycles.MGSolve;
+
+      if (timeMin >= (all_grids->cycles.MGSolve - time1)) {
+          timeMin = all_grids->cycles.MGSolve - time1;
+          for(int level=0;level< all_grids->num_levels;level++) computeMin(&(all_grids->levels[level]->cyclesMin), &(all_grids->levels[level]->cycles), &cycles1[level]);
+          all_grids->cyclesMin.MGSolve = all_grids->cycles.MGSolve - time1;
+          all_grids->cyclesMin.MGBuild = all_grids->cycles.MGBuild;
+          for (int i=0; i < 20; i++)
+            all_grids->bartime[i] = all_grids->levels[0]->bartime[i];
+      }
+
+      time1 = all_grids->cycles.MGSolve;
+      for(int level=0;level< all_grids->num_levels;level++) cycles1[level] = all_grids->levels[level]->cycles;
+
     }
 
     #ifdef USE_MPI
@@ -329,3 +362,14 @@ int main(int argc, char **argv){
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   return(0);
 }
+
+void computeMin(cycles_type *cmin, cycles_type *cur, cycles_type *last) {
+
+  uint64_t *a, *b, *c;
+
+  a = (uint64_t *)cmin;
+  b = (uint64_t *)cur;
+  c = (uint64_t *)last;
+  for (int i = 0; i < 35; i++) a[i] = b[i] - c[i];
+}
+

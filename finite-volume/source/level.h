@@ -110,6 +110,48 @@ typedef struct box_type {
 #endif
 } box_type;
 
+typedef  struct {
+    uint64_t              smooth;
+    uint64_t            apply_op;
+    uint64_t            residual;
+    uint64_t               blas1;
+    uint64_t               blas3;
+    uint64_t boundary_conditions;
+    // Distributed Restriction
+    uint64_t   restriction_total;
+    uint64_t   restriction_pack;
+    uint64_t   restriction_local;
+    uint64_t   restriction_shm;
+    uint64_t   restriction_unpack;
+    uint64_t   restriction_recv;
+    uint64_t   restriction_send;
+    uint64_t   restriction_wait;
+    uint64_t   restriction_bar;
+    // Distributed interpolation
+    uint64_t interpolation_total;
+    uint64_t interpolation_pack;
+    uint64_t interpolation_local;
+    uint64_t interpolation_shm;
+    uint64_t interpolation_unpack;
+    uint64_t interpolation_recv;
+    uint64_t interpolation_send;
+    uint64_t interpolation_wait;
+    uint64_t interpolation_bar;
+    // Ghost Zone Exchanges...
+    uint64_t     ghostZone_total;
+    uint64_t     ghostZone_pack;
+    uint64_t     ghostZone_local;
+    uint64_t     ghostZone_shm;
+    uint64_t     ghostZone_unpack;
+    uint64_t     ghostZone_recv;
+    uint64_t     ghostZone_send;
+    uint64_t     ghostZone_wait;
+    uint64_t     ghostZone_bar;
+    // Collectives...
+    uint64_t   collectives;
+    uint64_t         Total;
+}cycles_type;
+
 
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
@@ -163,47 +205,14 @@ typedef struct {
 
   // statistics information...
   uint64_t memory_allocated;			// 64b integer to track how much memory each process allocates for each level
-  struct {
-    uint64_t              smooth;
-    uint64_t            apply_op;
-    uint64_t            residual;
-    uint64_t               blas1;
-    uint64_t               blas3;
-    uint64_t boundary_conditions;
-    // Distributed Restriction
-    uint64_t   restriction_total;
-    uint64_t   restriction_pack;
-    uint64_t   restriction_local;
-    uint64_t   restriction_shm;
-    uint64_t   restriction_unpack;
-    uint64_t   restriction_recv;
-    uint64_t   restriction_send;
-    uint64_t   restriction_wait;
-    // Distributed interpolation
-    uint64_t interpolation_total;
-    uint64_t interpolation_pack;
-    uint64_t interpolation_local;
-    uint64_t interpolation_shm;
-    uint64_t interpolation_unpack;
-    uint64_t interpolation_recv;
-    uint64_t interpolation_send;
-    uint64_t interpolation_wait;
-    // Ghost Zone Exchanges...
-    uint64_t     ghostZone_total;
-    uint64_t     ghostZone_pack;
-    uint64_t     ghostZone_local;
-    uint64_t     ghostZone_shm;
-    uint64_t     ghostZone_unpack;
-    uint64_t     ghostZone_recv;
-    uint64_t     ghostZone_send;
-    uint64_t     ghostZone_wait;
-    // Collectives...
-    uint64_t   collectives;
-    uint64_t         Total;
-  }cycles;
+  cycles_type cycles, cycles1, cyclesMin;
   int Krylov_iterations;        // total number of bottom solver iterations
   int CAKrylov_formations_of_G; // i.e. [G,g] = [P,R]^T[P,R,rt]
   int vcycles_from_this_level;  // number of vcycles performed that were initiated from this level
+
+  int nbar[6];
+  uint64_t bartime[200];
+
 } level_type;
 
 
