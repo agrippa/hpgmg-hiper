@@ -306,12 +306,18 @@ int main(int argc, char **argv){
 
       upcxx::barrier();
 
+      for (int level = 0; level < 100; level++) all_grids->ncall[level] = 0;
+      
       #ifdef USE_FCYCLES
       FMGSolve(all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
       #else
        MGSolve(all_grids,VECTOR_U,VECTOR_F,a,b,1e-15);
       #endif
       numSolves++;
+
+      if (myrank() == 0  && doTiming == 0 && numSolves == 1) {
+        printf("NCalls : "); for (int level = 0; level < all_grids->num_levels; level++) printf("  %d ", all_grids->ncall[level]); printf("\n\n");
+      }
 
       //add for MINTIME report
       if (numSolves == 1) timeMin = all_grids->cycles.MGSolve;

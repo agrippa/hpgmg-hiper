@@ -182,7 +182,6 @@ void MGPrintTiming(mg_type *all_grids){
   printf( "   Min Total time in MGBuild UPCXX %12.6f seconds\n",SecondsPerCycle*(double)all_grids->cyclesMin.MGBuild);
   printf( "   Min Total time in MGSolve UPCXX %12.6f seconds\n",scale*(double)all_grids->cyclesMin.MGSolve);
   printf("\n\n");fflush(stdout);
-
 }
 
 
@@ -1323,7 +1322,6 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
     all_grids->levels[level]->h = 2.0*all_grids->levels[level-1]->h;
   }
 
-
   // bottom solver gets extra grids...
   level = all_grids->num_levels-1;
   int box;
@@ -1392,6 +1390,9 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
 void MGVCycle(mg_type *all_grids, int e_id, int R_id, double a, double b, int level){
   if(!all_grids->levels[level]->active)return;
   uint64_t _LevelStart;
+
+
+  all_grids->ncall[level]++;
 
   // bottom solve...
   if(level==all_grids->num_levels-1){
