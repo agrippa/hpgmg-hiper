@@ -33,6 +33,8 @@ typedef struct {
 
   uint64_t bartime[200];
 
+  int ncall[100];
+
 } mg_type;
 
 
