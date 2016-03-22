@@ -81,6 +81,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
     } 
   }
+  upcxx::advance();
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_send += (_timeEnd-_timeStart);
