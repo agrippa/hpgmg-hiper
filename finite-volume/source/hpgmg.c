@@ -39,6 +39,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <hclib_cpp.h>
 //------------------------------------------------------------------------------------------------------------------------------
 #ifdef USE_MPI
 #include <mpi.h>
