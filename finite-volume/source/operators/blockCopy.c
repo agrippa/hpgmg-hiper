@@ -30,14 +30,14 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
 #ifdef USE_UPCXX
   if(block->read.box >=0) {
     box_type *lbox = (box_type *) block->read.boxgp;
-    global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+    hclib::upcxx::global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
     read_jStride = lbox->jStride;
     read_kStride = lbox->kStride;
   }
   if(block->write.box>=0) {
     box_type *lbox = (box_type *) block->write.boxgp;
-    global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+    hclib::upcxx::global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
@@ -122,7 +122,7 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
   if(block->read.box >=0){
 #ifdef USE_UPCXX
      box_type *lbox = (box_type *) block->read.boxgp;
-     global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+     hclib::upcxx::global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
      read = (double *)gp;
      read_jStride = lbox->jStride;
      read_kStride = lbox->kStride;
@@ -135,7 +135,7 @@ static inline void IncrementBlock(level_type *level, int id, double prescale, bl
   if(block->write.box>=0){
 #ifdef USE_UPCXX
     box_type *lbox = (box_type *) block->write.boxgp;
-    global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
+    hclib::upcxx::global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride);
     write = (double *) gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;

@@ -67,7 +67,7 @@ static inline void RestrictBlock(level_type *level_c, int id_c, level_type *leve
   if(block->read.box >=0){
 #ifdef USE_UPCXX
      box_type *lbox = (box_type *) block->read.boxgp;
-     global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+     hclib::upcxx::global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
      read = (double *)gp;
      read_jStride = lbox->jStride;
      read_kStride = lbox->kStride;
@@ -80,7 +80,7 @@ static inline void RestrictBlock(level_type *level_c, int id_c, level_type *leve
   if(block->write.box>=0){
 #ifdef USE_UPCXX
     box_type *lbox = (box_type *) block->write.boxgp;
-    global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+    hclib::upcxx::global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
@@ -173,13 +173,13 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 #ifdef USE_UPCXX
   int nshm = 0;
   for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
-    global_ptr<double> p1, p2;
+    hclib::upcxx::global_ptr<double> p1, p2;
     p1 = level_f->restriction[restrictionType].global_send_buffers[n];
     p2 = level_f->restriction[restrictionType].global_match_buffers[n];
 
-    if (!is_memory_shared_with(level_f->restriction[restrictionType].send_ranks[n])) {
-      event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
-      upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], copy_e);
+    if (!hclib::upcxx::is_memory_shared_with(level_f->restriction[restrictionType].send_ranks[n])) {
+      hclib::upcxx::event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
+      hclib::upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], copy_e);
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
@@ -208,16 +208,16 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
     int rid = level_f->restriction[restrictionType].send_ranks[n];
 
-    if (!is_memory_shared_with(rid)) {
+    if (!hclib::upcxx::is_memory_shared_with(rid)) {
       int cnt = level_f->restriction[restrictionType].send_sizes[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
-      event* data_e = &level_f->restriction[restrictionType].data_e[n];
+      hclib::upcxx::event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
+      hclib::upcxx::event* data_e = &level_f->restriction[restrictionType].data_e[n];
       async_after(rid, copy_e, data_e)(cb_unpack_res, level_f->my_rank, pos, restrictionType, level_f->depth, id_c, level_c->depth);
     }
   }
 
-  async_wait();
+  hclib::upcxx::async_wait();
 
   size_t nth = MAX_NBGS*id_c;
 

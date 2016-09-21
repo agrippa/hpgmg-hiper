@@ -111,7 +111,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   #pragma omp parallel for schedule(dynamic,1)
   #endif
   for(n=0;n<level_c->restriction[restrictionType].num_recvs;n++){
-    MPI_Irecv(level_c->restriction[restrictionType].recv_buffers[n],
+    hclib::MPI_Irecv(level_c->restriction[restrictionType].recv_buffers[n],
               level_c->restriction[restrictionType].recv_sizes[n],
               MPI_DOUBLE,
               level_c->restriction[restrictionType].recv_ranks[n],
@@ -138,7 +138,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   #pragma omp parallel for schedule(dynamic,1)
   #endif
   for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
-    MPI_Isend(level_f->restriction[restrictionType].send_buffers[n],
+    hclib::MPI_Isend(level_f->restriction[restrictionType].send_buffers[n],
               level_f->restriction[restrictionType].send_sizes[n],
               MPI_DOUBLE,
               level_f->restriction[restrictionType].send_ranks[n],
@@ -163,7 +163,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // wait for MPI to finish...
   #ifdef USE_MPI 
   _timeStart = CycleTime();
-  if(nMessages)MPI_Waitall(nMessages,level_f->restriction[restrictionType].requests,level_f->restriction[restrictionType].status);
+  if(nMessages)hclib::MPI_Waitall(nMessages,level_f->restriction[restrictionType].requests,level_f->restriction[restrictionType].status);
   _timeEnd = CycleTime();
   level_f->cycles.restriction_wait += (_timeEnd-_timeStart);
 

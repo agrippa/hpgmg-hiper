@@ -26,7 +26,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   #pragma omp parallel for schedule(dynamic,1)
   #endif
   for(n=0;n<level->exchange_ghosts[justFaces].num_recvs;n++){
-    MPI_Irecv(level->exchange_ghosts[justFaces].recv_buffers[n],
+    hclib::MPI_Irecv(level->exchange_ghosts[justFaces].recv_buffers[n],
               level->exchange_ghosts[justFaces].recv_sizes[n],
               MPI_DOUBLE,
               level->exchange_ghosts[justFaces].recv_ranks[n],
@@ -54,7 +54,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   #pragma omp parallel for schedule(dynamic,1)
   #endif
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    MPI_Isend(level->exchange_ghosts[justFaces].send_buffers[n],
+    hclib::MPI_Isend(level->exchange_ghosts[justFaces].send_buffers[n],
               level->exchange_ghosts[justFaces].send_sizes[n],
               MPI_DOUBLE,
               level->exchange_ghosts[justFaces].send_ranks[n],
@@ -81,7 +81,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // wait for MPI to finish...
   #ifdef USE_MPI 
   _timeStart = CycleTime();
-  if(nMessages)MPI_Waitall(nMessages,level->exchange_ghosts[justFaces].requests,level->exchange_ghosts[justFaces].status);
+  if(nMessages)hclib::MPI_Waitall(nMessages,level->exchange_ghosts[justFaces].requests,level->exchange_ghosts[justFaces].status);
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
 

@@ -11,10 +11,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <hclib_cpp.h>
+#include <hclib_upcxx.h>
+#include <hclib_mpi.h>
 
 #ifdef USE_UPCXX
 #include <upcxx.h>
-using namespace upcxx;
+// using namespace upcxx;
 #endif
 
 #include "defines.h"
@@ -46,7 +49,7 @@ typedef struct {
   int subtype;                  // e.g. used to calculate normal to domain for BC's
   struct {int i, j, k;}dim;     // dimensions of the block to copy
 #ifdef USE_UPCXX
-  struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; global_ptr<box_type> boxgp;}read,write;
+  struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr; hclib::upcxx::global_ptr<box_type> boxgp;}read,write;
 #else
   struct {int box, i, j, k, jStride, kStride;double * __restrict__ ptr;}read,write;
 #endif
@@ -56,10 +59,8 @@ typedef struct {
   // Thus, you can do grid->grid, grid->buf, buf->grid, or buf->buf
 } blockCopy_type;
 
-#ifdef USE_UPCXX
-extern shared_array< global_ptr<double>, 1 > upc_buf_info;
-extern shared_array< global_ptr<int>, 1> upc_rflag_ptr;
-#endif
+extern hclib::upcxx::shared_array< hclib::upcxx::global_ptr<double>, 1 > upc_buf_info;
+extern hclib::upcxx::shared_array< hclib::upcxx::global_ptr<int>, 1> upc_rflag_ptr;
 
 //------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
@@ -70,17 +71,17 @@ typedef struct {
     int     * __restrict__       recv_sizes;	//   size of each MPI recv buffer...       recv_sizes[neighbor]
     int     * __restrict__       send_sizes;	//   size of each MPI send buffer...       send_sizes[neighbor]
 #ifdef USE_UPCXX
-    global_ptr<int>     rflag;                  //   message recv flag
-    global_ptr<int>     *match_rflag;           //   address of neighbor's recv flag
+    hclib::upcxx::global_ptr<int>     rflag;                  //   message recv flag
+    hclib::upcxx::global_ptr<int>     *match_rflag;           //   address of neighbor's recv flag
     int                 *send_match_pos;        //   my position in receiver's recv list
     int              * __restrict__         sblock2, eblock2;  // start and end position in blocks[2] for each neighbor
 
-    global_ptr<double>        *global_recv_buffers;    // allocate buffer in global address
-    global_ptr<double>        *global_send_buffers;    // allocate buffer in global address
-    global_ptr<double>        *global_match_buffers;   // record neighbor's recv buffer address
+    hclib::upcxx::global_ptr<double>        *global_recv_buffers;    // allocate buffer in global address
+    hclib::upcxx::global_ptr<double>        *global_send_buffers;    // allocate buffer in global address
+    hclib::upcxx::global_ptr<double>        *global_match_buffers;   // record neighbor's recv buffer address
 
-    event            *copy_e;                   //   events used for p2p synchronization      
-    event            *data_e;                   //   events used for p2p synchronization 
+    hclib::upcxx::event            *copy_e;                   //   events used for p2p synchronization      
+    hclib::upcxx::event            *data_e;                   //   events used for p2p synchronization 
 #endif
     double ** __restrict__     recv_buffers;	//   MPI recv buffer for each neighbor...  recv_buffers[neighbor][ recv_sizes[neighbor] ]
     double ** __restrict__     send_buffers;	//   MPI send buffer for each neighbor...  send_buffers[neighbor][ send_sizes[neighbor] ]
@@ -102,8 +103,8 @@ typedef struct box_type {
   int                jStride,kStride,volume;	// useful for offsets
   int                            numVectors;	//
 #ifdef USE_UPCXX
-  global_ptr<global_ptr<double> >   vectors;    // allocate buffer in global address
-  global_ptr<double>           vectors_base;    // allocate buffer in global address
+  hclib::upcxx::global_ptr<hclib::upcxx::global_ptr<double> >   vectors;    // allocate buffer in global address
+  hclib::upcxx::global_ptr<double>           vectors_base;    // allocate buffer in global address
 #else
   double   ** __restrict__          vectors;	// vectors[c] = pointer to 3D array for vector c
   double    * __restrict__     vectors_base;    // pointer used for malloc/free.  vectors[c] are shifted from this for alignment
@@ -157,7 +158,7 @@ typedef  struct {
 typedef struct {
 #ifdef USE_UPCXX
   int depth;
-  team *subteam;
+  hclib::upcxx::team *subteam;
 #endif
   double h;					// grid spacing at this level
   int active;					// I am an active process (I have work to do on this or subsequent levels)
@@ -172,8 +173,8 @@ typedef struct {
   int * rank_of_box;				// 3D array containing rank of each box.  i-major ordering
   int    num_my_boxes;				//           number of boxes owned by this rank
 #ifdef USE_UPCXX
-  global_ptr<box_type> *addr_of_box;            // global address for all box, can be removed later
-  global_ptr<box_type> my_boxes;                // global address
+  hclib::upcxx::global_ptr<box_type> *addr_of_box;            // global address for all box, can be removed later
+  hclib::upcxx::global_ptr<box_type> my_boxes;                // global address
   box_type             **my_local_boxes;
 #else
   box_type * my_boxes;				// pointer to array of boxes owned by this rank
@@ -228,11 +229,11 @@ int qsortInt(const void *a, const void *b);
 void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *num_blocks,
                           int dim_i, int dim_j, int dim_k,
 #ifdef USE_UPCXX
-			  global_ptr<box_type> read_boxgp,
+			  hclib::upcxx::global_ptr<box_type> read_boxgp,
 #endif
                           int  read_box, double*  read_ptr, int  read_i, int  read_j, int  read_k, int  read_jStride, int  read_kStride, int  read_scale,
 #ifdef USE_UPCXX
-                          global_ptr<box_type> write_boxgp,
+                          hclib::upcxx::global_ptr<box_type> write_boxgp,
 #endif
 
                           int write_box, double* write_ptr, int write_i, int write_j, int write_k, int write_jStride, int write_kStride, int write_scale,

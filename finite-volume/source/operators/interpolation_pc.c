@@ -65,7 +65,7 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
   if(block->read.box >=0){
 #ifdef USE_UPCXX
     box_type *lbox = (box_type *) block->read.boxgp;
-    global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+    hclib::upcxx::global_ptr<double> gp = lbox->vectors[id_c] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
     read_jStride = lbox->jStride;
     read_kStride = lbox->kStride;
@@ -78,7 +78,7 @@ static inline void InterpolateBlock_PC(level_type *level_f, int id_f, double pre
   if(block->write.box>=0){
 #ifdef USE_UPCXX
     box_type *lbox = (box_type *) block->write.boxgp;
-    global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
+    hclib::upcxx::global_ptr<double> gp = lbox->vectors[id_f] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     write = (double *)gp;
     write_jStride = lbox->jStride;
     write_kStride = lbox->kStride;
@@ -131,12 +131,12 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 #ifdef USE_UPCXX
   int nshm = 0;
   for(n=0;n<level_c->interpolation.num_sends;n++){
-    global_ptr<double> p1, p2;
+    hclib::upcxx::global_ptr<double> p1, p2;
     p1 = level_c->interpolation.global_send_buffers[n];
     p2 = level_c->interpolation.global_match_buffers[n];
-    if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
-      event* copy_e = &level_c->interpolation.copy_e[n];
-      upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
+    if (!hclib::upcxx::is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
+      hclib::upcxx::event* copy_e = &level_c->interpolation.copy_e[n];
+      hclib::upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
@@ -164,17 +164,17 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   for(n=0;n<level_c->interpolation.num_sends;n++){
     int rid = level_c->interpolation.send_ranks[n];
 
-    if (!is_memory_shared_with(rid)) {
+    if (!hclib::upcxx::is_memory_shared_with(rid)) {
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      event* copy_e = &level_c->interpolation.copy_e[n];
-      event* data_e = &level_c->interpolation.data_e[n];
+      hclib::upcxx::event* copy_e = &level_c->interpolation.copy_e[n];
+      hclib::upcxx::event* data_e = &level_c->interpolation.data_e[n];
       async_after(rid, copy_e, data_e)(cb_unpack_int, level_c->my_rank, pos,
                   level_f->depth, id_f, prescale_f);
     }
   }
 
-  async_wait();
+  hclib::upcxx::async_wait();
 
   if (level_f->interpolation.num_recvs > 0) {
   size_t nth = MAX_NBGS*id_f; nth = 0;

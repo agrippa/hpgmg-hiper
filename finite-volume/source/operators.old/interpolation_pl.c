@@ -91,7 +91,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   #pragma omp parallel for schedule(dynamic,1)
   #endif
   for(n=0;n<level_f->interpolation.num_recvs;n++){
-    MPI_Irecv(level_f->interpolation.recv_buffers[n],
+    hclib::MPI_Irecv(level_f->interpolation.recv_buffers[n],
               level_f->interpolation.recv_sizes[n],
               MPI_DOUBLE,
               level_f->interpolation.recv_ranks[n],
@@ -118,7 +118,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   #pragma omp parallel for schedule(dynamic,1)
   #endif
   for(n=0;n<level_c->interpolation.num_sends;n++){
-    MPI_Isend(level_c->interpolation.send_buffers[n],
+    hclib::MPI_Isend(level_c->interpolation.send_buffers[n],
               level_c->interpolation.send_sizes[n],
               MPI_DOUBLE,
               level_c->interpolation.send_ranks[n],
@@ -143,7 +143,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   // wait for MPI to finish...
   #ifdef USE_MPI 
   _timeStart = CycleTime();
-  if(nMessages)MPI_Waitall(nMessages,level_f->interpolation.requests,level_f->interpolation.status);
+  if(nMessages)hclib::MPI_Waitall(nMessages,level_f->interpolation.requests,level_f->interpolation.status);
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_wait += (_timeEnd-_timeStart);
 

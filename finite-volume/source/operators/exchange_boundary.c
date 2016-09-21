@@ -67,17 +67,17 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeStart = CycleTime();
 
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    global_ptr<double> p1, p2;
+    hclib::upcxx::global_ptr<double> p1, p2;
     p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
     p2 = level->exchange_ghosts[justFaces].global_match_buffers[n];
-    if (!is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
-      event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
-      upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],copy_e);
+    if (!hclib::upcxx::is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
+      hclib::upcxx::event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
+      hclib::upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],copy_e);
 
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
-      event* data_e = &level->exchange_ghosts[justFaces].data_e[n];
+      hclib::upcxx::event* data_e = &level->exchange_ghosts[justFaces].data_e[n];
       async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
     } 
   }
@@ -96,7 +96,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeStart = CycleTime();
   int nshm = 0;
   for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    if (is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
+    if (hclib::upcxx::is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
       int rid = level->exchange_ghosts[justFaces].send_ranks[n];
       int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
       size_t nth = MAX_NBGS * id;
@@ -135,7 +135,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   }
 
-  async_wait();
+ hclib::upcxx::async_wait();
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);

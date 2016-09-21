@@ -11,9 +11,9 @@
 #include <string.h>
 #include <math.h>
 //------------------------------------------------------------------------------------------------------------------------------
-#ifdef USE_MPI
-#include <mpi.h>
-#endif
+// #ifdef USE_MPI
+// #include <mpi.h>
+// #endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -25,9 +25,9 @@
 //------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef USE_UPCXX
-extern shared_array< global_ptr<double>, 1 > upc_buf_info;
-extern shared_array< global_ptr<box_type>, 1> upc_box_info;
-extern shared_array< int, 1> upc_int_info;
+extern hclib::upcxx::shared_array< hclib::upcxx::global_ptr<double>, 1 > upc_buf_info;
+extern hclib::upcxx::shared_array< hclib::upcxx::global_ptr<box_type>, 1> upc_box_info;
+extern hclib::upcxx::shared_array< int, 1> upc_int_info;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -127,18 +127,21 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
   box->volume = (dim+2*ghosts)*box->kStride;
 
 #ifdef USE_UPCXX
-  box->vectors = upcxx::allocate<global_ptr<double> >(MYTHREAD, box->numVectors);
-               memory_allocated += box->numVectors*sizeof(global_ptr<double>);
+  box->vectors = hclib::upcxx::allocate<hclib::upcxx::global_ptr<double> >(MYTHREAD, box->numVectors);
+               memory_allocated += box->numVectors*sizeof(hclib::upcxx::global_ptr<double>);
   if((box->numVectors>0)&&(box->vectors==NULL)){fprintf(stderr,"malloc failed - create_box/box->vectors\n");exit(0);}
   uint64_t malloc_size = box->volume*box->numVectors + BOX_ALIGN_1ST_CELL/sizeof(double);
-  box->vectors_base = upcxx::allocate<double>(MYTHREAD, malloc_size);
+  box->vectors_base = hclib::upcxx::allocate<double>(MYTHREAD, malloc_size);
                memory_allocated += malloc_size;
   if((box->numVectors>0)&&(box->vectors_base==NULL)){fprintf(stderr,"malloc failed - create_box/box->vectors_base\n");exit(0);}
   double * tmpbuf = (double *)box->vectors_base;
   int num = 0;
   memset(tmpbuf,0,malloc_size*sizeof(double)); // zero to avoid 0.0*NaN or 0.0*Inf
   while( (uint64_t)(tmpbuf+box->ghosts*(1+box->jStride+box->kStride)) & (BOX_ALIGN_1ST_CELL-1) ){tmpbuf++; num++;} // allign first *non-ghost* zone element of first component to page boundary...
-  int c;for(c=0;c<box->numVectors;c++){box->vectors[c] = box->vectors_base + c*box->volume + num;}
+  int c;
+  for(c=0;c<box->numVectors;c++){
+      box->vectors[c] = box->vectors_base + c*box->volume + num;
+  }
 
 #else
   // allocate an array of pointers to vectors...
@@ -164,15 +167,15 @@ int create_box(box_type *box, int numVectors, int dim, int ghosts){
 #ifdef USE_UPCXX
 void add_vectors_to_box(box_type *box, int numAdditionalVectors){
   if(numAdditionalVectors<=0)return;                                                                    // nothing to do
-  global_ptr<double> old_bp = box->vectors_base;
-  global_ptr<double> old_v0 = box->vectors[0];
-  global_ptr<global_ptr<double> > old_v = box->vectors;
+  hclib::upcxx::global_ptr<double> old_bp = box->vectors_base;
+  hclib::upcxx::global_ptr<double> old_v0 = box->vectors[0];
+  hclib::upcxx::global_ptr<hclib::upcxx::global_ptr<double> > old_v = box->vectors;
   box->numVectors+=numAdditionalVectors;                                                                //
-  box->vectors = upcxx::allocate<global_ptr<double> >(MYTHREAD, box->numVectors);
+  box->vectors = hclib::upcxx::allocate<hclib::upcxx::global_ptr<double> >(MYTHREAD, box->numVectors);
   if((box->numVectors>0)&&(box->vectors==NULL)){fprintf(stderr,"malloc failed - add_vectors_to_box/box->vectors\n");exit(0);}
   // NOTE !!! realloc() cannot guarantee the same alignment... malloc, allign, copy...
   uint64_t malloc_size = box->volume*box->numVectors + BOX_ALIGN_1ST_CELL/sizeof(double); // shift pointer by up to 1 TLB page...
-  box->vectors_base =  upcxx::allocate<double>(MYTHREAD, malloc_size);
+  box->vectors_base =  hclib::upcxx::allocate<double>(MYTHREAD, malloc_size);
   if((box->numVectors>0)&&(box->vectors_base==NULL)){fprintf(stderr,"malloc failed - add_vectors_to_box/box->vectors_base\n");exit(0);}
   double * tmpbuf = (double *)box->vectors_base;
   memset(tmpbuf,0,malloc_size*sizeof(double));  // zero to avoid 0.0*NaN or 0.0*Inf
@@ -371,11 +374,11 @@ void print_decomposition(level_type *level){
 void append_block_to_list(blockCopy_type ** blocks, int *allocated_blocks, int *num_blocks,
                           int dim_i, int dim_j, int dim_k,
 #ifdef USE_UPCXX
-			  global_ptr<box_type> read_boxgp,
+			  hclib::upcxx::global_ptr<box_type> read_boxgp,
 #endif
                           int  read_box, double*  read_ptr, int  read_i, int  read_j, int  read_k, int  read_jStride, int  read_kStride, int  read_scale,
 #ifdef USE_UPCXX
-			  global_ptr<box_type> write_boxgp,
+			  hclib::upcxx::global_ptr<box_type> write_boxgp,
 #endif
                           int write_box, double* write_ptr, int write_i, int write_j, int write_k, int write_jStride, int write_kStride, int write_scale,
                           int blockcopy_tile_i, int blockcopy_tile_j, int blockcopy_tile_k,
@@ -660,12 +663,12 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].send_sizes    =     (int*)malloc(numSendRanks*sizeof(int));
   level->exchange_ghosts[justFaces].send_buffers  = (double**)malloc(numSendRanks*sizeof(double*));
 #ifdef USE_UPCXX
-  level->exchange_ghosts[justFaces].global_send_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
-  level->exchange_ghosts[justFaces].global_match_buffers = (global_ptr<double> *)malloc(numSendRanks*sizeof(global_ptr<double>));
+  level->exchange_ghosts[justFaces].global_send_buffers = (hclib::upcxx::global_ptr<double> *)malloc(numSendRanks*sizeof(hclib::upcxx::global_ptr<double>));
+  level->exchange_ghosts[justFaces].global_match_buffers = (hclib::upcxx::global_ptr<double> *)malloc(numSendRanks*sizeof(hclib::upcxx::global_ptr<double>));
   level->exchange_ghosts[justFaces].send_match_pos = (int *)malloc(numSendRanks*sizeof(int));
-  level->exchange_ghosts[justFaces].match_rflag    = (upcxx::global_ptr<int> *)allocate< global_ptr<int> >(level->my_rank, numSendRanks);
-  level->exchange_ghosts[justFaces].copy_e = new event[numSendRanks];
-  level->exchange_ghosts[justFaces].data_e = new event[numSendRanks];
+  level->exchange_ghosts[justFaces].match_rflag    = (hclib::upcxx::global_ptr<int> *)hclib::upcxx::allocate< hclib::upcxx::global_ptr<int> >(level->my_rank, numSendRanks);
+  level->exchange_ghosts[justFaces].copy_e = new hclib::upcxx::event[numSendRanks];
+  level->exchange_ghosts[justFaces].data_e = new hclib::upcxx::event[numSendRanks];
 #endif
   if(numSendRanks>0){
   if(level->exchange_ghosts[justFaces].send_ranks  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].send_ranks\n",justFaces);exit(0);}
@@ -691,7 +694,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(neighbor=0;neighbor<numSendRanks;neighbor++){
       if(stage==1){
 #ifdef USE_UPCXX
-	  level->exchange_ghosts[justFaces].global_send_buffers[neighbor] = allocate<double>(MYTHREAD,level->exchange_ghosts[justFaces].send_sizes[neighbor]); 
+	  level->exchange_ghosts[justFaces].global_send_buffers[neighbor] = hclib::upcxx::allocate<double>(MYTHREAD,level->exchange_ghosts[justFaces].send_sizes[neighbor]); 
 	  level->exchange_ghosts[justFaces].send_buffers[neighbor] = (double *)level->exchange_ghosts[justFaces].global_send_buffers[neighbor];
 #else
 	  level->exchange_ghosts[justFaces].send_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].send_sizes[neighbor]*sizeof(double));
@@ -745,8 +748,8 @@ void build_exchange_ghosts(level_type *level, int justFaces){
    
       if(stage==1){ 
 #ifdef USE_UPCXX
-        global_ptr<box_type> send_boxgp = level->addr_of_box[ghostsToSend[ghost].sendBoxID];
-        global_ptr<box_type> recv_boxgp = level->addr_of_box[ghostsToSend[ghost].recvBoxID];
+        hclib::upcxx::global_ptr<box_type> send_boxgp = level->addr_of_box[ghostsToSend[ghost].sendBoxID];
+        hclib::upcxx::global_ptr<box_type> recv_boxgp = level->addr_of_box[ghostsToSend[ghost].recvBoxID];
 #endif
 	if(LocalExchange) {// append to the local exchange list...
 #ifdef USE_UPCXX
@@ -938,11 +941,11 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   level->exchange_ghosts[justFaces].recv_buffers  = (double**)malloc(numRecvRanks*sizeof(double*));
 #ifdef USE_UPCXX
   level->exchange_ghosts[justFaces].sblock2       =     (int*)malloc((numRecvRanks+2)*sizeof(int));
-  level->exchange_ghosts[justFaces].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
+  level->exchange_ghosts[justFaces].rflag         =     hclib::upcxx::allocate<int>(MYTHREAD, MAX_VG);
   int *tmpp = (int *)level->exchange_ghosts[justFaces].rflag;
   memset(tmpp, 0, MAX_VG * sizeof(int));
   memset((void *)level->exchange_ghosts[justFaces].sblock2, 0, sizeof(int)*(numRecvRanks+2));
-  level->exchange_ghosts[justFaces].global_recv_buffers = (global_ptr<double> *) malloc(numRecvRanks*sizeof(global_ptr<double>));
+  level->exchange_ghosts[justFaces].global_recv_buffers = (hclib::upcxx::global_ptr<double> *) malloc(numRecvRanks*sizeof(hclib::upcxx::global_ptr<double>));
 #endif
   if(numRecvRanks>0){
   if(level->exchange_ghosts[justFaces].recv_ranks  ==NULL){fprintf(stderr,"malloc failed - exchange_ghosts[%d].recv_ranks\n",justFaces);exit(0);}
@@ -962,7 +965,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     for(neighbor=0;neighbor<numRecvRanks;neighbor++){
       if(stage==1){
 #ifdef USE_UPCXX
-	level->exchange_ghosts[justFaces].global_recv_buffers[neighbor] = allocate<double>(MYTHREAD, level->exchange_ghosts[justFaces].recv_sizes[neighbor]);
+	level->exchange_ghosts[justFaces].global_recv_buffers[neighbor] = hclib::upcxx::allocate<double>(MYTHREAD, level->exchange_ghosts[justFaces].recv_sizes[neighbor]);
 	level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double *)level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
 #else
 	level->exchange_ghosts[justFaces].recv_buffers[neighbor] = (double*)malloc(level->exchange_ghosts[justFaces].recv_sizes[neighbor]*sizeof(double));
@@ -1002,13 +1005,13 @@ void build_exchange_ghosts(level_type *level, int justFaces){
  
       // determine if this ghost requires a pack or local exchange 
 #ifdef USE_UPCXX
-      if (is_memory_shared_with(ghostsToRecv[ghost].sendRank)) continue;
+      if (hclib::upcxx::is_memory_shared_with(ghostsToRecv[ghost].sendRank)) continue;
 #endif
       neighbor=0;while(level->exchange_ghosts[justFaces].recv_ranks[neighbor] != ghostsToRecv[ghost].sendRank)neighbor++;
       if(stage==1) {
 #ifdef USE_UPCXX
-	global_ptr<box_type> send_boxgp = level->addr_of_box[ghostsToRecv[ghost].sendBoxID];
-	global_ptr<box_type> recv_boxgp = level->addr_of_box[ghostsToRecv[ghost].recvBoxID];
+	hclib::upcxx::global_ptr<box_type> send_boxgp = level->addr_of_box[ghostsToRecv[ghost].sendBoxID];
+	hclib::upcxx::global_ptr<box_type> recv_boxgp = level->addr_of_box[ghostsToRecv[ghost].recvBoxID];
 #endif
 	append_block_to_list(&(level->exchange_ghosts[justFaces].blocks[2]),&(level->exchange_ghosts[justFaces].allocated_blocks[2]),&(level->exchange_ghosts[justFaces].num_blocks[2]),
       /*dim.i         = */ dim_i,
@@ -1052,17 +1055,17 @@ void build_exchange_ghosts(level_type *level, int justFaces){
   free(recvRanks);
 
 #ifdef USE_UPCXX
-  upcxx::barrier();
+  hclib::upcxx::barrier();
   // compute the global_match_buffers for upcxx::async_copy()
   int neighbor;
-  global_ptr<double> p, p1, p2;
+  hclib::upcxx::global_ptr<double> p, p1, p2;
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_recvs; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].recv_ranks[neighbor];
     upc_buf_info[MYTHREAD * THREADS + nid] = level->exchange_ghosts[justFaces].global_recv_buffers[neighbor];
     upc_int_info[MYTHREAD * THREADS + nid] = neighbor;
   }
   upc_rflag_ptr[level->my_rank] = level->exchange_ghosts[justFaces].rflag;
-  upcxx::barrier();
+  hclib::upcxx::barrier();
 
   for (neighbor = 0; neighbor < level->exchange_ghosts[justFaces].num_sends; neighbor++) {
     int nid = level->exchange_ghosts[justFaces].send_ranks[neighbor];
@@ -1071,7 +1074,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
     level->exchange_ghosts[justFaces].match_rflag[neighbor] = upc_rflag_ptr[nid];
   }
   
-  upcxx::barrier();  
+  hclib::upcxx::barrier();  
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // malloc MPI requests/status arrays
@@ -1183,11 +1186,11 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   level->num_my_boxes=0;
   for(box=0;box<level->boxes_in.i*level->boxes_in.j*level->boxes_in.k;box++){if(level->rank_of_box[box]==level->my_rank)level->num_my_boxes++;} 
 #ifdef USE_UPCXX
-  level->my_boxes = upcxx::allocate<box_type>(MYTHREAD, level->num_my_boxes);
+  level->my_boxes = hclib::upcxx::allocate<box_type>(MYTHREAD, level->num_my_boxes);
   level->my_local_boxes = (box_type **)malloc(level->num_my_boxes * sizeof(box_type *));
 
   /* NOTE: add a local array to record the global address of every box, later, this array can be shrinked to neighbor boxes only */
-  level->addr_of_box = (global_ptr<box_type> *)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(global_ptr<box_type>));
+  level->addr_of_box = (hclib::upcxx::global_ptr<box_type> *)malloc(level->boxes_in.i*level->boxes_in.j*level->boxes_in.k*sizeof(hclib::upcxx::global_ptr<box_type>));
 #else
   level->my_boxes = (box_type*)malloc(level->num_my_boxes*sizeof(box_type));
 #endif
@@ -1221,16 +1224,16 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
 
 #ifdef USE_UPCXX
   // NOTE: this may removed later
-  upcxx::barrier();
+  hclib::upcxx::barrier();
   for (i = 0; i < level->boxes_in.i*level->boxes_in.j*level->boxes_in.k; i++)
     level->addr_of_box[i] = upc_box_info[i];
-  upcxx::barrier();
+  hclib::upcxx::barrier();
 #endif
 
   // Build and auxilarlly data structure that flattens boxes into blocks...
   for(box=0;box<level->num_my_boxes;box++){
 #ifdef USE_UPCXX
-    global_ptr<box_type> boxgp = level->addr_of_box[level->my_boxes[box].get().global_box_id];
+    hclib::upcxx::global_ptr<box_type> boxgp = level->addr_of_box[level->my_boxes[box].get().global_box_id];
 #endif
     append_block_to_list(&(level->my_blocks),&(level->allocated_blocks),&(level->num_my_blocks),
       /* dim.i         = */ level->my_boxes[box].get().dim,
@@ -1334,16 +1337,16 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   // duplicate MPI_COMM_WORLD to be the communicator for each level
 #ifdef USE_MPI
   if(my_rank==0){fprintf(stdout,"  Duplicating MPI_COMM_WORLD...");fflush(stdout);}
-  double time_start = MPI_Wtime();
-  MPI_Comm_dup(MPI_COMM_WORLD,&level->MPI_COMM_ALLREDUCE);
+  double time_start = hclib::MPI_Wtime();
+  hclib::MPI_Comm_dup(MPI_COMM_WORLD,&level->MPI_COMM_ALLREDUCE);
 
   // create upcxx barrier
-  level->subteam = &team_all;
+  level->subteam = &hclib::upcxx::team_all;
 
-  double time_end = MPI_Wtime();
+  double time_end = hclib::MPI_Wtime();
   double time_in_comm_dup = 0;
   double time_in_comm_dup_send = time_end-time_start;
-  MPI_Allreduce(&time_in_comm_dup_send,&time_in_comm_dup,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+  hclib::MPI_Allreduce(&time_in_comm_dup_send,&time_in_comm_dup,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
   if(my_rank==0){fprintf(stdout,"done (%0.6f seconds)\n",time_in_comm_dup);fflush(stdout);}
 #endif
     
@@ -1351,7 +1354,7 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   int BoxesPerProcess = level->num_my_boxes;
   #ifdef USE_MPI
   int BoxesPerProcessSend = level->num_my_boxes;
-  MPI_Allreduce(&BoxesPerProcessSend,&BoxesPerProcess,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
+  hclib::MPI_Allreduce(&BoxesPerProcessSend,&BoxesPerProcess,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
   #endif
   if(my_rank==0){fprintf(stdout,"  Calculating boxes per process... target=%0.3f, max=%d\n",(double)TotalBoxes/(double)num_ranks,BoxesPerProcess);}
 
@@ -1404,38 +1407,38 @@ void reset_level_timers(level_type *level){
 void max_level_timers(level_type *level){
   uint64_t temp;
   #ifdef USE_MPI
-  temp=level->cycles.smooth;              MPI_Allreduce(&temp,&level->cycles.smooth              ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.apply_op;            MPI_Allreduce(&temp,&level->cycles.apply_op            ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.residual;            MPI_Allreduce(&temp,&level->cycles.residual            ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.blas1;               MPI_Allreduce(&temp,&level->cycles.blas1               ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.blas3;               MPI_Allreduce(&temp,&level->cycles.blas3               ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.boundary_conditions; MPI_Allreduce(&temp,&level->cycles.boundary_conditions ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_total;   MPI_Allreduce(&temp,&level->cycles.restriction_total   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_pack;    MPI_Allreduce(&temp,&level->cycles.restriction_pack    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_local;   MPI_Allreduce(&temp,&level->cycles.restriction_local   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_shm  ;   MPI_Allreduce(&temp,&level->cycles.restriction_shm     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_unpack;  MPI_Allreduce(&temp,&level->cycles.restriction_unpack  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_recv;    MPI_Allreduce(&temp,&level->cycles.restriction_recv    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_send;    MPI_Allreduce(&temp,&level->cycles.restriction_send    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.restriction_wait;    MPI_Allreduce(&temp,&level->cycles.restriction_wait    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_total; MPI_Allreduce(&temp,&level->cycles.interpolation_total ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_pack;  MPI_Allreduce(&temp,&level->cycles.interpolation_pack  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_local; MPI_Allreduce(&temp,&level->cycles.interpolation_local ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_shm;   MPI_Allreduce(&temp,&level->cycles.interpolation_shm   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_unpack;MPI_Allreduce(&temp,&level->cycles.interpolation_unpack,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_recv;  MPI_Allreduce(&temp,&level->cycles.interpolation_recv  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_send;  MPI_Allreduce(&temp,&level->cycles.interpolation_send  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.interpolation_wait;  MPI_Allreduce(&temp,&level->cycles.interpolation_wait  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_total;     MPI_Allreduce(&temp,&level->cycles.ghostZone_total     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_pack;      MPI_Allreduce(&temp,&level->cycles.ghostZone_pack      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_local;     MPI_Allreduce(&temp,&level->cycles.ghostZone_local     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_shm;       MPI_Allreduce(&temp,&level->cycles.ghostZone_shm       ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_unpack;    MPI_Allreduce(&temp,&level->cycles.ghostZone_unpack    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_recv;      MPI_Allreduce(&temp,&level->cycles.ghostZone_recv      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_send;      MPI_Allreduce(&temp,&level->cycles.ghostZone_send      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.ghostZone_wait;      MPI_Allreduce(&temp,&level->cycles.ghostZone_wait      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.collectives;         MPI_Allreduce(&temp,&level->cycles.collectives         ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
-  temp=level->cycles.Total;               MPI_Allreduce(&temp,&level->cycles.Total               ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.smooth;              hclib::MPI_Allreduce(&temp,&level->cycles.smooth              ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.apply_op;            hclib::MPI_Allreduce(&temp,&level->cycles.apply_op            ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.residual;            hclib::MPI_Allreduce(&temp,&level->cycles.residual            ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.blas1;               hclib::MPI_Allreduce(&temp,&level->cycles.blas1               ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.blas3;               hclib::MPI_Allreduce(&temp,&level->cycles.blas3               ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.boundary_conditions; hclib::MPI_Allreduce(&temp,&level->cycles.boundary_conditions ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_total;   hclib::MPI_Allreduce(&temp,&level->cycles.restriction_total   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_pack;    hclib::MPI_Allreduce(&temp,&level->cycles.restriction_pack    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_local;   hclib::MPI_Allreduce(&temp,&level->cycles.restriction_local   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_shm  ;   hclib::MPI_Allreduce(&temp,&level->cycles.restriction_shm     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_unpack;  hclib::MPI_Allreduce(&temp,&level->cycles.restriction_unpack  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_recv;    hclib::MPI_Allreduce(&temp,&level->cycles.restriction_recv    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_send;    hclib::MPI_Allreduce(&temp,&level->cycles.restriction_send    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.restriction_wait;    hclib::MPI_Allreduce(&temp,&level->cycles.restriction_wait    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_total; hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_total ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_pack;  hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_pack  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_local; hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_local ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_shm;   hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_shm   ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_unpack;hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_unpack,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_recv;  hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_recv  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_send;  hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_send  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.interpolation_wait;  hclib::MPI_Allreduce(&temp,&level->cycles.interpolation_wait  ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_total;     hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_total     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_pack;      hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_pack      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_local;     hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_local     ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_shm;       hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_shm       ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_unpack;    hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_unpack    ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_recv;      hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_recv      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_send;      hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_send      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.ghostZone_wait;      hclib::MPI_Allreduce(&temp,&level->cycles.ghostZone_wait      ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.collectives;         hclib::MPI_Allreduce(&temp,&level->cycles.collectives         ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
+  temp=level->cycles.Total;               hclib::MPI_Allreduce(&temp,&level->cycles.Total               ,1,MPI_UINT64_T,MPI_MAX,MPI_COMM_WORLD);
   #endif
 }
 

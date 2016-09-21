@@ -40,10 +40,12 @@
 #include <string.h>
 #include <math.h>
 #include <hclib_cpp.h>
+#include <hclib_upcxx.h>
+#include <hclib_mpi.h>
 //------------------------------------------------------------------------------------------------------------------------------
-#ifdef USE_MPI
-#include <mpi.h>
-#endif
+// #ifdef USE_MPI
+// #include <mpi.h>
+// #endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -55,172 +57,103 @@
 #include "solvers.h"
 //------------------------------------------------------------------------------------------------------------------------------
 
-#ifdef USE_UPCXX
 // these arrays only used temporarily for communicator setup
-shared_array< int,                  1 > upc_int_info;
-shared_array< global_ptr<double>,   1 > upc_buf_info;
-shared_array< global_ptr<box_type>, 1 > upc_box_info;
-shared_array< global_ptr<mg_type>,  1 > upc_grids;
-shared_array< global_ptr<int>,      1 > upc_rflag_ptr;
-#endif
+hclib::upcxx::shared_array< int,                  1 > upc_int_info;
+hclib::upcxx::shared_array< hclib::upcxx::global_ptr<double>,   1 > upc_buf_info;
+hclib::upcxx::shared_array< hclib::upcxx::global_ptr<box_type>, 1 > upc_box_info;
+hclib::upcxx::shared_array< hclib::upcxx::global_ptr<mg_type>,  1 > upc_grids;
+hclib::upcxx::shared_array< hclib::upcxx::global_ptr<int>,      1 > upc_rflag_ptr;
 
 void computeMin(cycles_type *cmin, cycles_type *cur, cycles_type *last);
 
 mg_type *all_grids;  // to be consistent with MPI version
 
 int main(int argc, char **argv){
-  int my_rank=0;
-  int num_tasks=1;
-  int OMP_Threads = 1;
-  int OMP_Nested = 0;
 
-#ifdef USE_UPCXX
-  upcxx::init(&argc, &argv);
-  num_tasks = THREADS;
-  my_rank = MYTHREAD;
-  if (my_rank == 0) printf("Using UPCXX P2P SHM: Total %d processes\n", num_tasks);
+  const char *deps[] = { "system", "mpi" };
+  hclib::launch(deps, 2, [&argc, &argv] {
+
+    int num_tasks = hclib::upcxx::ranks();
+    int my_rank = hclib::upcxx::myrank();
+
+    if (my_rank == 0) printf("Using UPCXX P2P SHM: Total %d processes\n", num_tasks);
+
+    const int OMP_Threads = hclib::num_workers();
+
+    hclib::MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+    hclib::MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+#ifdef USE_HPM // IBM HPM counters for BGQ...
+    HPM_Init();
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel 
-  {
-#pragma omp master
-    {
-      OMP_Threads = omp_get_num_threads();
-      OMP_Nested  = omp_get_nested();
+    int log2_box_dim = 6;
+    int target_boxes_per_rank = 1;
+
+    if(argc==3){
+        log2_box_dim=atoi(argv[1]);
+        target_boxes_per_rank=atoi(argv[2]);
+    }else{
+        if(my_rank==0){printf("usage: ./a.out  [log2_box_dim]  [target_boxes_per_rank]\n");}
+        exit(0);
     }
-  }
-#endif
-    
 
-#ifdef USE_MPI
-  int    actual_threading_model = -1;
-  int requested_threading_model = -1;
-      requested_threading_model = MPI_THREAD_SINGLE;
-    //requested_threading_model = MPI_THREAD_FUNNELED;
-    //requested_threading_model = MPI_THREAD_SERIALIZED;
-    //requested_threading_model = MPI_THREAD_MULTIPLE;
-  //MPI_Init(&argc, &argv);
-  #ifdef _OPENMP
-      requested_threading_model = MPI_THREAD_FUNNELED;
-    //requested_threading_model = MPI_THREAD_SERIALIZED;
-    //requested_threading_model = MPI_THREAD_MULTIPLE;
-  //MPI_Init_thread(&argc, &argv, requested_threading_model, &actual_threading_model);
-  #endif
-  MPI_Init_thread(&argc, &argv, requested_threading_model, &actual_threading_model);
-  MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-//if(actual_threading_model>requested_threading_model)actual_threading_model=requested_threading_model;
-  if(my_rank==0){
-       if(requested_threading_model == MPI_THREAD_MULTIPLE  )printf("Requested MPI_THREAD_MULTIPLE, ");
-  else if(requested_threading_model == MPI_THREAD_SINGLE    )printf("Requested MPI_THREAD_SINGLE, ");
-  else if(requested_threading_model == MPI_THREAD_FUNNELED  )printf("Requested MPI_THREAD_FUNNELED, ");
-  else if(requested_threading_model == MPI_THREAD_SERIALIZED)printf("Requested MPI_THREAD_SERIALIZED, ");
-  else if(requested_threading_model == MPI_THREAD_MULTIPLE  )printf("Requested MPI_THREAD_MULTIPLE, ");
-  else                                                       printf("Requested Unknown MPI Threading Model (%d), ",requested_threading_model);
-       if(actual_threading_model    == MPI_THREAD_MULTIPLE  )printf("got MPI_THREAD_MULTIPLE\n");
-  else if(actual_threading_model    == MPI_THREAD_SINGLE    )printf("got MPI_THREAD_SINGLE\n");
-  else if(actual_threading_model    == MPI_THREAD_FUNNELED  )printf("got MPI_THREAD_FUNNELED\n");
-  else if(actual_threading_model    == MPI_THREAD_SERIALIZED)printf("got MPI_THREAD_SERIALIZED\n");
-  else if(actual_threading_model    == MPI_THREAD_MULTIPLE  )printf("got MPI_THREAD_MULTIPLE\n");
-  else                                                       printf("got Unknown MPI Threading Model (%d)\n",actual_threading_model);
-  }
-  #ifdef USE_HPM // IBM HPM counters for BGQ...
-  HPM_Init();
-  #endif
-#endif // USE_MPI
-
-  int log2_box_dim = 6;
-  int target_boxes_per_rank = 1;
-
-  if(argc==3){
-    log2_box_dim=atoi(argv[1]);
-    target_boxes_per_rank=atoi(argv[2]);
-  }else{
-    if(my_rank==0){printf("usage: ./a.out  [log2_box_dim]  [target_boxes_per_rank]\n");}
-#ifdef USE_MPI
-    MPI_Finalize();
-#endif
-#ifdef USE_UPCXX
-    upcxx::finalize();
-#endif
-    exit(0);
-  }
-
-  if(log2_box_dim<4){
-    if(my_rank==0){printf("log2_box_dim must be at least 4\n");}
-#ifdef USE_MPI
-    MPI_Finalize();
-#endif
-#ifdef USE_UPCXX
-    upcxx::finalize();
-#endif
-    exit(0);
-  }
+    if(log2_box_dim<4){
+        if(my_rank==0){printf("log2_box_dim must be at least 4\n");}
+        exit(0);
+    }
   
-  if(target_boxes_per_rank<1){
-    if(my_rank==0){printf("target_boxes_per_rank must be at least 1\n");}
-#ifdef USE_MPI
-    MPI_Finalize();
-#endif
-#ifdef USE_UPCXX
-    upcxx::finalize();
-#endif
-    exit(0);
-  }
-
-  if(my_rank==0){
-    if(OMP_Nested)fprintf(stdout,"%d MPI Tasks of %d threads (OMP_NESTED=TRUE)\n\n" ,num_tasks,OMP_Threads);
-             else fprintf(stdout,"%d MPI Tasks of %d threads (OMP_NESTED=FALSE)\n\n",num_tasks,OMP_Threads);
-  }
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-  // calculate the problem size...
-  #ifndef MAX_COARSE_DIM
-  #define MAX_COARSE_DIM 11
-  #endif
-  int64_t box_dim=1<<log2_box_dim;
-  int64_t target_boxes = (int64_t)target_boxes_per_rank*(int64_t)num_tasks;
-  int64_t boxes_in_i = -1;
-  int64_t bi;
-  for(bi=1;bi<1000;bi++){ // all possible problem sizes
-    int64_t total_boxes = bi*bi*bi;
-    if(total_boxes<=target_boxes){
-      int64_t coarse_grid_dim = box_dim*bi;
-      while( (coarse_grid_dim%2) == 0){coarse_grid_dim=coarse_grid_dim/2;}
-      if(coarse_grid_dim<=MAX_COARSE_DIM){
-        boxes_in_i = bi;
-      }
+    if(target_boxes_per_rank<1){
+        if(my_rank==0){printf("target_boxes_per_rank must be at least 1\n");}
+        exit(0);
     }
-  }
-  if(boxes_in_i<1){
-    if(my_rank==0){printf("failed to find an acceptable problem size\n");}
-    #ifdef USE_MPI
-    MPI_Finalize();
-    #endif
-    exit(0);
-  }
+
+    if(my_rank==0){
+        fprintf(stdout,"%d MPI Tasks of %d threads\n\n",num_tasks,OMP_Threads);
+    }
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+    // calculate the problem size...
+#ifndef MAX_COARSE_DIM
+#define MAX_COARSE_DIM 11
+#endif
+    int64_t box_dim=1<<log2_box_dim;
+    int64_t target_boxes = (int64_t)target_boxes_per_rank*(int64_t)num_tasks;
+    int64_t boxes_in_i = -1;
+    int64_t bi;
+    for(bi=1;bi<1000;bi++){ // all possible problem sizes
+        int64_t total_boxes = bi*bi*bi;
+        if(total_boxes<=target_boxes){
+            int64_t coarse_grid_dim = box_dim*bi;
+            while( (coarse_grid_dim%2) == 0){coarse_grid_dim=coarse_grid_dim/2;}
+            if(coarse_grid_dim<=MAX_COARSE_DIM){
+                boxes_in_i = bi;
+            }
+        }
+    }
+    if(boxes_in_i<1){
+        if(my_rank==0){printf("failed to find an acceptable problem size\n");}
+        exit(0);
+    }
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-#ifdef USE_UPCXX
   upc_int_info.init(THREADS*THREADS, THREADS);
   upc_buf_info.init(THREADS*THREADS, THREADS);
   upc_box_info.init(boxes_in_i*boxes_in_i*boxes_in_i,1);
   upc_grids.init(THREADS, 1);
-  upc_grids[MYTHREAD] = allocate<mg_type>(MYTHREAD, 1);
+  upc_grids[MYTHREAD] = hclib::upcxx::allocate<mg_type>(MYTHREAD, 1);
   upc_rflag_ptr.init(THREADS, 1);
-  upcxx::barrier();
-#endif
+  hclib::upcxx::barrier();
 
   long sz = sysconf(_SC_PAGESIZE);
-  if (myrank() == 0) printf("PAGE SIZE is %d\n", sz);
+  if (hclib::upcxx::myrank() == 0) printf("PAGE SIZE is %d\n", sz);
 
   // create the fine level...
   #ifdef USE_PERIODIC_BC
   int bc = BC_PERIODIC;
-  if (myrank() == 0) printf("BOUNDARY: PERIODIC_BC\n");
+  if (hclib::upcxx::myrank() == 0) printf("BOUNDARY: PERIODIC_BC\n");
   #else
   int bc = BC_DIRICHLET;
-  if (myrank() == 0) printf("BOUNDARY: DIRCHLET_BC\n");
+  if (hclib::upcxx::myrank() == 0) printf("BOUNDARY: DIRCHLET_BC\n");
   #endif
 
   level_type fine_grid;
@@ -282,7 +215,7 @@ int main(int argc, char **argv){
 
     #ifdef USE_MPI
     double minTime   = 15.0; // minimum time in seconds that the benchmark should run
-    double startTime = MPI_Wtime();
+    double startTime = hclib::MPI_Wtime();
     if(doTiming==1){
       if((minTime/timePerSolve)>minSolves)minSolves=(minTime/timePerSolve); // if one needs to do more than minSolves to run for minTime, change minSolves
     }
@@ -305,7 +238,7 @@ int main(int argc, char **argv){
     while( (numSolves<minSolves) ){
       zero_vector(all_grids->levels[0],VECTOR_U);
 
-      upcxx::barrier();
+      hclib::upcxx::barrier();
 
       for (int level = 0; level < 100; level++) all_grids->ncall[level] = 0;
       
@@ -316,7 +249,7 @@ int main(int argc, char **argv){
       #endif
       numSolves++;
 
-      if (myrank() == 0  && doTiming == 0 && numSolves == 1) {
+      if (hclib::upcxx::myrank() == 0  && doTiming == 0 && numSolves == 1) {
         printf("NCalls : "); for (int level = 0; level < all_grids->num_levels; level++) printf("  %d ", all_grids->ncall[level]); printf("\n\n");
       }
 
@@ -339,9 +272,9 @@ int main(int argc, char **argv){
 
     #ifdef USE_MPI
     if(doTiming==0){
-      double endTime = MPI_Wtime();
+      double endTime = hclib::MPI_Wtime();
       timePerSolve = (endTime-startTime)/numSolves;
-      MPI_Bcast(&timePerSolve,1,MPI_DOUBLE,0,MPI_COMM_WORLD); // after warmup, process 0 broadcasts the average time per solve (consensus)
+      hclib::MPI_Bcast(&timePerSolve,1,MPI_DOUBLE,0,MPI_COMM_WORLD); // after warmup, process 0 broadcasts the average time per solve (consensus)
     }
     #endif
 
@@ -351,7 +284,7 @@ int main(int argc, char **argv){
   }
   MGPrintTiming(all_grids); // don't include the error check in the timing results
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  hclib::MPI_Barrier(MPI_COMM_WORLD);
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   if(my_rank==0){fprintf(stdout,"calculating error...  ");}
@@ -364,8 +297,8 @@ int main(int argc, char **argv){
   #ifdef USE_HPM // IBM performance counters for BGQ...
   HPM_Print();
   #endif
-  MPI_Finalize();
   #endif
+  });
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   return(0);
 }

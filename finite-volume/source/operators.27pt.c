@@ -175,7 +175,7 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
   #ifdef USE_MPI
   uint64_t _timeStartAllReduce = CycleTime();
   double send = dominant_eigenvalue;
-  MPI_Allreduce(&send,&dominant_eigenvalue,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+  hclib::MPI_Allreduce(&send,&dominant_eigenvalue,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
   uint64_t _timeEndAllReduce = CycleTime();
   level->cycles.collectives   += (uint64_t)(_timeEndAllReduce-_timeStartAllReduce);
   #endif

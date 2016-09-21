@@ -10,9 +10,9 @@
 #include <math.h>
 #include <unistd.h>
 //------------------------------------------------------------------------------------------------------------------------------
-#ifdef USE_MPI
-#include <mpi.h>
-#endif
+// #ifdef USE_MPI
+// #include <mpi.h>
+// #endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -25,7 +25,7 @@
 #include "mg.h"
 
 #ifdef USE_UPCXX
-extern shared_array< int, 1> upc_int_info;
+extern hclib::upcxx::shared_array< int, 1> upc_int_info;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -274,12 +274,12 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.send_sizes    =            (int*)malloc(numFineRanks*sizeof(int));
     all_grids->levels[level]->interpolation.send_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
 #ifdef USE_UPCXX
-    all_grids->levels[level]->interpolation.global_send_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));   
-    all_grids->levels[level]->interpolation.global_match_buffers  = (global_ptr<double> *)malloc(numFineRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->interpolation.global_send_buffers  = (hclib::upcxx::global_ptr<double> *)malloc(numFineRanks*sizeof(hclib::upcxx::global_ptr<double>));   
+    all_grids->levels[level]->interpolation.global_match_buffers  = (hclib::upcxx::global_ptr<double> *)malloc(numFineRanks*sizeof(hclib::upcxx::global_ptr<double>));
     all_grids->levels[level]->interpolation.send_match_pos = (int *)malloc(numFineRanks*sizeof(int));
-    all_grids->levels[level]->interpolation.match_rflag    = (upcxx::global_ptr<int> *)allocate< global_ptr<int> >(MYTHREAD, numFineRanks);
-    all_grids->levels[level]->interpolation.copy_e = new event[numFineRanks];
-    all_grids->levels[level]->interpolation.data_e = new event[numFineRanks];
+    all_grids->levels[level]->interpolation.match_rflag    = (hclib::upcxx::global_ptr<int> *)hclib::upcxx::allocate< hclib::upcxx::global_ptr<int> >(MYTHREAD, numFineRanks);
+    all_grids->levels[level]->interpolation.copy_e = new hclib::upcxx::event[numFineRanks];
+    all_grids->levels[level]->interpolation.data_e = new hclib::upcxx::event[numFineRanks];
 #endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->interpolation.send_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.send_ranks\n",level);exit(0);}
@@ -293,7 +293,7 @@ void build_interpolation(mg_type *all_grids){
 
     int elementSize = all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim*all_grids->levels[level-1]->box_dim;
 #ifdef USE_UPCXX
-    global_ptr<double> my_send_buffers = allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
+    hclib::upcxx::global_ptr<double> my_send_buffers = hclib::upcxx::allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
     double * all_send_buffers = (double *) my_send_buffers;
 #else
     double * all_send_buffers = (double*)malloc(numFineBoxesRemote*elementSize*sizeof(double));
@@ -313,7 +313,7 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.send_buffers[neighbor] = all_send_buffers;
 
 #ifdef USE_UPCXX
-      if(upcxx::is_memory_shared_with(fineRanks[neighbor])) {
+      if(hclib::upcxx::is_memory_shared_with(fineRanks[neighbor])) {
         all_grids->levels[level]->interpolation.send_ranks[neighbor] = fineRanks[neighbor];
         all_grids->levels[level]->interpolation.send_sizes[neighbor] = offset;
         all_send_buffers+=offset;
@@ -324,8 +324,8 @@ void build_interpolation(mg_type *all_grids){
       for(fineBox=0;fineBox<numFineBoxes;fineBox++)
 	if(fineBoxes[fineBox].recvRank==fineRanks[neighbor]){
 #ifdef USE_UPCXX
-	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].sendBoxID];
-	  global_ptr<box_type> recv_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
+	  hclib::upcxx::global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].sendBoxID];
+	  hclib::upcxx::global_ptr<box_type> recv_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
 #endif
         // pack the MPI send buffer...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[0]),&(all_grids->levels[level]->interpolation.allocated_blocks[0]),&(all_grids->levels[level]->interpolation.num_blocks[0]),
@@ -371,9 +371,9 @@ void build_interpolation(mg_type *all_grids){
     {
       int fineBox;
 #ifdef USE_UPCXX
-      for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(upcxx::is_memory_shared_with(fineBoxes[fineBox].recvRank)){
-	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].sendBoxID];
-	  global_ptr<box_type> recv_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
+      for(fineBox=0;fineBox<numFineBoxes;fineBox++)if(hclib::upcxx::is_memory_shared_with(fineBoxes[fineBox].recvRank)){
+	  hclib::upcxx::global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].sendBoxID];
+	  hclib::upcxx::global_ptr<box_type> recv_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].recvBoxID];
 	  box_type *lbox = (box_type *) recv_boxgp;
 	  int jStride = lbox->jStride;
 	  int kStride = lbox->kStride;
@@ -508,10 +508,10 @@ void build_interpolation(mg_type *all_grids){
     all_grids->levels[level]->interpolation.recv_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
 #ifdef USE_UPCXX
     all_grids->levels[level]->interpolation.sblock2       =     (int*)malloc((numCoarseRanks+2)*sizeof(int));
-    all_grids->levels[level]->interpolation.rflag         =     allocate<int>(MYTHREAD, MAX_VG);
+    all_grids->levels[level]->interpolation.rflag         =     hclib::upcxx::allocate<int>(MYTHREAD, MAX_VG);
     memset((int *)all_grids->levels[level]->interpolation.rflag, 0, MAX_VG * sizeof(int));
     memset((void *)all_grids->levels[level]->interpolation.sblock2, 0, sizeof(int)*(numCoarseRanks+2));
-    all_grids->levels[level]->interpolation.global_recv_buffers  = (global_ptr<double> *) malloc(numCoarseRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->interpolation.global_recv_buffers  = (hclib::upcxx::global_ptr<double> *) malloc(numCoarseRanks*sizeof(hclib::upcxx::global_ptr<double>));
 #endif
     if(numCoarseRanks>0){
     if(all_grids->levels[level]->interpolation.recv_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->interpolation.recv_ranks\n",level);exit(0);}
@@ -524,7 +524,7 @@ void build_interpolation(mg_type *all_grids){
 
     int elementSize = all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim*all_grids->levels[level]->box_dim;
 #ifdef USE_UPCXX
-    global_ptr<double> my_recv_buffers = allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
+    hclib::upcxx::global_ptr<double> my_recv_buffers = hclib::upcxx::allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
     double * all_recv_buffers = (double *) my_recv_buffers;
 #else
     double * all_recv_buffers = (double*)malloc(numCoarseBoxes*elementSize*sizeof(double)); 
@@ -542,7 +542,7 @@ void build_interpolation(mg_type *all_grids){
       all_grids->levels[level]->interpolation.recv_buffers[neighbor] = all_recv_buffers;
 #ifdef USE_UPCXX
       all_grids->levels[level]->interpolation.global_recv_buffers[neighbor] = my_recv_buffers;
-      if(is_memory_shared_with(coarseRanks[neighbor])) {
+      if(hclib::upcxx::is_memory_shared_with(coarseRanks[neighbor])) {
         all_grids->levels[level]->interpolation.recv_ranks[neighbor] = coarseRanks[neighbor];
         all_grids->levels[level]->interpolation.recv_sizes[neighbor] = offset;
         all_recv_buffers+=offset;
@@ -552,8 +552,8 @@ void build_interpolation(mg_type *all_grids){
       for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)
 	if(coarseBoxes[coarseBox].sendRank==coarseRanks[neighbor]){
 #ifdef USE_UPCXX
-	  global_ptr<box_type> send_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
-	  global_ptr<box_type> recv_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
+	  hclib::upcxx::global_ptr<box_type> send_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
+	  hclib::upcxx::global_ptr<box_type> recv_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
 #endif
         // unpack MPI recv buffer...
         append_block_to_list(&(all_grids->levels[level]->interpolation.blocks[2]),&(all_grids->levels[level]->interpolation.allocated_blocks[2]),&(all_grids->levels[level]->interpolation.num_blocks[2]),
@@ -631,13 +631,13 @@ void build_interpolation(mg_type *all_grids){
   } // all levels
 
 #ifdef USE_UPCXX
-  upcxx::barrier();
+  hclib::upcxx::barrier();
   // compute the global_match_buffers for upcxx::async_copy()
   int neighbor;
 
   for(level=0;level<all_grids->num_levels-1;level++){
     // recv: level, send : level+1
-    global_ptr<double> p, p1, p2;
+    hclib::upcxx::global_ptr<double> p, p1, p2;
 
     if (all_grids->levels[level]->num_my_boxes>0) {
       communicator_type *ct = (communicator_type *)&(all_grids->levels[level]->interpolation);
@@ -648,7 +648,7 @@ void build_interpolation(mg_type *all_grids){
       }
       upc_rflag_ptr[MYTHREAD] = ct->rflag;
     }
-    upcxx::barrier();
+    hclib::upcxx::barrier();
     if (all_grids->levels[level+1]->num_my_boxes>0){
       communicator_type *ct1 = (communicator_type *)&(all_grids->levels[level+1]->interpolation);
       for (neighbor = 0; neighbor < ct1->num_sends; neighbor++) {
@@ -658,7 +658,7 @@ void build_interpolation(mg_type *all_grids){
 	ct1->match_rflag[neighbor] = upc_rflag_ptr[nid];
       }
     }
-    upcxx::barrier();
+    hclib::upcxx::barrier();
   }
 #endif
 }
@@ -740,12 +740,12 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].send_sizes    =            (int*)malloc(numCoarseRanks*sizeof(int));
     all_grids->levels[level]->restriction[restrictionType].send_buffers  =        (double**)malloc(numCoarseRanks*sizeof(double*));
 #ifdef USE_UPCXX
-    all_grids->levels[level]->restriction[restrictionType].global_send_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));   
-    all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (global_ptr<double> *)malloc(numCoarseRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->restriction[restrictionType].global_send_buffers  = (hclib::upcxx::global_ptr<double> *)malloc(numCoarseRanks*sizeof(hclib::upcxx::global_ptr<double>));   
+    all_grids->levels[level]->restriction[restrictionType].global_match_buffers  = (hclib::upcxx::global_ptr<double> *)malloc(numCoarseRanks*sizeof(hclib::upcxx::global_ptr<double>));
     all_grids->levels[level]->restriction[restrictionType].send_match_pos = (int*)malloc(numCoarseRanks*sizeof(int));
-    all_grids->levels[level]->restriction[restrictionType].match_rflag    = (upcxx::global_ptr<int> *)allocate< global_ptr<int> >(MYTHREAD, numCoarseRanks);
-    all_grids->levels[level]->restriction[restrictionType].copy_e = new event[numCoarseRanks];
-    all_grids->levels[level]->restriction[restrictionType].data_e = new event[numCoarseRanks];
+    all_grids->levels[level]->restriction[restrictionType].match_rflag    = (hclib::upcxx::global_ptr<int> *)hclib::upcxx::allocate< hclib::upcxx::global_ptr<int> >(MYTHREAD, numCoarseRanks);
+    all_grids->levels[level]->restriction[restrictionType].copy_e = new hclib::upcxx::event[numCoarseRanks];
+    all_grids->levels[level]->restriction[restrictionType].data_e = new hclib::upcxx::event[numCoarseRanks];
 #endif
 
     if(numCoarseRanks>0){
@@ -777,7 +777,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     elementSize = restrict_dim_i*restrict_dim_j*restrict_dim_k;
 
 #ifdef USE_UPCXX
-    global_ptr<double> my_send_buffers = allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
+    hclib::upcxx::global_ptr<double> my_send_buffers = hclib::upcxx::allocate<double>(MYTHREAD, numCoarseBoxes*elementSize);
     double * all_send_buffers = (double *) my_send_buffers; 
 #else      
     double * all_send_buffers = (double*)malloc(numCoarseBoxes*elementSize*sizeof(double));
@@ -796,7 +796,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       all_grids->levels[level]->restriction[restrictionType].send_buffers[neighbor] = all_send_buffers;
 
 #ifdef USE_UPCXX
-      if(upcxx::is_memory_shared_with(coarseRanks[neighbor])) {
+      if(hclib::upcxx::is_memory_shared_with(coarseRanks[neighbor])) {
         all_grids->levels[level]->restriction[restrictionType].send_ranks[neighbor] = coarseRanks[neighbor];
         all_grids->levels[level]->restriction[restrictionType].send_sizes[neighbor] = offset;
         all_send_buffers+=offset;
@@ -808,8 +808,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 	if(coarseBoxes[coarseBox].recvRank==coarseRanks[neighbor]){
         // restrict to MPI send buffer...
 #ifdef USE_UPCXX
-	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
-	  global_ptr<box_type> recv_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
+	  hclib::upcxx::global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
+	  hclib::upcxx::global_ptr<box_type> recv_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
 #endif
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[0]),
                               &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[0]),
@@ -858,9 +858,9 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     {
       int coarseBox;
 #ifdef USE_UPCXX
-      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(upcxx::is_memory_shared_with(coarseBoxes[coarseBox].recvRank)){
-	  global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
-	  global_ptr<box_type> recv_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
+      for(coarseBox=0;coarseBox<numCoarseBoxes;coarseBox++)if(hclib::upcxx::is_memory_shared_with(coarseBoxes[coarseBox].recvRank)){
+	  hclib::upcxx::global_ptr<box_type> send_boxgp = all_grids->levels[level]->addr_of_box[coarseBoxes[coarseBox].sendBoxID];
+	  hclib::upcxx::global_ptr<box_type> recv_boxgp = all_grids->levels[level+1]->addr_of_box[coarseBoxes[coarseBox].recvBoxID];
 	  box_type *lbox = (box_type *) recv_boxgp;
 	  int jStride = lbox->jStride;
 	  int kStride = lbox->kStride;
@@ -1013,10 +1013,10 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     all_grids->levels[level]->restriction[restrictionType].recv_buffers  =        (double**)malloc(numFineRanks*sizeof(double*));
 #ifdef USE_UPCXX
     all_grids->levels[level]->restriction[restrictionType].sblock2       =     (int*)malloc((numFineRanks+2)*sizeof(int));
-    all_grids->levels[level]->restriction[restrictionType].rflag         =     allocate<int>(MYTHREAD, MAX_VG);
+    all_grids->levels[level]->restriction[restrictionType].rflag         =     hclib::upcxx::allocate<int>(MYTHREAD, MAX_VG);
     memset((int *)all_grids->levels[level]->restriction[restrictionType].rflag, 0, MAX_VG *sizeof(int));
     memset((void *)all_grids->levels[level]->restriction[restrictionType].sblock2, 0, sizeof(int)*(numFineRanks+2));
-    all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (global_ptr<double> *) malloc(numFineRanks*sizeof(global_ptr<double>));
+    all_grids->levels[level]->restriction[restrictionType].global_recv_buffers  = (hclib::upcxx::global_ptr<double> *) malloc(numFineRanks*sizeof(hclib::upcxx::global_ptr<double>));
 #endif
     if(numFineRanks>0){
     if(all_grids->levels[level]->restriction[restrictionType].recv_ranks  ==NULL){fprintf(stderr,"malloc failed - all_grids->levels[%d]->restriction[restrictionType].recv_ranks  \n",level);exit(0);}
@@ -1046,7 +1046,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
     elementSize = restrict_dim_i*restrict_dim_j*restrict_dim_k;
 
 #ifdef USE_UPCXX
-    global_ptr<double> my_recv_buffers = allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
+    hclib::upcxx::global_ptr<double> my_recv_buffers = hclib::upcxx::allocate<double>(MYTHREAD, numFineBoxesRemote*elementSize);
     double * all_recv_buffers = (double *) my_recv_buffers;
 #else
     double * all_recv_buffers = (double*)malloc(numFineBoxesRemote*elementSize*sizeof(double));
@@ -1067,7 +1067,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       all_grids->levels[level]->restriction[restrictionType].recv_buffers[neighbor] = all_recv_buffers;
 
 #ifdef USE_UPCXX
-      if (is_memory_shared_with(fineRanks[neighbor])) {
+      if (hclib::upcxx::is_memory_shared_with(fineRanks[neighbor])) {
         all_grids->levels[level]->restriction[restrictionType].recv_ranks[neighbor] = fineRanks[neighbor];
         all_grids->levels[level]->restriction[restrictionType].recv_sizes[neighbor] = offset;
         all_recv_buffers+=offset;
@@ -1077,8 +1077,8 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       for(fineBox=0;fineBox<numFineBoxesRemote;fineBox++)if(fineBoxes[fineBox].sendRank==fineRanks[neighbor]){
         // unpack MPI recv buffer...
 #ifdef USE_UPCXX
-	global_ptr<box_type> send_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].sendBoxID];
-	global_ptr<box_type> recv_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].recvBoxID];
+	hclib::upcxx::global_ptr<box_type> send_boxgp = all_grids->levels[level-1]->addr_of_box[fineBoxes[fineBox].sendBoxID];
+	hclib::upcxx::global_ptr<box_type> recv_boxgp = all_grids->levels[level]->addr_of_box[fineBoxes[fineBox].recvBoxID];
 #endif
         append_block_to_list( &(all_grids->levels[level]->restriction[restrictionType].blocks[2]),
                               &(all_grids->levels[level]->restriction[restrictionType].allocated_blocks[2]),
@@ -1158,13 +1158,13 @@ void build_restriction(mg_type *all_grids, int restrictionType){
   } // all levels
 
 #ifdef USE_UPCXX
-  upcxx::barrier();
+  hclib::upcxx::barrier();
   // compute the global_match_buffers for upcxx::async_copy()
   int neighbor;
 
   for(level=0;level<all_grids->num_levels-1;level++){
     // recv: level + 1, send : level
-    global_ptr<double> p, p1, p2;
+    hclib::upcxx::global_ptr<double> p, p1, p2;
 
     if (all_grids->levels[level+1]->num_my_boxes>0) {
       communicator_type *ct1 = (communicator_type *)&(all_grids->levels[level+1]->restriction[restrictionType]);
@@ -1175,7 +1175,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
       }
       upc_rflag_ptr[MYTHREAD] = ct1->rflag;
     }
-    upcxx::barrier();
+    hclib::upcxx::barrier();
     if (all_grids->levels[level]->num_my_boxes>0){
       communicator_type *ct = (communicator_type *)&(all_grids->levels[level]->restriction[restrictionType]);
       for (neighbor = 0; neighbor < ct->num_sends; neighbor++) {
@@ -1185,7 +1185,7 @@ void build_restriction(mg_type *all_grids, int restrictionType){
 	ct->match_rflag[neighbor] = upc_rflag_ptr[nid];
       }
     }
-    upcxx::barrier();
+    hclib::upcxx::barrier();
   }
 #endif
 
@@ -1347,23 +1347,23 @@ void MGBuild(mg_type *all_grids, level_type *fine_grid, double a, double b, int 
   #ifdef USE_SUBCOMM
   if(all_grids->my_rank==0){fprintf(stdout,"\n");}
   for(level=1;level<all_grids->num_levels;level++){
-    double comm_split_start = MPI_Wtime();
+    double comm_split_start = hclib::MPI_Wtime();
     if(all_grids->my_rank==0){fprintf(stdout,"  Building MPI subcommunicator for level %d...",level);fflush(stdout);}
     all_grids->levels[level]->active=0;
     int ll;for(ll=level;ll<all_grids->num_levels;ll++)if(all_grids->levels[ll]->num_my_boxes>0)all_grids->levels[level]->active=1;
-    MPI_Comm_split(MPI_COMM_WORLD,all_grids->levels[level]->active,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE);
+    hclib::MPI_Comm_split(MPI_COMM_WORLD,all_grids->levels[level]->active,all_grids->levels[level]->my_rank,&all_grids->levels[level]->MPI_COMM_ALLREDUCE);
     int SIZE;
-    MPI_Comm_size(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &SIZE);
+    hclib::MPI_Comm_size(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &SIZE);
 
     // create upcxx team
     int subrank;
-    MPI_Comm_rank(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &subrank);
-    team_all.split(all_grids->levels[level]->active, subrank, all_grids->levels[level]->subteam);
+    hclib::MPI_Comm_rank(all_grids->levels[level]->MPI_COMM_ALLREDUCE, &subrank);
+    hclib::upcxx::team_all.split(all_grids->levels[level]->active, subrank, all_grids->levels[level]->subteam);
 
-    double comm_split_end = MPI_Wtime();
+    double comm_split_end = hclib::MPI_Wtime();
     double comm_split_time_send = comm_split_end-comm_split_start;
     double comm_split_time = 0;
-    MPI_Allreduce(&comm_split_time_send,&comm_split_time,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+    hclib::MPI_Allreduce(&comm_split_time_send,&comm_split_time,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
     if(all_grids->my_rank==0){fprintf(stdout,"done (%0.6f seconds)\n",comm_split_time);fflush(stdout);}
   }
   #endif
@@ -1433,7 +1433,7 @@ void MGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double 
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   #ifdef USE_MPI
-  double MG_Start_Time = MPI_Wtime();
+  double MG_Start_Time = hclib::MPI_Wtime();
   #endif
   if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"MGSolve... ");}
   uint64_t _timeStartMGSolve = CycleTime();
@@ -1482,7 +1482,7 @@ void MGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double 
   all_grids->cycles.MGSolve += (uint64_t)(CycleTime()-_timeStartMGSolve);
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   #ifdef USE_MPI
-  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",MPI_Wtime()-MG_Start_Time);} // used to monitor variability in individual solve times
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",hclib::MPI_Wtime()-MG_Start_Time);} // used to monitor variability in individual solve times
   #else
   if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done\n");}
   #endif
@@ -1501,7 +1501,7 @@ void FMGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double
   int R_id = VECTOR_F_MINUS_AV;
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   #ifdef USE_MPI
-  double FMG_Start_Time = MPI_Wtime();
+  double FMG_Start_Time = hclib::MPI_Wtime();
   #endif
   if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"FMGSolve... ");}
   uint64_t _timeStartMGSolve = CycleTime();
@@ -1583,7 +1583,7 @@ void FMGSolve(mg_type *all_grids, int u_id, int F_id, double a, double b, double
   all_grids->cycles.MGSolve += (uint64_t)(CycleTime()-_timeStartMGSolve);
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   #ifdef USE_MPI
-  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",MPI_Wtime()-FMG_Start_Time);} // used to monitor variability in individual solve times
+  if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",hclib::MPI_Wtime()-FMG_Start_Time);} // used to monitor variability in individual solve times
   #else
   if(all_grids->levels[0]->my_rank==0){fprintf(stdout,"done\n");}
   #endif
