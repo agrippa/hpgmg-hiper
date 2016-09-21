@@ -22,20 +22,23 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // loop through packed list of MPI receives and prepost Irecv's...
   _timeStart = CycleTime();
-  #ifdef USE_MPI_THREAD_MULTIPLE
-  #pragma omp parallel for schedule(dynamic,1)
-  #endif
-  for(n=0;n<level->exchange_ghosts[justFaces].num_recvs;n++){
-    hclib::MPI_Irecv(level->exchange_ghosts[justFaces].recv_buffers[n],
-              level->exchange_ghosts[justFaces].recv_sizes[n],
-              MPI_DOUBLE,
-              level->exchange_ghosts[justFaces].recv_ranks[n],
-              0, // by convention, ghost zone exchanges use tag=0
-              MPI_COMM_WORLD,
-              //&level->exchange_ghosts[justFaces].requests[n]
-              &recv_requests[n]
-    );
-  }
+
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level->exchange_ghosts[justFaces].num_recvs);
+      hclib::forasync(&loop, [] (int n) {
+        hclib::MPI_Irecv(level->exchange_ghosts[justFaces].recv_buffers[n],
+                  level->exchange_ghosts[justFaces].recv_sizes[n],
+                  MPI_DOUBLE,
+                  level->exchange_ghosts[justFaces].recv_ranks[n],
+                  0, // by convention, ghost zone exchanges use tag=0
+                  MPI_COMM_WORLD,
+                  //&level->exchange_ghosts[justFaces].requests[n]
+                  &recv_requests[n]
+        );
+
+      });
+  });
+
   _timeEnd = CycleTime();
   level->cycles.ghostZone_recv += (_timeEnd-_timeStart);
 

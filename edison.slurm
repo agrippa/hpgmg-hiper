@@ -10,6 +10,7 @@ export GASNET_BACKTRACE=1
 export HCLIB_LOCALITY_FILE=$HCLIB_HOME/locality_graphs/edison.json
 # export HCLIB_LOCALITY_FILE=$HCLIB_HOME/locality_graphs/edison.no_interconnect.json
 export OMP_NUM_THREADS=12
+export HCLIB_WORKERS=$OMP_NUM_THREADS
 
 # cd $HOME/hclib/test/cpp
 # srun -N 1 -n 1 ./test_all.sh
