@@ -62,49 +62,57 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
   MPI_Request *recv_requests = level_f->interpolation.requests;
   MPI_Request *send_requests = level_f->interpolation.requests + level_f->interpolation.num_recvs;
 
-
   // loop through packed list of MPI receives and prepost Irecv's...
   _timeStart = CycleTime();
-  #ifdef USE_MPI_THREAD_MULTIPLE
-  #pragma omp parallel for schedule(dynamic,1)
-  #endif
-  for(n=0;n<level_f->interpolation.num_recvs;n++){
-    hclib::MPI_Irecv(level_f->interpolation.recv_buffers[n],
-              level_f->interpolation.recv_sizes[n],
-              MPI_DOUBLE,
-              level_f->interpolation.recv_ranks[n],
-              6, // by convention, piecewise constant interpolation uses tag=6
-              MPI_COMM_WORLD,
-              &recv_requests[n]
-    );
-  }
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level_f->interpolation.num_recvs);
+    hclib::forasync(&loop, [] (int n) {
+        hclib::MPI_Irecv(level_f->interpolation.recv_buffers[n],
+                  level_f->interpolation.recv_sizes[n],
+                  MPI_DOUBLE,
+                  level_f->interpolation.recv_ranks[n],
+                  6, // by convention, piecewise constant interpolation uses tag=6
+                  MPI_COMM_WORLD,
+                  &recv_requests[n]
+        );
+
+    });
+  });
+
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_recv += (_timeEnd-_timeStart);
 
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
-  #pragma omp parallel for private(buffer) if(level_c->interpolation.num_blocks[0]>1) schedule(static,1)
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[0];buffer++){InterpolateBlock_PC(level_f,id_f,0.0,level_c,id_c,&level_c->interpolation.blocks[0][buffer]);} // !!! prescale==0 because you don't want to increment the MPI buffer
+  // #pragma omp parallel for private(buffer) if(level_c->interpolation.num_blocks[0]>1) schedule(static,1)
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level_c->interpolation.num_blocks[0]);
+    hclib::forasync(&loop, [] (int buffer) {
+      InterpolateBlock_PC(level_f,id_f,0.0,level_c,id_c,
+          &level_c->interpolation.blocks[0][buffer]);
+    }, level_c->interpolation.num_blocks[0] <= 1);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_pack += (_timeEnd-_timeStart);
 
  
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
-  #ifdef USE_MPI_THREAD_MULTIPLE
-  #pragma omp parallel for schedule(dynamic,1)
-  #endif
-  for(n=0;n<level_c->interpolation.num_sends;n++){
-    hclib::MPI_Isend(level_c->interpolation.send_buffers[n],
-              level_c->interpolation.send_sizes[n],
-              MPI_DOUBLE,
-              level_c->interpolation.send_ranks[n],
-              6, // by convention, piecewise constant interpolation uses tag=6
-              MPI_COMM_WORLD,
-              &send_requests[n]
-    );
-  }
+  // #pragma omp parallel for schedule(dynamic,1)
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level_c->interpolation.num_sends);
+    hclib::forasync(&loop, [] (int n) {
+        hclib::MPI_Isend(level_c->interpolation.send_buffers[n],
+                  level_c->interpolation.send_sizes[n],
+                  MPI_DOUBLE,
+                  level_c->interpolation.send_ranks[n],
+                  6, // by convention, piecewise constant interpolation uses tag=6
+                  MPI_COMM_WORLD,
+                  &send_requests[n]
+        );
+    });
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_send += (_timeEnd-_timeStart);
   #endif
@@ -112,8 +120,14 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  #pragma omp parallel for private(buffer) if(level_c->interpolation.num_blocks[1]>1) schedule(static,1)
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
+  // #pragma omp parallel for private(buffer) if(level_c->interpolation.num_blocks[1]>1) schedule(static,1)
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level_c->interpolation.num_blocks[1]);
+    hclib::forasync(&loop, [] (int buffer) {
+      InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,
+          &level_c->interpolation.blocks[1][buffer]);
+    }, level_c->interpolation.num_blocks[1]<=1);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
 
@@ -127,8 +141,14 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
-  #pragma omp parallel for private(buffer) if(level_f->interpolation.num_blocks[2]>1) schedule(static,1)
-  for(buffer=0;buffer<level_f->interpolation.num_blocks[2];buffer++){IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);}
+  // #pragma omp parallel for private(buffer) if(level_f->interpolation.num_blocks[2]>1) schedule(static,1)
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level_f->interpolation.num_blocks[2]);
+    hclib::forasync(&loop, [] (int buffer) {
+      IncrementBlock(level_f,id_f,prescale_f,
+          &level_f->interpolation.blocks[2][buffer]);
+    }, level_f->interpolation.num_blocks[2] <= 1);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_unpack += (_timeEnd-_timeStart);
 

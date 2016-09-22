@@ -70,7 +70,7 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
   level->h = hLevel;
 
   int box;
-  for(box=0;box<level->num_my_boxes;box++){
+  for(box=0;box<level->num_my_boxes;box++) {
     memset(level->my_boxes[box].vectors[VECTOR_ALPHA ],0,level->my_boxes[box].volume*sizeof(double));
     memset(level->my_boxes[box].vectors[VECTOR_BETA_I],0,level->my_boxes[box].volume*sizeof(double));
     memset(level->my_boxes[box].vectors[VECTOR_BETA_J],0,level->my_boxes[box].volume*sizeof(double));
@@ -84,49 +84,50 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
     const int   dim_i = level->my_boxes[box].dim;
     const int   dim_j = level->my_boxes[box].dim;
     const int   dim_k = level->my_boxes[box].dim;
-    #ifdef _OPENMP
-    #pragma omp parallel for private(k,j,i) collapse(2)
-    #endif
-    for(k=0;k<=dim_k;k++){ // include high face
-    for(j=0;j<=dim_j;j++){ // include high face
-    for(i=0;i<=dim_i;i++){ // include high face
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      // FIX... move to quadrature version to initialize the problem.  
-      // i.e. the value of an array element is the average value of the function over the cell (finite volume)
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      int ijk = (i+ghosts) + (j+ghosts)*jStride + (k+ghosts)*kStride;
-      double x = hLevel*( (double)(i+level->my_boxes[box].low.i) + 0.5 ); // +0.5 to get to the center of cell
-      double y = hLevel*( (double)(j+level->my_boxes[box].low.j) + 0.5 );
-      double z = hLevel*( (double)(k+level->my_boxes[box].low.k) + 0.5 );
-      double A,B,Bx,By,Bz,Bi,Bj,Bk;
-      double U,Ux,Uy,Uz,Uxx,Uyy,Uzz;
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      A  = 1.0;
-      B  = 1.0;
-      Bx = 0.0;
-      By = 0.0;
-      Bz = 0.0; 
-      Bi = 1.0;
-      Bj = 1.0;
-      Bk = 1.0;
-      #ifdef STENCIL_VARIABLE_COEFFICIENT // variable coefficient problem...
-      evaluateBeta(x-hLevel*0.5,y           ,z           ,&Bi,&Bx,&By,&Bz); // face-centered value of Beta for beta_i
-      evaluateBeta(x           ,y-hLevel*0.5,z           ,&Bj,&Bx,&By,&Bz); // face-centered value of Beta for beta_j
-      evaluateBeta(x           ,y           ,z-hLevel*0.5,&Bk,&Bx,&By,&Bz); // face-centered value of Beta for beta_k
-      evaluateBeta(x           ,y           ,z           ,&B ,&Bx,&By,&Bz); // cell-centered value of Beta
-      #endif
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      evaluateU(x,y,z,&U,&Ux,&Uy,&Uz,&Uxx,&Uyy,&Uzz, (level->boundary_condition.type == BC_PERIODIC) );
-      double F = a*A*U - b*( (Bx*Ux + By*Uy + Bz*Uz)  +  B*(Uxx + Uyy + Uzz) );
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-      level->my_boxes[box].vectors[VECTOR_BETA_I][ijk] = Bi;
-      level->my_boxes[box].vectors[VECTOR_BETA_J][ijk] = Bj;
-      level->my_boxes[box].vectors[VECTOR_BETA_K][ijk] = Bk;
-      level->my_boxes[box].vectors[VECTOR_ALPHA ][ijk] = A;
-      level->my_boxes[box].vectors[VECTOR_UTRUE ][ijk] = U;
-      level->my_boxes[box].vectors[VECTOR_F     ][ijk] = F;
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    }}}
+    // #pragma omp parallel for private(k,j,i) collapse(2)
+    hclib::finish([] {
+        hclib::loop_domain_2d loop(dim_k, dim_j);
+        hclib::forasync(&loop, [] (int k, int j) {
+            for(i=0;i<=dim_i;i++){ // include high face
+            //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+            // FIX... move to quadrature version to initialize the problem.  
+            // i.e. the value of an array element is the average value of the function over the cell (finite volume)
+            //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+            int ijk = (i+ghosts) + (j+ghosts)*jStride + (k+ghosts)*kStride;
+            double x = hLevel*( (double)(i+level->my_boxes[box].low.i) + 0.5 ); // +0.5 to get to the center of cell
+            double y = hLevel*( (double)(j+level->my_boxes[box].low.j) + 0.5 );
+            double z = hLevel*( (double)(k+level->my_boxes[box].low.k) + 0.5 );
+            double A,B,Bx,By,Bz,Bi,Bj,Bk;
+            double U,Ux,Uy,Uz,Uxx,Uyy,Uzz;
+            //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+            A  = 1.0;
+            B  = 1.0;
+            Bx = 0.0;
+            By = 0.0;
+            Bz = 0.0; 
+            Bi = 1.0;
+            Bj = 1.0;
+            Bk = 1.0;
+#ifdef STENCIL_VARIABLE_COEFFICIENT // variable coefficient problem...
+            evaluateBeta(x-hLevel*0.5,y           ,z           ,&Bi,&Bx,&By,&Bz); // face-centered value of Beta for beta_i
+            evaluateBeta(x           ,y-hLevel*0.5,z           ,&Bj,&Bx,&By,&Bz); // face-centered value of Beta for beta_j
+            evaluateBeta(x           ,y           ,z-hLevel*0.5,&Bk,&Bx,&By,&Bz); // face-centered value of Beta for beta_k
+            evaluateBeta(x           ,y           ,z           ,&B ,&Bx,&By,&Bz); // cell-centered value of Beta
+#endif
+            //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+            evaluateU(x,y,z,&U,&Ux,&Uy,&Uz,&Uxx,&Uyy,&Uzz, (level->boundary_condition.type == BC_PERIODIC) );
+            double F = a*A*U - b*( (Bx*Ux + By*Uy + Bz*Uz)  +  B*(Uxx + Uyy + Uzz) );
+            //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+            level->my_boxes[box].vectors[VECTOR_BETA_I][ijk] = Bi;
+            level->my_boxes[box].vectors[VECTOR_BETA_J][ijk] = Bj;
+            level->my_boxes[box].vectors[VECTOR_BETA_K][ijk] = Bk;
+            level->my_boxes[box].vectors[VECTOR_ALPHA ][ijk] = A;
+            level->my_boxes[box].vectors[VECTOR_UTRUE ][ijk] = U;
+            level->my_boxes[box].vectors[VECTOR_F     ][ijk] = F;
+            //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+            }
+        });
+    });
   }
 
 

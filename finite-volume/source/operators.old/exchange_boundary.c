@@ -45,19 +45,22 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
-  #pragma omp parallel for if(level->exchange_ghosts[justFaces].num_blocks[0]>1) schedule(static,1)
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[0];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);}
+
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level->exchange_ghosts[justFaces].num_blocks[0]);
+    hclib::forasync(&loop, [] (int buffer) {
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);
+    }, level->exchange_ghosts[justFaces].num_blocks[0] <= 1);
+  });
   _timeEnd = CycleTime();
   level->cycles.ghostZone_pack += (_timeEnd-_timeStart);
-
  
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
-  #ifdef USE_MPI_THREAD_MULTIPLE
-  #pragma omp parallel for schedule(dynamic,1)
-  #endif
-  for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    hclib::MPI_Isend(level->exchange_ghosts[justFaces].send_buffers[n],
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level->exchange_ghosts[justFaces].num_sends);
+    hclib::forasync([] (int n) {
+     hclib::MPI_Isend(level->exchange_ghosts[justFaces].send_buffers[n],
               level->exchange_ghosts[justFaces].send_sizes[n],
               MPI_DOUBLE,
               level->exchange_ghosts[justFaces].send_ranks[n],
@@ -67,7 +70,8 @@ void exchange_boundary(level_type * level, int id, int justFaces){
               //&level->exchange_ghosts[justFaces].requests[n+level->exchange_ghosts[justFaces].num_recvs]
                                               // requests[0..num_recvs-1] were used by recvs.  So sends start at num_recvs
     ); 
-  }
+    });
+  });
   _timeEnd = CycleTime();
   level->cycles.ghostZone_send += (_timeEnd-_timeStart);
   #endif
@@ -75,8 +79,12 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  #pragma omp parallel for if(level->exchange_ghosts[justFaces].num_blocks[1]>1) schedule(static,1)
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);}
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(level->exchange_ghosts[justFaces].num_blocks[1]);
+    hclib::forasync(&loop, [] (int buffer) {
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);
+    });
+  });
   _timeEnd = CycleTime();
   level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 
@@ -91,8 +99,14 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // unpack MPI receive buffers 
   _timeStart = CycleTime();
-  #pragma omp parallel for if(level->exchange_ghosts[justFaces].num_blocks[2]>1) schedule(static,1)
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[2];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);}
+
+  hclib::finish([] {
+    hclib::loop_domain_1d loop(exchange_ghosts[justFaces].num_blocks[2]);
+    hclib::forasync(&loop, [] (int buffer) {
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
+    });
+  });
+
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);
   #endif

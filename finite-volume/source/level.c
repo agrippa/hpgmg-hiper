@@ -1120,19 +1120,22 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
     if(domain_boundary_condition==BC_PERIODIC )fprintf(stdout,"\nattempting to create a %d^3 level (with Periodic BC) using a %d^3 grid of %d^3 boxes and %d tasks...\n", box_dim*boxes_in_i,boxes_in_i,box_dim,num_ranks);
   }
 
-  int omp_threads = 1;
-  int omp_nested  = 0;
+  // int omp_threads = 1;
+  // int omp_nested  = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel 
-  {
-#pragma omp master
-    {
-      omp_threads = omp_get_num_threads();
-      omp_nested  = omp_get_nested();
-    }
-  }
-#endif
+  int omp_threads = hclib::num_workers();
+  int omp_nested = 1;
+
+// #ifdef _OPENMP
+// #pragma omp parallel 
+//   {
+// #pragma omp master
+//     {
+//       omp_threads = omp_get_num_threads();
+//       omp_nested  = omp_get_nested();
+//     }
+//   }
+// #endif
 
   if(box_ghosts < stencil_get_radius() ){
     if(my_rank==0)fprintf(stderr,"ghosts(%d) must be >= stencil_get_radius(%d)\n",box_ghosts,stencil_get_radius());
@@ -1290,10 +1293,8 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
              else fprintf(stdout,"  OMP_NESTED=FALSE OMP_NUM_THREADS=%d ... %d teams of %d threads\n",omp_threads,level->concurrent_boxes,level->threads_per_box);
   }
 
-
   // build an assists data structure which specifies which cells are within the domain (used with STENCIL_FUSE_BC)
   initialize_valid_region(level);
-
 
   // build an assist structure for Gauss Seidel Red Black that would facilitate unrolling and SIMDization...
   if(level->num_my_boxes){
@@ -1332,7 +1333,6 @@ void create_level(level_type *level, int boxes_in_i, int box_dim, int box_ghosts
   build_exchange_ghosts(level,1); // justFaces
   build_boundary_conditions(level,0); // faces, edges, corners
   build_boundary_conditions(level,1); // just faces
-
 
   // duplicate MPI_COMM_WORLD to be the communicator for each level
 #ifdef USE_MPI

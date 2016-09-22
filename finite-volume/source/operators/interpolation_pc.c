@@ -32,7 +32,6 @@ void cb_unpack_int(int srcid, int pos, int depth_f, int id_f, double prescale_f)
   int bstart = level_f->interpolation.sblock2[pos];
   int bend   = level_f->interpolation.sblock2[pos+1];
 
-//    PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
   for(buffer=bstart;buffer<bend;buffer++){
     IncrementBlock(level_f,id_f,prescale_f,&level_f->interpolation.blocks[2][buffer]);
   }
@@ -113,15 +112,23 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[3])
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[3];buffer++){InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[3][buffer]);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[3])
+  parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[3],
+          [&level_f, &id_f, &prescale_f, &level_c, &id_c] (int buffer) {
+    InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,
+        &level_c->interpolation.blocks[3][buffer]);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_shm += (_timeEnd-_timeStart);
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[0])
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[0];buffer++){InterpolateBlock_PC(level_f,id_f,0.0,level_c,id_c,&level_c->interpolation.blocks[0][buffer]);} // !!! prescale==0 because you don't want to increment the MPI buffer
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[0])
+  parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[0],
+          [&level_f, &id_f, &level_c, &id_c] (int buffer) {
+    InterpolateBlock_PC(level_f,id_f,0.0,level_c,id_c,
+        &level_c->interpolation.blocks[0][buffer]);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_pack += (_timeEnd-_timeStart);
 
@@ -151,8 +158,12 @@ void interpolation_pc(level_type * level_f, int id_f, double prescale_f, level_t
 
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
-  for(buffer=0;buffer<level_c->interpolation.num_blocks[1];buffer++){InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,&level_c->interpolation.blocks[1][buffer]);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
+  parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[1],
+          [&level_f, &id_f, &prescale_f, &level_c, &id_c] (int buffer) {
+    InterpolateBlock_PC(level_f,id_f,prescale_f,level_c,id_c,
+        &level_c->interpolation.blocks[1][buffer]);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
 

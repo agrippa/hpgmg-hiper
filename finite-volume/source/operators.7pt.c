@@ -8,39 +8,34 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <functional>
 //------------------------------------------------------------------------------------------------------------------------------
 #include "timers.h"
 #include "defines.h"
 #include "level.h"
 #include "operators.h"
 #include "mg.h"
+#include "hclib_atomic.h"
 //------------------------------------------------------------------------------------------------------------------------------
 #define STENCIL_VARIABLE_COEFFICIENT
 //------------------------------------------------------------------------------------------------------------------------------
 #define MyPragma(a) _Pragma(#a)
 //------------------------------------------------------------------------------------------------------------------------------
-#if (_OPENMP>=201107) // OpenMP 3.1 supports max reductions...
-  // KNC does not like the num_threads() clause...
-  #ifdef __xlC__ // XL C/C++ 12.1.09 sets _OPENMP to 201107, but does not support the max clause
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    
-  #warning not threading norm() calculations due to issue with XL/C, _Pragma, and reduction(max:bmax)
-  #else
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(max:bmax) )
-  #endif
-#elif _OPENMP // older OpenMP versions don't support the max reduction clause
-  #warning Threading max reductions requires OpenMP 3.1 (July 2011).  Please upgrade your compiler.                                                           
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    
-#else // flat MPI should not define any threading...
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    
-#endif
+
+// #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
+template <typename T>
+inline void parallel_across_blocks(level_type *level, int b, int nb,
+        T lambda) {
+    hclib::finish([&nb, &lambda] {
+        hclib::loop_domain_1d loop(nb);
+        hclib::forasync1D<T>(&loop, lambda, nb <= 1);
+    });
+}
+
+// #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
+// #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(max:bmax) )
+
+
 //------------------------------------------------------------------------------------------------------------------------------
 // fix... make #define...
 void apply_BCs(level_type * level, int x_id, int justFaces){
@@ -223,10 +218,12 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
   uint64_t _timeStart = CycleTime();
   int block;
 
-  double dominant_eigenvalue = -1e9;
+  // double dominant_eigenvalue = -1e9;
+  hclib::atomic_max_t<double> dominant_eigenvalue_atomic(-1E9);
 
-  PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,block,level->num_my_blocks,dominant_eigenvalue)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,block,level->num_my_blocks,dominant_eigenvalue)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &dominant_eigenvalue_atomic, &b, &a] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -299,10 +296,12 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
                        else L1inv[ijk] = 1.0/(Aii+0.5*sumAbsAij);		// 
       double Di = (Aii + sumAbsAij)/Aii;if(Di>block_eigenvalue)block_eigenvalue=Di;	// upper limit to Gershgorin disc == bound on dominant eigenvalue
     }}}
-    if(block_eigenvalue>dominant_eigenvalue){dominant_eigenvalue = block_eigenvalue;}
-  }
+    // if(block_eigenvalue>dominant_eigenvalue){dominant_eigenvalue = block_eigenvalue;}
+    dominant_eigenvalue_atomic.update(block_eigenvalue);
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 
+  double dominant_eigenvalue = dominant_eigenvalue_atomic.get();
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Reduce the local estimates dominant eigenvalue to a global estimate

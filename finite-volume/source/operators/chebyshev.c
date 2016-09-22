@@ -48,8 +48,9 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
     // apply the smoother... Chebyshev ping pongs between x_id and VECTOR_TEMP
     uint64_t _timeStart = CycleTime();
 
-    PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-    for(block=0;block<level->num_my_blocks;block++){
+    // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+    parallel_across_blocks(level, block, level->num_my_blocks,
+            [&level, &rhs_id, &s, &x_id, &chebyshev_c1, &chebyshev_c2, &a, &alpha, &b] (int block) {
       const int box = level->my_blocks[block].read.box;
       const int ilo = level->my_blocks[block].read.i;
       const int jlo = level->my_blocks[block].read.j;
@@ -99,7 +100,7 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
         x_np1[ijk] = x_n[ijk] + c1*(x_n[ijk]-x_nm1[ijk]) + c2*lambda*(rhs[ijk]-Ax_n);
       }}}
 
-    } // box-loop
+    }); // box-loop
     level->cycles.smooth += (uint64_t)(CycleTime()-_timeStart);
   } // s-loop
 }

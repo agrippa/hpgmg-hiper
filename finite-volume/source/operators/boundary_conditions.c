@@ -29,8 +29,9 @@ void apply_BCs_linear(level_type * level, int x_id, int justFaces){
 
   int buffer;
   uint64_t _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->boundary_condition.num_blocks[justFaces])
-  for(buffer=0;buffer<level->boundary_condition.num_blocks[justFaces];buffer++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->boundary_condition.num_blocks[justFaces])
+  parallel_across_blocks(level, buffer, level->boundary_condition.num_blocks[justFaces],
+          [&level, &faces, &justFaces, &edges, &corners, &x_id] (int buffer) {
     double scale = 1.0;
     if(  faces[level->boundary_condition.blocks[justFaces][buffer].subtype])scale=-1.0;
     if(  edges[level->boundary_condition.blocks[justFaces][buffer].subtype])scale= 1.0;
@@ -85,7 +86,7 @@ void apply_BCs_linear(level_type * level, int x_id, int justFaces){
       }}}
     }
 
-  }
+  });
   level->cycles.boundary_conditions += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -104,8 +105,9 @@ void apply_BCs_quadratic(level_type * level, int x_id, int justFaces){
 
   int buffer;
   uint64_t _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->boundary_condition.num_blocks[justFaces])
-  for(buffer=0;buffer<level->boundary_condition.num_blocks[justFaces];buffer++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->boundary_condition.num_blocks[justFaces])
+  parallel_across_blocks(level, buffer, level->boundary_condition.num_blocks[justFaces],
+          [&level, &justFaces, &x_id, &faces, &edges, &corners] (int buffer) {
     int i,j,k;
     const int       box = level->boundary_condition.blocks[justFaces][buffer].read.box; 
     const int     dim_i = level->boundary_condition.blocks[justFaces][buffer].dim.i;
@@ -199,7 +201,7 @@ void apply_BCs_quadratic(level_type * level, int x_id, int justFaces){
                 +0.037037037037037037*x[ijk+2*di+2*dj+2*dk];
     }
 
-  }
+  });
   level->cycles.boundary_conditions += (uint64_t)(CycleTime()-_timeStart);
 }
 

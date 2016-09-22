@@ -8,8 +8,9 @@ void zero_vector(level_type * level, int component_id){
   uint64_t _timeStart = CycleTime();
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &component_id] (int block) {
     const int box = level->my_blocks[block].read.box;
           int ilo = level->my_blocks[block].read.i;
           int jlo = level->my_blocks[block].read.j;
@@ -41,7 +42,7 @@ void zero_vector(level_type * level, int component_id){
       int ijk = i + j*jStride + k*kStride;
       grid[ijk] = 0.0;
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -51,8 +52,9 @@ void initialize_valid_region(level_type * level){
   uint64_t _timeStart = CycleTime();
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [level] (int block) {
     const int box = level->my_blocks[block].read.box;
           int ilo = level->my_blocks[block].read.i; 
           int jlo = level->my_blocks[block].read.j; 
@@ -94,7 +96,7 @@ void initialize_valid_region(level_type * level){
 
       }
     }}}
-  }
+  }); // });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -105,8 +107,9 @@ void initialize_grid_to_scalar(level_type * level, int component_id, double scal
   uint64_t _timeStart = CycleTime();
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &component_id, &scalar] (int block) {
     const int box = level->my_blocks[block].read.box;
           int ilo = level->my_blocks[block].read.i;
           int jlo = level->my_blocks[block].read.j;
@@ -139,7 +142,7 @@ void initialize_grid_to_scalar(level_type * level, int component_id, double scal
         int ghostZone = (i<0) || (j<0) || (k<0) || (i>=dim) || (j>=dim) || (k>=dim);
         grid[ijk] = ghostZone ? 0.0 : scalar;
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -150,8 +153,9 @@ void add_vectors(level_type * level, int id_c, double scale_a, int id_a, double 
 
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_c, &id_a, &id_b, &scale_a, &scale_b] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -177,7 +181,7 @@ void add_vectors(level_type * level, int id_c, double scale_a, int id_a, double 
         int ijk = i + j*jStride + k*kStride;
         grid_c[ijk] = scale_a*grid_a[ijk] + scale_b*grid_b[ijk];
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -188,8 +192,9 @@ void mul_vectors(level_type * level, int id_c, double scale, int id_a, int id_b)
 
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_c, &id_a, &id_b, &scale] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -214,7 +219,7 @@ void mul_vectors(level_type * level, int id_c, double scale, int id_a, int id_b)
         int ijk = i + j*jStride + k*kStride;
         grid_c[ijk] = scale*grid_a[ijk]*grid_b[ijk];
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -225,8 +230,9 @@ void invert_vector(level_type * level, int id_c, double scale_a, int id_a){ // c
 
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_c, &id_a, &scale_a] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -250,7 +256,7 @@ void invert_vector(level_type * level, int id_c, double scale_a, int id_a){ // c
         int ijk = i + j*jStride + k*kStride;
         grid_c[ijk] = scale_a/grid_a[ijk];
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -261,8 +267,9 @@ void scale_vector(level_type * level, int id_c, double scale_a, int id_a){ // c[
 
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_c, &id_a, &scale_a] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -286,7 +293,7 @@ void scale_vector(level_type * level, int id_c, double scale_a, int id_a){ // c[
         int ijk = i + j*jStride + k*kStride;
         grid_c[ijk] = scale_a*grid_a[ijk];
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -297,10 +304,11 @@ double dot(level_type * level, int id_a, int id_b){
 
 
   int block;
-  double a_dot_b_level =  0.0;
+  hclib::atomic_sum_t<double> a_dot_b_level_atomic(0.0);
 
-  PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,block,level->num_my_blocks,a_dot_b_level)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,block,level->num_my_blocks,a_dot_b_level)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_a, &id_b, &a_dot_b_level_atomic] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -326,9 +334,11 @@ double dot(level_type * level, int id_a, int id_b){
       int ijk = i + j*jStride + k*kStride;
       a_dot_b_block += grid_a[ijk]*grid_b[ijk];
     }}}
-    a_dot_b_level+=a_dot_b_block;
-  }
+    a_dot_b_level_atomic+=a_dot_b_block;
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
+
+  double a_dot_b_level = a_dot_b_level_atomic.get();
 
   #ifdef USE_MPI
   uint64_t _timeStartAllReduce = CycleTime();
@@ -346,10 +356,12 @@ double norm(level_type * level, int component_id){ // implements the max norm
   uint64_t _timeStart = CycleTime();
 
   int block;
-  double max_norm =  0.0;
+  hclib::atomic_max_t<double> max_norm_atomic(0.0);
 
-  PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,block,level->num_my_blocks,max_norm)
-  for(block=0;block<level->num_my_blocks;block++){
+
+  // PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,block,level->num_my_blocks,max_norm)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &component_id, &max_norm_atomic] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -375,9 +387,11 @@ double norm(level_type * level, int component_id){ // implements the max norm
       if(fabs_grid_ijk>block_norm){block_norm=fabs_grid_ijk;} // max norm
     }}}
 
-    if(block_norm>max_norm){max_norm = block_norm;}
-  } // block list
+    max_norm_atomic.update(block_norm);
+  }); // block list
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
+
+  double max_norm = max_norm_atomic.get();
 
   #ifdef USE_MPI
   uint64_t _timeStartAllReduce = CycleTime();
@@ -396,10 +410,11 @@ double mean(level_type * level, int id_a){
 
 
   int block;
-  double sum_level =  0.0;
+  hclib::atomic_sum_t<double> sum_level_atomic(0.0);
 
-  PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,block,level->num_my_blocks,sum_level)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,block,level->num_my_blocks,sum_level)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_a, &sum_level_atomic] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -423,10 +438,12 @@ double mean(level_type * level, int id_a){
       int ijk = i + j*jStride + k*kStride;
       sum_block += grid_a[ijk];
     }}}
-    sum_level+=sum_block;
-  }
+    sum_level_atomic += sum_block;
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
   double ncells_level = (double)level->dim.i*(double)level->dim.j*(double)level->dim.k;
+
+  double sum_level = sum_level_atomic.get();
 
   #ifdef USE_MPI
   uint64_t _timeStartAllReduce = CycleTime();
@@ -446,8 +463,9 @@ void shift_vector(level_type * level, int id_c, int id_a, double shift_a){
   uint64_t _timeStart = CycleTime();
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_c, &id_a, &shift_a] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -470,7 +488,7 @@ void shift_vector(level_type * level, int id_c, int id_a, double shift_a){
       int ijk = i + j*jStride + k*kStride;
       grid_c[ijk] = grid_a[ijk] + shift_a;
     }}}
-  }
+  });
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }
 
@@ -479,8 +497,9 @@ void project_cell_to_face(level_type * level, int id_cell, int id_face, int dir)
   uint64_t _timeStart = CycleTime();
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &id_cell, &id_face, &dir] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -510,7 +529,7 @@ void project_cell_to_face(level_type * level, int id_cell, int id_face, int dir)
       int ijk = i + j*jStride + k*kStride;
       grid_face[ijk] = 0.5*(grid_cell[ijk-stride] + grid_cell[ijk]); // simple linear interpolation
     }}}
-  }
+  });
 
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 }

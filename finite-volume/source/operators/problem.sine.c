@@ -77,12 +77,10 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
     const int   dim_i = level->my_boxes[box].dim;
     const int   dim_j = level->my_boxes[box].dim;
     const int   dim_k = level->my_boxes[box].dim;
-    #ifdef _OPENMP
-    #pragma omp parallel for private(k,j,i) collapse(3)
-    #endif
-    for(k=0;k<=dim_k;k++){ // include high face
-    for(j=0;j<=dim_j;j++){ // include high face
-    for(i=0;i<=dim_i;i++){ // include high face
+    // #pragma omp parallel for private(k,j,i) collapse(3)
+    hclib::finish([] {
+        hclib::loop_domain_3d loop(dim_k, dim_j, dim_i);
+        hclib::forasync3D(&loop, [] (int k, int j, int i) {
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
       // FIX... move to quadrature version to initialize the problem.  
       // i.e. the value of an array element is the average value of the function over the cell (finite volume)
@@ -119,7 +117,9 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
       level->my_boxes[box].vectors[VECTOR_UTRUE ][ijk] = U;
       level->my_boxes[box].vectors[VECTOR_F     ][ijk] = F;
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    }}}
+
+        });
+    });
   }
 
   // quick test for Poisson...

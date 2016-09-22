@@ -12,8 +12,9 @@ void apply_op(level_type * level, int Ax_id, int x_id, double a, double b){  // 
   uint64_t _timeStart = CycleTime();
   int block;
 
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  for(block=0;block<level->num_my_blocks;block++){
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
+  parallel_across_blocks(level, block, level->num_my_blocks,
+          [&level, &a, &b, &x_id, &Ax_id] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -43,7 +44,7 @@ void apply_op(level_type * level, int Ax_id, int x_id, double a, double b){  // 
       int ijk = i + j*jStride + k*kStride;
       Ax[ijk] = apply_op_ijk(x);
     }}}
-  }
+  });
   level->cycles.apply_op += (uint64_t)(CycleTime()-_timeStart);
 }
 //------------------------------------------------------------------------------------------------------------------------------

@@ -31,7 +31,6 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
   int bstart = level->exchange_ghosts[justFaces].sblock2[pos];
   int bend   = level->exchange_ghosts[justFaces].sblock2[pos+1];
 
-//  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,bend-bstart)
   for(buffer=bstart;buffer<bend;buffer++){
     CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
   }
@@ -58,8 +57,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[0])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[0];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[0])
+  parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[0],
+          [&level, &id, &justFaces] (int buffer) {
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);
+  });
   _timeEnd = CycleTime();
   level->cycles.ghostZone_pack += (_timeEnd-_timeStart);
 
@@ -88,8 +90,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[3])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[3];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[3][buffer]);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[3])
+  parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[3],
+          [&level, &id, &justFaces] (int buffer) {
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[3][buffer]);
+  });
   _timeEnd = CycleTime();
   level->cycles.ghostZone_shm += (_timeEnd-_timeStart);
 
@@ -109,8 +114,11 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
-  for(buffer=0;buffer<level->exchange_ghosts[justFaces].num_blocks[1];buffer++){CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
+  parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[1],
+          [&level, &id, &justFaces] (int buffer) {
+      CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);
+  });
   _timeEnd = CycleTime();
   level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 

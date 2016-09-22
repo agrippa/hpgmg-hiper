@@ -17,26 +17,28 @@
 //------------------------------------------------------------------------------------------------------------------------------
 #define MyPragma(a) _Pragma(#a)
 //------------------------------------------------------------------------------------------------------------------------------
+
+// #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
+inline void parallel_across_blocks(level_type *level, int b, int nb, auto lambda) {
+    hclib::finish([&nb] {
+        hclib::loop_domain_1d loop(nb);
+        hclib::forasync(&loop, lambda, nb <= 1);
+    });
+}
+
 #if (_OPENMP>=201107) // OpenMP 3.1 supports max reductions...
   // KNC does not like the num_threads() clause...
   #ifdef __xlC__ // XL C/C++ 12.1.09 sets _OPENMP to 201107, but does not support the max clause
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
   #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
   #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    
   #warning not threading norm()
   #else
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
   #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
   #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(max:bmax) )
   #endif
 #elif _OPENMP // older OpenMP versions don't support the max reduction clause
   #warning Threading max reductions requires OpenMP 3.1 (July 2011).  Please upgrade your compiler.                                                           
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
   #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    
-#else // flat MPI should not define any threading...
-  #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    
-  #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    
   #define PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,b,nb,bmax)    
 #endif
 //------------------------------------------------------------------------------------------------------------------------------

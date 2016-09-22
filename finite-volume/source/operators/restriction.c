@@ -34,7 +34,6 @@ void cb_unpack_res(int srcid, int pos, int type, int depth_f, int id_c, int dept
   int bstart = level_c->restriction[type].sblock2[pos];
   int bend   = level_c->restriction[type].sblock2[pos+1];
 
-  //  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,bend-bstart)
   for(buffer=bstart;buffer<bend;buffer++){
     CopyBlock(level_c,id_c,&level_c->restriction[type].blocks[2][buffer]);
   }
@@ -155,15 +154,25 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
   // perform local restriction[restrictionType]... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[3])
-  for(buffer=0;buffer<level_f->restriction[restrictionType].num_blocks[3];buffer++){RestrictBlock(level_c,id_c,level_f,id_f,&level_f->restriction[restrictionType].blocks[3][buffer],restrictionType);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[3])
+  parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[3],
+          [&level_c, &id_c, &level_f, &id_f, &restrictionType] (int buffer) {
+    RestrictBlock(level_c,id_c,level_f,id_f,
+        &level_f->restriction[restrictionType].blocks[3][buffer],
+        restrictionType);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.restriction_shm += (_timeEnd-_timeStart);
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[0])
-  for(buffer=0;buffer<level_f->restriction[restrictionType].num_blocks[0];buffer++){RestrictBlock(level_c,id_c,level_f,id_f,&level_f->restriction[restrictionType].blocks[0][buffer],restrictionType);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[0])
+  parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[0],
+          [&level_c, &id_c, &level_f, &id_f, &restrictionType] (int buffer) {
+    RestrictBlock(level_c,id_c,level_f,id_f,
+        &level_f->restriction[restrictionType].blocks[0][buffer],
+        restrictionType);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.restriction_pack += (_timeEnd-_timeStart);
 
@@ -196,8 +205,13 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
 
   // perform local restriction[restrictionType]... try and hide within Isend latency... 
   _timeStart = CycleTime();
-  PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[1])
-  for(buffer=0;buffer<level_f->restriction[restrictionType].num_blocks[1];buffer++){RestrictBlock(level_c,id_c,level_f,id_f,&level_f->restriction[restrictionType].blocks[1][buffer],restrictionType);}
+  // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[1])
+  parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[1],
+          [&level_c, &id_c, &level_f, &id_f, &restrictionType] (int buffer) {
+    RestrictBlock(level_c,id_c,level_f,id_f,
+        &level_f->restriction[restrictionType].blocks[1][buffer],
+        restrictionType);
+  });
   _timeEnd = CycleTime();
   level_f->cycles.restriction_local += (_timeEnd-_timeStart);
 
