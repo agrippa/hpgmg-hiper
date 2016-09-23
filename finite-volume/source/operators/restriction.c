@@ -244,7 +244,7 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
       if (level_c->restriction[restrictionType].rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_c->restriction[restrictionType].num_recvs) break;
-    upcxx::advance();
+    hclib::upcxx::advance();
   }
   for (int n = 0; n < level_c->restriction[restrictionType].num_recvs; n++) {
     p[nth+n] = 0;

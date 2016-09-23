@@ -180,7 +180,7 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
       if (level_f->interpolation.rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
-    upcxx::advance();
+    hclib::upcxx::advance();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     p[nth+n] = 0;

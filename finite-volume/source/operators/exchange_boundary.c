@@ -83,7 +83,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
     } 
   }
-  upcxx::advance();
+  hclib::upcxx::advance();
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_send += (_timeEnd-_timeStart);
@@ -135,7 +135,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       if (level->exchange_ghosts[justFaces].rflag[nth + n] == 1) arrived++;
     }
     if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
-    upcxx::advance();
+    hclib::upcxx::advance();
   }
   for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
     p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
@@ -143,7 +143,7 @@ void exchange_boundary(level_type * level, int id, int justFaces){
 
   }
 
- hclib::upcxx::async_wait();
+  hclib::upcxx::async_wait();
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);

@@ -186,8 +186,8 @@ void add_vectors_to_box(box_type *box, int numAdditionalVectors){
 //  cout << "NEW BASE " << box->vectors_base + num << " local " << tmpbuf << " num " << num << endl;
 
   int c;for(c=0;c<box->numVectors;c++){box->vectors[c] = box->vectors_base + c*box->volume + num;}                      // pointer arithmetic...
-  upcxx::deallocate(old_bp);
-  upcxx::deallocate(old_v );
+  hclib::upcxx::deallocate(old_bp);
+  hclib::upcxx::deallocate(old_v );
 }
 #else
 
@@ -216,8 +216,8 @@ void add_vectors_to_box(box_type *box, int numAdditionalVectors){
 
 //------------------------------------------------------------------------------------------------------------------------------
 void destroy_box(box_type *box){
-  upcxx::deallocate(box->vectors_base); // single allocate with pointer arithmetic...
-  upcxx::deallocate(box->vectors);
+    hclib::upcxx::deallocate(box->vectors_base); // single allocate with pointer arithmetic...
+    hclib::upcxx::deallocate(box->vectors);
 }
 
 
@@ -735,7 +735,7 @@ void build_exchange_ghosts(level_type *level, int justFaces){
       // determine if this ghost requires a pack or local exchange 
       int LocalExchange; // 0 = pack list, 1 = local exchange list
 #ifdef USE_UPCXX
-      if (!upcxx::is_memory_shared_with(ghostsToSend[ghost].recvRank)) {
+      if (!hclib::upcxx::is_memory_shared_with(ghostsToSend[ghost].recvRank)) {
 #else
       if(ghostsToSend[ghost].recvRank != level->my_rank){
 #endif

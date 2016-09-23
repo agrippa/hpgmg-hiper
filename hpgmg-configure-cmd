@@ -1,0 +1,5 @@
+Without OMP:
+
+./configure --arch=build --CC=icpc --upcxx-dir $UPCXX_INSTALL --CFLAGS="-I$CRAY_MPICH_DIR/include -I$HCLIB_ROOT/include -I$HCLIB_ROOT/../modules/upcxx/inc -I$HCLIB_ROOT/../modules/mpi/inc" --LDLIBS="-lpmi -lugni -lxpmem -lmpich -lhclib -lhclib_mpi $HCLIB_ROOT/../modules/upcxx/lib/libhclib_upcxx.a" --LDFLAGS="$CRAY_PMI_POST_LINK_OPTS $CRAY_UGNI_POST_LINK_OPTS $CRAY_XPMEM_POST_LINK_OPTS -L$CRAY_MPICH_DIR/lib -L$HCLIB_ROOT/lib $HOME/jsmn/jsmn.o -L$HCLIB_ROOT/../modules/upcxx/lib -L$HCLIB_ROOT/../modules/mpi/lib"
+
+For OMP, add -openmp to CFLAGS and LDFLAGS

@@ -137,7 +137,7 @@ void interpolation_pq(level_type * level_f, int id_f, double prescale_f, level_t
 
     if (!is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
       event* copy_e = &level_c->interpolation.copy_e[n];
-      upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
+      hclib::upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
@@ -187,7 +187,7 @@ void interpolation_pq(level_type * level_f, int id_f, double prescale_f, level_t
       if (level_f->interpolation.rflag[nth+n]==1) arrived++;
     }
     if (arrived == level_f->interpolation.num_recvs) break;
-    upcxx::advance();
+    hclib::upcxx::advance();
   }
   for (int n = 0; n < level_f->interpolation.num_recvs; n++) {
     p[nth+n] = 0;

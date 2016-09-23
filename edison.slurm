@@ -3,6 +3,7 @@
 #SBATCH -N 2
 #SBATCH -t 30:00
 #SBATCH -J hpgmg
+#SBATCH --exclusive
 
 export GASNET_MAX_SEGSIZE='4096MB'
 export GASNET_PHYSMEM_MAX=16G
@@ -16,4 +17,4 @@ export HCLIB_WORKERS=$OMP_NUM_THREADS
 # srun -N 1 -n 1 ./test_all.sh
 
 cd $HOME/hpgmg
-LD_LIBRARY_PATH=$HCLIB_HOME/modules/mpi/lib:$LD_LIBRARY_PATH srun -N 2 -n 4 --ntasks-per-node=2 ./build/bin/hpgmg-fv 7 8
+LD_LIBRARY_PATH=$HCLIB_HOME/modules/mpi/lib:$LD_LIBRARY_PATH srun --ntasks=4 --ntasks-per-node=2 --ntasks-per-socket=1 --cpus-per-task=12 --cpu_bind=verbose,cores ./build/bin/hpgmg-fv 7 8
