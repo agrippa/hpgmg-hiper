@@ -13,7 +13,7 @@ void apply_op(level_type * level, int Ax_id, int x_id, double a, double b){  // 
   int block;
 
   // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  parallel_across_blocks(level, block, level->num_my_blocks,
+  hclib::future_t *fut = parallel_across_blocks(level, block, level->num_my_blocks,
           [&level, &a, &b, &x_id, &Ax_id] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
@@ -45,6 +45,7 @@ void apply_op(level_type * level, int Ax_id, int x_id, double a, double b){  // 
       Ax[ijk] = apply_op_ijk(x);
     }}}
   });
+  fut->wait();
   level->cycles.apply_op += (uint64_t)(CycleTime()-_timeStart);
 }
 //------------------------------------------------------------------------------------------------------------------------------

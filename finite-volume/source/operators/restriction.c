@@ -155,27 +155,34 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // perform local restriction[restrictionType]... try and hide within Isend latency... 
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[3])
-  parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[3],
+  hclib::future_t *fut0 = parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[3],
           [&level_c, &id_c, &level_f, &id_f, &restrictionType] (int buffer) {
     RestrictBlock(level_c,id_c,level_f,id_f,
         &level_f->restriction[restrictionType].blocks[3][buffer],
         restrictionType);
   });
+  fut0->wait();
   _timeEnd = CycleTime();
   level_f->cycles.restriction_shm += (_timeEnd-_timeStart);
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[0])
-  parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[0],
+  hclib::future_t *fut1 = parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[0],
           [&level_c, &id_c, &level_f, &id_f, &restrictionType] (int buffer) {
     RestrictBlock(level_c,id_c,level_f,id_f,
         &level_f->restriction[restrictionType].blocks[0][buffer],
         restrictionType);
   });
+  fut1->wait();
   _timeEnd = CycleTime();
   level_f->cycles.restriction_pack += (_timeEnd-_timeStart);
 
+  hclib::future_t **copy_events = (hclib::future_t **)malloc(
+          level_f->restriction[restrictionType].num_sends *
+          sizeof(hclib::future_t *));
+  memset(copy_events, 0x00, level_f->restriction[restrictionType].num_sends *
+          sizeof(hclib::future_t *));
  
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
@@ -187,8 +194,8 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     p2 = level_f->restriction[restrictionType].global_match_buffers[n];
 
     if (!hclib::upcxx::is_memory_shared_with(level_f->restriction[restrictionType].send_ranks[n])) {
-      hclib::upcxx::event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
-      hclib::upcxx::async_copy(p1, p2, level_f->restriction[restrictionType].send_sizes[n], copy_e);
+      copy_events[n] = hclib::upcxx::async_copy(p1, p2,
+              level_f->restriction[restrictionType].send_sizes[n]);
     } else {
       int rid = level_f->restriction[restrictionType].send_ranks[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
@@ -206,12 +213,13 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   // perform local restriction[restrictionType]... try and hide within Isend latency... 
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_f->restriction[restrictionType].num_blocks[1])
-  parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[1],
+  hclib::future_t *fut2 = parallel_across_blocks(level_f, buffer, level_f->restriction[restrictionType].num_blocks[1],
           [&level_c, &id_c, &level_f, &id_f, &restrictionType] (int buffer) {
     RestrictBlock(level_c,id_c,level_f,id_f,
         &level_f->restriction[restrictionType].blocks[1][buffer],
         restrictionType);
   });
+  fut2->wait();
   _timeEnd = CycleTime();
   level_f->cycles.restriction_local += (_timeEnd-_timeStart);
 
@@ -225,11 +233,21 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
     if (!hclib::upcxx::is_memory_shared_with(rid)) {
       int cnt = level_f->restriction[restrictionType].send_sizes[n];
       int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      hclib::upcxx::event* copy_e = &level_f->restriction[restrictionType].copy_e[n];
-      hclib::upcxx::event* data_e = &level_f->restriction[restrictionType].data_e[n];
-      async_after(rid, copy_e, data_e)(cb_unpack_res, level_f->my_rank, pos, restrictionType, level_f->depth, id_c, level_c->depth);
+      const int my_rank_copy = level_f->my_rank;
+      const int my_c_depth = level_c->depth;
+      const int my_f_depth = level_f->depth;
+      copy_events[n] = hclib::upcxx::async_after(rid, copy_events[n],
+              [=] {
+                  cb_unpack_res(my_rank_copy, pos, restrictionType, my_f_depth,
+                      id_c, my_c_depth);
+              });
     }
   }
+
+  for (n=0;n<level_f->restriction[restrictionType].num_sends;n++) {
+      if (copy_events[n]) copy_events[n]->wait();
+  }
+  free(copy_events);
 
   hclib::upcxx::async_wait();
 

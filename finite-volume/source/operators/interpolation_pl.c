@@ -95,11 +95,12 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[3])
-  parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[3],
+  hclib::future_t *fut0 = parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[3],
           [&level_f, &id_f, &prescale_f, &level_c, &id_c] (int buffer) {
     InterpolateBlock_PL(level_f,id_f,prescale_f,level_c,id_c,
         &level_c->interpolation.blocks[3][buffer]);
   });
+  fut0->wait();
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_shm += (_timeEnd-_timeStart);
 
@@ -107,14 +108,19 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   // pack MPI send buffers...
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[0])
-  parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[0],
+  hclib::future_t *fut1 = parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[0],
           [&level_f, &id_f, &level_c, &id_c] (int buffer) {
     InterpolateBlock_PL(level_f,id_f,0.0,level_c,id_c,
         &level_c->interpolation.blocks[0][buffer]);
   });
+  fut1->wait();
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_pack += (_timeEnd-_timeStart);
 
+  hclib::future_t **events = (hclib::future_t **)malloc(
+          level_c->interpolation.num_sends * sizeof(hclib::future_t *));
+  memset(events, 0x00,
+          level_c->interpolation.num_sends * sizeof(hclib::future_t *));
  
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
@@ -126,8 +132,8 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     p2 = level_c->interpolation.global_match_buffers[n];
 
     if (!hclib::upcxx::is_memory_shared_with(level_c->interpolation.send_ranks[n])) {
-      hclib::upcxx::event* copy_e = &level_c->interpolation.copy_e[n];
-      hclib::upcxx::async_copy(p1, p2, level_c->interpolation.send_sizes[n], copy_e);
+      events[n] = hclib::upcxx::async_copy(p1, p2,
+              level_c->interpolation.send_sizes[n]);
     } else {
       int rid = level_c->interpolation.send_ranks[n];
       int pos = level_c->interpolation.send_match_pos[n];
@@ -143,11 +149,12 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
   // perform local interpolation... try and hide within Isend latency... 
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level_f,buffer,level_c->interpolation.num_blocks[1])
-  parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[1],
+  hclib::future_t *fut2 = parallel_across_blocks(level_f, buffer, level_c->interpolation.num_blocks[1],
           [&level_f, &id_f, &prescale_f, &level_c, &id_c] (int buffer) {
     InterpolateBlock_PL(level_f,id_f,prescale_f,level_c,id_c,
         &level_c->interpolation.blocks[1][buffer]);
   });
+  fut2->wait();
   _timeEnd = CycleTime();
   level_f->cycles.interpolation_local += (_timeEnd-_timeStart);
 
@@ -162,12 +169,19 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
     if (!hclib::upcxx::is_memory_shared_with(rid)) {
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      hclib::upcxx::event* copy_e = &level_c->interpolation.copy_e[n];
-      hclib::upcxx::event* data_e = &level_c->interpolation.data_e[n];
-      async_after(rid, copy_e, data_e)(cb_unpack_int, level_c->my_rank, pos,
-                  level_f->depth, id_f, prescale_f);
+      const int my_rank_copy = level_c->my_rank;
+      const int f_depth_copy = level_f->depth;
+      events[n] = hclib::upcxx::async_after(rid, events[n], [=] {
+                  cb_unpack_int(my_rank_copy, pos, f_depth_copy, id_f,
+                      prescale_f);
+              });
     }
   }
+
+  for (n=0;n<level_c->interpolation.num_sends;n++) {
+      if (events[n]) events[n]->wait();
+  }
+  free(events);
 
   hclib::upcxx::async_wait();
 

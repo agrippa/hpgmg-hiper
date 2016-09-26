@@ -10,7 +10,9 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
     fprintf(stderr,"error... CHEBYSHEV_DEGREE*NUM_SMOOTHS must be even for the chebyshev smoother...\n");
     exit(0);
   }
-  if( (level->dominant_eigenvalue_of_DinvA<=0.0) && (level->my_rank==0) )fprintf(stderr,"dominant_eigenvalue_of_DinvA <= 0.0 !\n");
+  if ((level->dominant_eigenvalue_of_DinvA<=0.0) && (level->my_rank==0)) {
+      fprintf(stderr,"dominant_eigenvalue_of_DinvA <= 0.0 !\n");
+  }
 
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -42,14 +44,19 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
 
   for(s=0;s<CHEBYSHEV_DEGREE*NUM_SMOOTHS;s++){
     // get ghost zone data... Chebyshev ping pongs between x_id and VECTOR_TEMP
-    if((s&1)==0){exchange_boundary(level,       x_id,stencil_is_star_shaped());apply_BCs(level,       x_id,stencil_is_star_shaped());}
-            else{exchange_boundary(level,VECTOR_TEMP,stencil_is_star_shaped());apply_BCs(level,VECTOR_TEMP,stencil_is_star_shaped());}
+    if((s&1)==0){
+        exchange_boundary(level, x_id,stencil_is_star_shaped());
+        apply_BCs(level, x_id,stencil_is_star_shaped());
+    } else{
+        exchange_boundary(level,VECTOR_TEMP,stencil_is_star_shaped());
+        apply_BCs(level,VECTOR_TEMP,stencil_is_star_shaped());
+    }
    
     // apply the smoother... Chebyshev ping pongs between x_id and VECTOR_TEMP
     uint64_t _timeStart = CycleTime();
 
     // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-    parallel_across_blocks(level, block, level->num_my_blocks,
+    hclib::future_t *fut = parallel_across_blocks(level, block, level->num_my_blocks,
             [&level, &rhs_id, &s, &x_id, &chebyshev_c1, &chebyshev_c2, &a, &alpha, &b] (int block) {
       const int box = level->my_blocks[block].read.box;
       const int ilo = level->my_blocks[block].read.i;
@@ -101,6 +108,7 @@ void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
       }}}
 
     }); // box-loop
+    fut->wait();
     level->cycles.smooth += (uint64_t)(CycleTime()-_timeStart);
   } // s-loop
 }

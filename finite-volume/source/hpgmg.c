@@ -298,6 +298,9 @@ int main(int argc, char **argv){
   HPM_Print();
   #endif
   #endif
+
+  hclib::upcxx::print_upcxx_profiling_data();
+  hclib::print_mpi_profiling_data();
   });
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   return(0);

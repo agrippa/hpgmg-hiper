@@ -15,7 +15,7 @@ void residual(level_type * level, int res_id, int x_id, int rhs_id, double a, do
   int block;
 
   // PRAGMA_THREAD_ACROSS_BLOCKS(level,block,level->num_my_blocks)
-  parallel_across_blocks(level, block, level->num_my_blocks, [&level, &x_id, &rhs_id, &res_id, &a, &b] (int block) {
+  hclib::future_t *fut = parallel_across_blocks(level, block, level->num_my_blocks, [&level, &x_id, &rhs_id, &res_id, &a, &b] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
     const int jlo = level->my_blocks[block].read.j;
@@ -48,6 +48,7 @@ void residual(level_type * level, int res_id, int x_id, int rhs_id, double a, do
       res[ijk] = rhs[ijk]-Ax;
     }}}
   });
+  fut->wait();
   level->cycles.residual += (uint64_t)(CycleTime()-_timeStart);
 }
 

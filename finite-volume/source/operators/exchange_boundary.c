@@ -16,6 +16,8 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
   level_type *level = all_grids->levels[depth];
   int buffer;
 
+  // fprintf(stderr, "cb_unpack: id=%d pos=%d on %d\n", id, pos, hclib::upcxx::myrank());
+
   _timeStart = CycleTime();
 
   int i;
@@ -53,36 +55,56 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   int buffer=0;
   int n;
 
-  if(justFaces)justFaces=1;else justFaces=0;  // must be 0 or 1 in order to index into exchange_ghosts[]
+  // must be 0 or 1 in order to index into exchange_ghosts[]
+  if (justFaces) {
+      justFaces=1;
+  } else {
+      justFaces=0;
+  }
 
   // pack MPI send buffers...
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[0])
-  parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[0],
+  hclib::future_t *fut0 = parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[0],
           [&level, &id, &justFaces] (int buffer) {
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[0][buffer]);
   });
+  fut0->wait();
   _timeEnd = CycleTime();
   level->cycles.ghostZone_pack += (_timeEnd-_timeStart);
 
   // loop through MPI send buffers and post Isend's...
   _timeStart = CycleTime();
 
-  for(n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
-    hclib::upcxx::global_ptr<double> p1, p2;
-    p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
-    p2 = level->exchange_ghosts[justFaces].global_match_buffers[n];
-    if (!hclib::upcxx::is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
-      hclib::upcxx::event* copy_e = &level->exchange_ghosts[justFaces].copy_e[n];
-      hclib::upcxx::async_copy(p1, p2, level->exchange_ghosts[justFaces].send_sizes[n],copy_e);
+  hclib::future_t **events = (hclib::future_t **)malloc(
+          level->exchange_ghosts[justFaces].num_sends *
+          sizeof(hclib::future_t *));
+  memset(events, 0x00, level->exchange_ghosts[justFaces].num_sends *
+          sizeof(hclib::future_t *));
 
-      int rid = level->exchange_ghosts[justFaces].send_ranks[n];
-      int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
-      int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
-      hclib::upcxx::event* data_e = &level->exchange_ghosts[justFaces].data_e[n];
-      async_after(rid, copy_e, data_e)(cb_unpack, level->my_rank, pos, cnt, id, level->depth, justFaces);
-    } 
+  for(int n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
+      hclib::upcxx::global_ptr<double> p1, p2;
+      p1 = level->exchange_ghosts[justFaces].global_send_buffers[n];
+      p2 = level->exchange_ghosts[justFaces].global_match_buffers[n];
+      if (!hclib::upcxx::is_memory_shared_with(level->exchange_ghosts[justFaces].send_ranks[n])) {
+          // Completion of async_copy triggers copy_e
+          hclib::future_t *copy_e = hclib::upcxx::async_copy(p1, p2,
+              level->exchange_ghosts[justFaces].send_sizes[n]);
+
+          int rid = level->exchange_ghosts[justFaces].send_ranks[n];
+          int cnt = level->exchange_ghosts[justFaces].send_sizes[n];
+          int pos = level->exchange_ghosts[justFaces].send_match_pos[n];
+          // cb_unpack runs on remote node after copy completes, triggering data_e
+
+          const int my_rank_copy = level->my_rank;
+          const int depth_copy = level->depth;
+          // fprintf(stderr, "%d sending cb_unpack to %d with id=%d pos=%d\n", hclib::upcxx::myrank(), rid, id, pos);
+          events[n] = hclib::upcxx::async_after(rid, copy_e, [=] {
+                  cb_unpack(my_rank_copy, pos, cnt, id, depth_copy, justFaces);
+              });
+      }
   }
+
   hclib::upcxx::advance();
 
   _timeEnd = CycleTime();
@@ -91,10 +113,12 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   // exchange locally... try and hide within Isend latency... 
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[3])
-  parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[3],
+  hclib::future_t *fut1 = parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[3],
           [&level, &id, &justFaces] (int buffer) {
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[3][buffer]);
   });
+
+  fut1->wait();
   _timeEnd = CycleTime();
   level->cycles.ghostZone_shm += (_timeEnd-_timeStart);
 
@@ -112,38 +136,46 @@ void exchange_boundary(level_type * level, int id, int justFaces){
   _timeEnd = CycleTime();
   level->cycles.ghostZone_shm += (_timeEnd-_timeStart);
 
-
   _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->exchange_ghosts[justFaces].num_blocks[1])
-  parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[1],
+  hclib::future_t *fut2 = parallel_across_blocks(level, buffer, level->exchange_ghosts[justFaces].num_blocks[1],
           [&level, &id, &justFaces] (int buffer) {
       CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[1][buffer]);
   });
+  fut2->wait();
   _timeEnd = CycleTime();
   level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 
-
-// async_wait();
-
   _timeStart = CycleTime();
- if (level->exchange_ghosts[justFaces].num_recvs > 0) {
-  size_t nth = MAX_NBGS * id;
-  int *p = (int *) level->exchange_ghosts[justFaces].rflag;
-  while (1) {
-    int arrived = 0;
-    for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-      if (level->exchange_ghosts[justFaces].rflag[nth + n] == 1) arrived++;
-    }
-    if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
-    hclib::upcxx::advance();
-  }
-  for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-    p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
+  // Wait for incoming messages to be received, signalled by cb_unpack
+  if (level->exchange_ghosts[justFaces].num_recvs > 0) {
+      size_t nth = MAX_NBGS * id;
+      int *p = (int *) level->exchange_ghosts[justFaces].rflag;
+      // fprintf(stderr, "%d : spinning...\n", hclib::upcxx::myrank());
+      while (1) {
+          int arrived = 0;
+          for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
+              if (level->exchange_ghosts[justFaces].rflag[nth + n] == 1) {
+                  arrived++;
+              }
+          }
+          if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
+          hclib::upcxx::advance();
+      }
+      // fprintf(stderr, "%d : done spinning...\n", hclib::upcxx::myrank());
+      for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
+          p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
+      }
   }
 
-  }
+  // fprintf(stderr, "%d : waiting...\n", hclib::upcxx::myrank());
 
+  for(int n=0;n<level->exchange_ghosts[justFaces].num_sends;n++){
+      if (events[n]) events[n]->wait();
+  }
+  free(events);
   hclib::upcxx::async_wait();
+  // fprintf(stderr, "%d : done waiting...\n", hclib::upcxx::myrank());
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);

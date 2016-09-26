@@ -47,7 +47,7 @@ void matmul(level_type * level, double *C, int * id_A, int * id_B, int rows, int
         if((mm<cols)&&(nn<rows)){C[nn*cols + mm] = a_dot_b_level;}// C[nn][mm] 
         }
 
-    });
+    }, false, FORASYNC_MODE_FLAT);
   });
   level->cycles.blas3 += (uint64_t)(CycleTime()-_timeStart);
 

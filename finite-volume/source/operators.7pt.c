@@ -24,12 +24,13 @@
 
 // #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
 template <typename T>
-inline void parallel_across_blocks(level_type *level, int b, int nb,
-        T lambda) {
-    hclib::finish([&nb, &lambda] {
-        hclib::loop_domain_1d loop(nb);
-        hclib::forasync1D<T>(&loop, lambda, nb <= 1);
-    });
+inline hclib::future_t *parallel_across_blocks(level_type *level, int b,
+        int nb, T lambda) {
+    hclib::loop_domain_1d loop(nb);
+    hclib::future_t *fut = hclib::forasync1D_future(&loop, lambda, nb <= 1,
+            FORASYNC_MODE_FLAT);
+    fut->wait();
+    return fut;
 }
 
 // #define PRAGMA_THREAD_ACROSS_BLOCKS_SUM(level,b,nb,bsum)    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1) reduction(  +:bsum) )
@@ -222,7 +223,7 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
   hclib::atomic_max_t<double> dominant_eigenvalue_atomic(-1E9);
 
   // PRAGMA_THREAD_ACROSS_BLOCKS_MAX(level,block,level->num_my_blocks,dominant_eigenvalue)
-  parallel_across_blocks(level, block, level->num_my_blocks,
+  hclib::future_t *fut = parallel_across_blocks(level, block, level->num_my_blocks,
           [&level, &dominant_eigenvalue_atomic, &b, &a] (int block) {
     const int box = level->my_blocks[block].read.box;
     const int ilo = level->my_blocks[block].read.i;
@@ -299,6 +300,7 @@ void rebuild_operator(level_type * level, level_type *fromLevel, double a, doubl
     // if(block_eigenvalue>dominant_eigenvalue){dominant_eigenvalue = block_eigenvalue;}
     dominant_eigenvalue_atomic.update(block_eigenvalue);
   });
+  fut->wait();
   level->cycles.blas1 += (uint64_t)(CycleTime()-_timeStart);
 
   double dominant_eigenvalue = dominant_eigenvalue_atomic.get();

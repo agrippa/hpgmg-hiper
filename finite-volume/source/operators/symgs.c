@@ -4,6 +4,7 @@
 // Lawrence Berkeley National Lab
 //------------------------------------------------------------------------------------------------------------------------------
 void smooth(level_type * level, int phi_id, int rhs_id, double a, double b){
+  fprintf(stderr, "symgs smooth\n");
   int box,s;
 
   for(s=0;s<2*NUM_SMOOTHS;s++){ // there are two sweeps (forward/backward) per GS smooth
@@ -50,7 +51,7 @@ void smooth(level_type * level, int phi_id, int rhs_id, double a, double b){
             }
 
 
-        });
+        }, false, FORASYNC_MODE_FLAT);
     });
     level->cycles.smooth += (uint64_t)(CycleTime()-_timeStart);
   } // s-loop

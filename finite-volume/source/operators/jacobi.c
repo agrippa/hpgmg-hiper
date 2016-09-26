@@ -6,6 +6,7 @@
 #include <stdint.h>
 //------------------------------------------------------------------------------------------------------------------------------
 void smooth(level_type * level, int x_id, int rhs_id, double a, double b){
+  fprintf(stderr, "jacobi smooth\n");
   if(NUM_SMOOTHS&1){
     fprintf(stderr,"error - NUM_SMOOTHS must be even...\n");
     exit(0);

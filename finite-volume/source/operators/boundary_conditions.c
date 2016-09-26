@@ -30,7 +30,7 @@ void apply_BCs_linear(level_type * level, int x_id, int justFaces){
   int buffer;
   uint64_t _timeStart = CycleTime();
   // PRAGMA_THREAD_ACROSS_BLOCKS(level,buffer,level->boundary_condition.num_blocks[justFaces])
-  parallel_across_blocks(level, buffer, level->boundary_condition.num_blocks[justFaces],
+  hclib::future_t *fut = parallel_across_blocks(level, buffer, level->boundary_condition.num_blocks[justFaces],
           [&level, &faces, &justFaces, &edges, &corners, &x_id] (int buffer) {
     double scale = 1.0;
     if(  faces[level->boundary_condition.blocks[justFaces][buffer].subtype])scale=-1.0;
@@ -87,6 +87,7 @@ void apply_BCs_linear(level_type * level, int x_id, int justFaces){
     }
 
   });
+  fut->wait();
   level->cycles.boundary_conditions += (uint64_t)(CycleTime()-_timeStart);
 }
 

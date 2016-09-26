@@ -5,6 +5,9 @@
 //------------------------------------------------------------------------------------------------------------------------------
 #include <math.h>
 //------------------------------------------------------------------------------------------------------------------------------
+
+#error Unsupported
+
 static inline void InterpolateBlock_PQ(level_type *level_f, int id_f, double prescale_f, level_type *level_c, int id_c, blockCopy_type *block){
   // interpolate 3D array from read_i,j,k of read[] to write_i,j,k in write[]
   int write_dim_i   = block->dim.i<<1; // calculate the dimensions of the resultant fine block
@@ -102,7 +105,8 @@ static inline void InterpolateBlock_PQ(level_type *level_f, int id_f, double pre
 //------------------------------------------------------------------------------------------------------------------------------
 // perform a (inter-level) piecewise linear interpolation
 void interpolation_pq(level_type * level_f, int id_f, double prescale_f, level_type *level_c, int id_c){
-    exchange_boundary(level_c,id_c,0);
+  fprintf(stderr, "interpolation_pq\n");
+  exchange_boundary(level_c,id_c,0);
   apply_BCs_quadratic(level_c,id_c,0);
 
   uint64_t _timeCommunicationStart = CycleTime();
@@ -169,14 +173,14 @@ void interpolation_pq(level_type * level_f, int id_f, double prescale_f, level_t
     if (!is_memory_shared_with(rid)) {
       int cnt = level_c->interpolation.send_sizes[n];
       int pos = level_c->interpolation.send_match_pos[n];
-      event* copy_e = &level_c->interpolation.copy_e[n];
-      event* data_e = &level_c->interpolation.data_e[n];
-      async_after(rid, copy_e, data_e)(cb_unpack_int, level_c->my_rank, pos,
+      hclib::upcxx::event* copy_e = &level_c->interpolation.copy_e[n];
+      hclib::upcxx::event* data_e = &level_c->interpolation.data_e[n];
+      hclib::upcxx::async_after(rid, copy_e, data_e)(cb_unpack_int, level_c->my_rank, pos,
                   level_f->depth, id_f, prescale_f);
     }
   }
 
-  async_wait();
+  hclib::upcxx::async_wait();
 
   if (level_f->interpolation.num_recvs > 0) {
   size_t nth = MAX_NBGS*id_f;  nth = 0;
