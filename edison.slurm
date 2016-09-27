@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #SBATCH -p debug
 #SBATCH -N 16
-#SBATCH -t 10:00
+#SBATCH -t 5:00
 #SBATCH -J hpgmg
 #SBATCH --exclusive
 #SBATCH --exclusive
