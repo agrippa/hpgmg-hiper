@@ -227,29 +227,26 @@ void restriction(level_type * level_c, int id_c, level_type *level_f, int id_f, 
   _timeStart = CycleTime();
 #ifdef USE_UPCXX
 
-  for(n=0;n<level_f->restriction[restrictionType].num_sends;n++){
-    int rid = level_f->restriction[restrictionType].send_ranks[n];
+  hclib::upcxx::remote_finish([&] {
+      for(int n=0;n<level_f->restriction[restrictionType].num_sends;n++){
+        int rid = level_f->restriction[restrictionType].send_ranks[n];
 
-    if (!hclib::upcxx::is_memory_shared_with(rid)) {
-      int cnt = level_f->restriction[restrictionType].send_sizes[n];
-      int pos = level_f->restriction[restrictionType].send_match_pos[n];
-      const int my_rank_copy = level_f->my_rank;
-      const int my_c_depth = level_c->depth;
-      const int my_f_depth = level_f->depth;
-      copy_events[n] = hclib::upcxx::async_after(rid, copy_events[n],
-              [=] {
-                  cb_unpack_res(my_rank_copy, pos, restrictionType, my_f_depth,
-                      id_c, my_c_depth);
-              });
-    }
-  }
+        if (!hclib::upcxx::is_memory_shared_with(rid)) {
+          int cnt = level_f->restriction[restrictionType].send_sizes[n];
+          int pos = level_f->restriction[restrictionType].send_match_pos[n];
+          const int my_rank_copy = level_f->my_rank;
+          const int my_c_depth = level_c->depth;
+          const int my_f_depth = level_f->depth;
+          hclib::upcxx::async_after(rid, copy_events[n],
+                  [=] {
+                      cb_unpack_res(my_rank_copy, pos, restrictionType, my_f_depth,
+                          id_c, my_c_depth);
+                  });
+        }
+      }
 
-  for (n=0;n<level_f->restriction[restrictionType].num_sends;n++) {
-      if (copy_events[n]) copy_events[n]->wait();
-  }
-  free(copy_events);
-
-  hclib::upcxx::async_wait();
+      free(copy_events);
+  });
 
   size_t nth = MAX_NBGS*id_c;
 

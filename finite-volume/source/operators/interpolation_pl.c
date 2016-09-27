@@ -163,27 +163,24 @@ void interpolation_pl(level_type * level_f, int id_f, double prescale_f, level_t
 
 #ifdef USE_UPCXX
 
-  for(n=0;n<level_c->interpolation.num_sends;n++){
-    int rid = level_c->interpolation.send_ranks[n];
+  hclib::upcxx::remote_finish([&] {
+      for(int n=0;n<level_c->interpolation.num_sends;n++){
+        int rid = level_c->interpolation.send_ranks[n];
 
-    if (!hclib::upcxx::is_memory_shared_with(rid)) {
-      int cnt = level_c->interpolation.send_sizes[n];
-      int pos = level_c->interpolation.send_match_pos[n];
-      const int my_rank_copy = level_c->my_rank;
-      const int f_depth_copy = level_f->depth;
-      events[n] = hclib::upcxx::async_after(rid, events[n], [=] {
-                  cb_unpack_int(my_rank_copy, pos, f_depth_copy, id_f,
-                      prescale_f);
-              });
-    }
-  }
+        if (!hclib::upcxx::is_memory_shared_with(rid)) {
+          int cnt = level_c->interpolation.send_sizes[n];
+          int pos = level_c->interpolation.send_match_pos[n];
+          const int my_rank_copy = level_c->my_rank;
+          const int f_depth_copy = level_f->depth;
+          hclib::upcxx::async_after(rid, events[n], [=] {
+                      cb_unpack_int(my_rank_copy, pos, f_depth_copy, id_f,
+                          prescale_f);
+                  });
+        }
+      }
 
-  for (n=0;n<level_c->interpolation.num_sends;n++) {
-      if (events[n]) events[n]->wait();
-  }
-  free(events);
-
-  hclib::upcxx::async_wait();
+      free(events);
+  });
 
   if (level_f->interpolation.num_recvs > 0) {
   size_t nth = MAX_NBGS*id_f;  nth = 0;
