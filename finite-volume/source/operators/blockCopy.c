@@ -32,6 +32,7 @@ static inline void CopyBlock(level_type *level, int id, blockCopy_type *block){
     box_type *lbox = (box_type *) block->read.boxgp;
     hclib::upcxx::global_ptr<double> gp = lbox->vectors[id] + lbox->ghosts*(1+lbox->jStride+lbox->kStride); 
     read = (double *)gp;
+
     read_jStride = lbox->jStride;
     read_kStride = lbox->kStride;
   }

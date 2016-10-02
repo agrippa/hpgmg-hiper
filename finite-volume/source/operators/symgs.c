@@ -15,7 +15,7 @@ void smooth(level_type * level, int phi_id, int rhs_id, double a, double b){
     // #pragma omp parallel for private(box)
     hclib::finish([] {
         hclib::loop_domain_1d loop(level->num_my_boxes);
-        hclib::forasync(&loop, [] (int box) {
+        hclib::forasync_nb(&loop, [] (int box) {
             int i,j,k;
             const int ghosts = level->box_ghosts;
             const int jStride = level->my_boxes[box].jStride;

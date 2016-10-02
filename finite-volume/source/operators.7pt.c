@@ -22,13 +22,41 @@
 #define MyPragma(a) _Pragma(#a)
 //------------------------------------------------------------------------------------------------------------------------------
 
+static hclib_locale_t **thread_private_locales = NULL;
+static int STATIC_LOOP_DIST = -1;
+
+static hclib_locale_t *dist_func(const int dim,
+        const hclib_loop_domain_t *subloop, const hclib_loop_domain_t *loop,
+        const int mode) {
+    // assert(dim == 1);
+    // assert(mode == FORASYNC_MODE_FLAT);
+    // assert(loop->stride == 1);
+    // assert(loop->low == 0);
+
+    const int num_workers = hclib::num_workers();
+    const int chunk_size = (loop->high + num_workers - 1) /
+        num_workers;
+    const int chunk_id = subloop->low / chunk_size;
+
+    return thread_private_locales[chunk_id];
+}
+
 // #define PRAGMA_THREAD_ACROSS_BLOCKS(    level,b,nb     )    MyPragma(omp parallel for private(b) if(nb>1) schedule(static,1)                     )
 template <typename T>
 inline hclib::future_t *parallel_across_blocks(level_type *level, int b,
         int nb, T lambda) {
+    if (thread_private_locales == NULL) {
+        thread_private_locales = hclib::get_thread_private_locales();
+        int count_nonzero = 0;
+        for (int i = 0; i < hclib::num_workers(); i++) {
+            if (thread_private_locales[i]) count_nonzero++;
+        }
+        assert(count_nonzero == hclib::num_workers());
+        STATIC_LOOP_DIST = hclib_register_dist_func(dist_func);
+    }
     hclib::loop_domain_1d loop(nb);
-    hclib::future_t *fut = hclib::forasync1D_future(&loop, lambda, nb <= 1,
-            FORASYNC_MODE_FLAT);
+    hclib::future_t *fut = hclib::forasync1D_nb_future(&loop, lambda, nb <= 1,
+            FORASYNC_MODE_FLAT, NULL, STATIC_LOOP_DIST);
     fut->wait();
     return fut;
 }

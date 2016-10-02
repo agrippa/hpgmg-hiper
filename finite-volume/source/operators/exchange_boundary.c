@@ -33,9 +33,24 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
   int bstart = level->exchange_ghosts[justFaces].sblock2[pos];
   int bend   = level->exchange_ghosts[justFaces].sblock2[pos+1];
 
-  for(buffer=bstart;buffer<bend;buffer++){
-    CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
-  }
+  // hclib::loop_domain_1d loop(bstart, bend);
+  // hclib::future_t *fut = hclib::forasync1D_future(&loop, [=] (int buffer) {
+  //         CopyBlock(level, id, &level->exchange_ghosts[justFaces].blocks[2][buffer]);
+  //     }, (bend - bstart) <= 1, FORASYNC_MODE_FLAT, NULL);
+  // fut->wait();
+
+  // hclib::finish([&] {
+  //     hclib::async([&] {
+  //         fprintf(stderr, "HOWDY\n");
+          // const unsigned long long start = hclib_current_time_ns();
+          for(buffer=bstart;buffer<bend;buffer++){
+              // CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], true);
+              CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer]);
+          }
+          // const unsigned long long elapsed = hclib_current_time_ns() - start;
+          // fprintf(stderr, "HOWDY %llu ns\n", elapsed);
+  //     });
+  // });
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_unpack += (_timeEnd-_timeStart);

@@ -19,7 +19,7 @@ void matmul(level_type * level, double *C, int * id_A, int * id_B, int rows, int
   // #pragma omp parallel for schedule(static,1) collapse(2)
   hclib::finish([&rows, &cols, &level, &id_A, &C, &id_B] {
     hclib::loop_domain_2d loop(rows, cols);
-    hclib::forasync2D(&loop, [&level, &id_A, &C, &id_B, &cols, &rows] (int mm, int nn) {
+    hclib::forasync2D_nb(&loop, [&level, &id_A, &C, &id_B, &cols, &rows] (int mm, int nn) {
         if(nn>=mm){ // upper triangular
         int box;
         double a_dot_b_level =  0.0;

@@ -80,7 +80,7 @@ void initialize_problem(level_type * level, double hLevel, double a, double b){
     // #pragma omp parallel for private(k,j,i) collapse(3)
     hclib::finish([] {
         hclib::loop_domain_3d loop(dim_k, dim_j, dim_i);
-        hclib::forasync3D(&loop, [] (int k, int j, int i) {
+        hclib::forasync3D_nb(&loop, [] (int k, int j, int i) {
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
       // FIX... move to quadrature version to initialize the problem.  
       // i.e. the value of an array element is the average value of the function over the cell (finite volume)
