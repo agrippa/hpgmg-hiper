@@ -41,7 +41,6 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
 
   // hclib::finish([&] {
   //     hclib::async([&] {
-  //         fprintf(stderr, "HOWDY\n");
           // const unsigned long long start = hclib_current_time_ns();
           for(buffer=bstart;buffer<bend;buffer++){
               // CopyBlock(level,id,&level->exchange_ghosts[justFaces].blocks[2][buffer], true);
@@ -64,6 +63,7 @@ void cb_unpack(int srcid, int pos, int n, int id, int depth, int justFaces) {
 //  It will not enforce any boundary conditions
 //  BC's are either the responsibility of a separate function or should be fused into the stencil
 void exchange_boundary(level_type * level, int id, int justFaces){
+  // fprintf(stderr, "%d : Entering exchange_boundary\n", hclib::upcxx::myrank());
   uint64_t _timeCommunicationStart = CycleTime();
   uint64_t _timeStart,_timeEnd;
   int my_tag = (level->tag<<4) | justFaces;
@@ -156,32 +156,35 @@ void exchange_boundary(level_type * level, int id, int justFaces){
       _timeEnd = CycleTime();
       level->cycles.ghostZone_local += (_timeEnd-_timeStart);
 
-      _timeStart = CycleTime();
-      // Wait for incoming messages to be received, signalled by cb_unpack
-      if (level->exchange_ghosts[justFaces].num_recvs > 0) {
-          size_t nth = MAX_NBGS * id;
-          int *p = (int *) level->exchange_ghosts[justFaces].rflag;
-          // fprintf(stderr, "%d : spinning...\n", hclib::upcxx::myrank());
-          while (1) {
-              int arrived = 0;
-              for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-                  if (level->exchange_ghosts[justFaces].rflag[nth + n] == 1) {
-                      arrived++;
-                  }
-              }
-              if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
-              hclib::upcxx::advance();
-          }
-          // fprintf(stderr, "%d : done spinning...\n", hclib::upcxx::myrank());
-          for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
-              p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
-          }
-      }
   });
+
+  _timeStart = CycleTime();
+  // Wait for incoming messages to be received, signalled by cb_unpack
+  if (level->exchange_ghosts[justFaces].num_recvs > 0) {
+      size_t nth = MAX_NBGS * id;
+      int *p = (int *) level->exchange_ghosts[justFaces].rflag;
+      // fprintf(stderr, "%d : spinning...\n", hclib::upcxx::myrank());
+      while (1) {
+          int arrived = 0;
+          for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
+              if (level->exchange_ghosts[justFaces].rflag[nth + n] == 1) {
+                  arrived++;
+              }
+          }
+          if (arrived == level->exchange_ghosts[justFaces].num_recvs) break;
+          hclib::upcxx::advance();
+      }
+      // fprintf(stderr, "%d : done spinning...\n", hclib::upcxx::myrank());
+      for (int n = 0; n < level->exchange_ghosts[justFaces].num_recvs; n++) {
+          p[nth+n] = 0;  //upc_rflag[nth+n] = 0;
+      }
+  }
   // fprintf(stderr, "%d : done waiting...\n", hclib::upcxx::myrank());
 
   _timeEnd = CycleTime();
   level->cycles.ghostZone_wait += (_timeEnd-_timeStart);
  
   level->cycles.ghostZone_total += (uint64_t)(CycleTime()-_timeCommunicationStart);
+
+  // fprintf(stderr, "%d : Exiting exchange_boundary\n", hclib::upcxx::myrank());
 }

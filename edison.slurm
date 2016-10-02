@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -p debug
-#SBATCH -N 64
+#SBATCH -N 512
 #SBATCH -t 10:00
 #SBATCH -J hpgmg
 #SBATCH --exclusive
@@ -18,9 +18,16 @@ export HCLIB_WORKERS=$OMP_NUM_THREADS
 # cd $HOME/hclib/test/cpp
 # srun -N 1 -n 1 ./test_all.sh
 
-echo '========== HIPER =========='
-cd $HOME/hpgmg
-LD_LIBRARY_PATH=$HCLIB_HOME/modules/mpi/lib:$LD_LIBRARY_PATH srun --ntasks=128 --ntasks-per-node=2 --ntasks-per-socket=1 --cpus-per-task=12 --cpu_bind=verbose,cores ./build/bin/hpgmg-fv 7 8
-echo '========== VANILLA =========='
-cd $HOME/hpgmg-vanilla
-LD_LIBRARY_PATH=$HCLIB_HOME/modules/mpi/lib:$LD_LIBRARY_PATH srun --ntasks=128 --ntasks-per-node=2 --ntasks-per-socket=1 --cpus-per-task=12 --cpu_bind=verbose,cores ./build/bin/hpgmg-fv 7 8
+NRUNS=5
+
+for RUN in $(seq $NRUNS); do
+    echo '========== HIPER =========='
+    cd $HOME/hpgmg
+    LD_LIBRARY_PATH=$HCLIB_HOME/modules/mpi/lib:$LD_LIBRARY_PATH srun --ntasks=1024 --ntasks-per-node=2 --ntasks-per-socket=1 --cpus-per-task=12 --cpu_bind=verbose,cores ./build/bin/hpgmg-fv 7 8
+done
+
+for RUN in $(seq $NRUNS); do
+    echo '========== VANILLA =========='
+    cd $HOME/hpgmg-vanilla
+    LD_LIBRARY_PATH=$HCLIB_HOME/modules/mpi/lib:$LD_LIBRARY_PATH srun --ntasks=1024 --ntasks-per-node=2 --ntasks-per-socket=1 --cpus-per-task=12 --cpu_bind=verbose,cores ./build/bin/hpgmg-fv 7 8
+done

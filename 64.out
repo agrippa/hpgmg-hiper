@@ -1,0 +1,2025 @@
+There is no build of BUPC 2.22.3 for PrgEnv-intel/5.2.56 and intel/16.0.0.109
+There is no build of BUPC 2.22.3 for PrgEnv-intel/5.2.56 and intel/16.0.0.109
+========== HIPER ==========
+cpu_bind_cores=UNK  - nid00182, task 20  0 [13845]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00182, task 21  1 [13846]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00188, task 32  0 [47787]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00203, task 46  0 [42589]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00188, task 33  1 [47788]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00203, task 47  1 [42590]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00208, task 56  0 [41218]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00208, task 57  1 [41219]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00100, task  4  0 [14689]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00100, task  5  1 [14690]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00181, task 18  0 [8130]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00181, task 19  1 [8131]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00102, task  9  1 [28812]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00102, task  8  0 [28811]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00185, task 27  1 [1467]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00185, task 26  0 [1466]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00179, task 15  1 [10462]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00099, task  3  1 [32189]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00099, task  2  0 [32188]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00190, task 37  1 [8318]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00101, task  7  1 [48985]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00190, task 36  0 [8317]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00205, task 51  1 [34865]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00189, task 34  0 [48697]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00191, task 39  1 [7881]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00211, task 63  1 [11634]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00209, task 58  0 [16356]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00098, task  1  1 [9785]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00200, task 40  0 [2660]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00186, task 28  0 [19953]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00200, task 41  1 [2661]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00207, task 54  0 [22583]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00098, task  0  0 [9784]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00178, task 12  0 [46382]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00180, task 17  1 [532]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00206, task 52  0 [46227]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00177, task 11  1 [4575]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00179, task 14  0 [10461]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00204, task 48  0 [7328]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00183, task 22  0 [43736]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00183, task 23  1 [43737]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00210, task 60  0 [33458]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00187, task 30  0 [33901]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00202, task 44  0 [31007]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00184, task 24  0 [18267]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00101, task  6  0 [48984]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00201, task 43  1 [39746]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00191, task 38  0 [7880]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00211, task 62  0 [11633]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00205, task 50  0 [34864]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00189, task 35  1 [48698]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00209, task 59  1 [16357]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00186, task 29  1 [19954]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00178, task 13  1 [46383]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00207, task 55  1 [22584]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00180, task 16  0 [531]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00206, task 53  1 [46228]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00177, task 10  0 [4574]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00204, task 49  1 [7329]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00210, task 61  1 [33459]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00187, task 31  1 [33902]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00202, task 45  1 [31008]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00184, task 25  1 [18268]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00201, task 42  0 [39745]: mask 0xfff000fff set
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module upcxx
+Registering module system
+Pre-initializing 3 module(s)
+Registering module system
+Pre-initializing 3 module(s)
+Registering module system
+Pre-initializing 3 module(s)
+Registering module system
+Registering module system
+Pre-initializing 3 module(s)
+Registering module system
+Pre-initializing 3 module(s)
+Registering module system
+Registering module system
+Pre-initializing 3 module(s)
+Registering module system
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unrePre-initializing 3 module(s)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Registering module system
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Pre-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreRegistering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Registering module system
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Pre-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreLoading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Loading locality graph from /global/homes/j/jmg3/hclib/locality_graphs/edison.json
+Post-initializing 3 module(s)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreWARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+achable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Overloading # workers set in locality file (24) from HCLIB_WORKERS environment variable (12)
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 2 (L3_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 15 (L2_1_0) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 16 (L2_1_1) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 17 (L2_1_2) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 18 (L2_1_3) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 19 (L2_1_4) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 20 (L2_1_5) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 21 (L2_1_6) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 22 (L2_1_7) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 23 (L2_1_8) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 24 (L2_1_9) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 25 (L2_1_10) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+WARNING: Locale 26 (L2_1_11) is unreachable along any pop or steal path, if a task is launched there this may lead to a hang
+Using UPCXX P2P SHM: Total 64 processes
+64 MPI Tasks of 12 threads
+
+PAGE SIZE is 4096
+BOUNDARY: DIRCHLET_BC
+
+attempting to create a 1024^3 level (with Dirichlet BC) using a 8^3 grid of 128^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 8 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000598 seconds)
+  Calculating boxes per process... target=8.000, max=8
+  Creating Poisson (a=0.000000, b=1.000000) test problem
+  rebuilding operator for level...  h=9.765625e-04 
+ eigenvalue_max<2.000000e+00
+
+attempting to create a 512^3 level (with Dirichlet BC) using a 8^3 grid of 64^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 8 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000758 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 256^3 level (with Dirichlet BC) using a 8^3 grid of 32^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 8 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000294 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 128^3 level (with Dirichlet BC) using a 8^3 grid of 16^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 8 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000414 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 64^3 level (with Dirichlet BC) using a 8^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 8 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000224 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 32^3 level (with Dirichlet BC) using a 4^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 1 teams of 8 threads
+  Duplicating MPI_COMM_WORLD...done (0.000255 seconds)
+  Calculating boxes per process... target=1.000, max=1
+
+attempting to create a 16^3 level (with Dirichlet BC) using a 2^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 1 teams of 8 threads
+  Duplicating MPI_COMM_WORLD...done (0.000107 seconds)
+  Calculating boxes per process... target=0.125, max=1
+
+attempting to create a 8^3 level (with Dirichlet BC) using a 1^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 1 teams of 8 threads
+  Duplicating MPI_COMM_WORLD...done (0.000091 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+attempting to create a 4^3 level (with Dirichlet BC) using a 1^3 grid of 4^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 1 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000111 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+attempting to create a 2^3 level (with Dirichlet BC) using a 1^3 grid of 2^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 1 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000096 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+attempting to create a 1^3 level (with Dirichlet BC) using a 1^3 grid of 1^3 boxes and 64 tasks...
+  OMP_NESTED=TRUE  OMP_NUM_THREADS=12 ... 1 teams of 1 threads
+  Duplicating MPI_COMM_WORLD...done (0.000092 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+  Building MPI subcommunicator for level 1...done (0.000581 seconds)
+  Building MPI subcommunicator for level 2...done (0.000383 seconds)
+  Building MPI subcommunicator for level 3...done (0.000374 seconds)
+  Building MPI subcommunicator for level 4...done (0.000464 seconds)
+  Building MPI subcommunicator for level 5...done (0.000442 seconds)
+  Building MPI subcommunicator for level 6...done (0.001948 seconds)
+  Building MPI subcommunicator for level 7...done (0.000502 seconds)
+  Building MPI subcommunicator for level 8...done (0.000397 seconds)
+  Building MPI subcommunicator for level 9...done (0.000393 seconds)
+  Building MPI subcommunicator for level 10...done (0.000707 seconds)
+
+  rebuilding operator for level...  h=1.953125e-03 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=3.906250e-03 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=7.812500e-03 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=1.562500e-02 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=3.125000e-02 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=6.250000e-02 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=1.250000e-01 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=2.500000e-01 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=5.000000e-01 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=1.000000e+00 
+ eigenvalue_max<1.000000e+00
+
+
+
+===== warming up by running 10 solves ===============================
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.423942 seconds)
+NCalls :   1   2   3   4   5   6   7   8   9   10   10 
+
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.434980 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.426088 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.430069 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.437101 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.425072 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.425383 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.423139 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.420933 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.426380 seconds)
+
+
+===== running 34 solves =============================================
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.422872 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.427352 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.421325 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.423809 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.422901 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.421146 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.423169 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.422517 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.429029 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.424559 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.426389 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.421526 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.424562 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.428576 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.426699 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.438331 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.444106 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.428433 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.422764 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.421934 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.419869 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.422557 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.420089 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.423723 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.420398 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.420910 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.421333 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.420559 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.425230 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.423516 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.421874 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.438605 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.438024 seconds)
+FMGSolve... f-cycle     norm=5.403756000212092e-06  done (0.428854 seconds)
+
+
+                                     0            1            2            3            4            5            6            7            8            9           10 
+box dimension                    128^3         64^3         32^3         16^3          8^3          8^3          8^3          8^3          4^3          2^3          1^3        total
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+smooth                        0.182620     0.046736     0.004813     0.001179     0.000590     0.000220     0.000250     0.000291     0.000097     0.000061     0.000000     0.236857
+residual                      0.040244     0.004918     0.000550     0.000113     0.000068     0.000024     0.000025     0.000029     0.000011     0.000007     0.000009     0.045998
+applyOp                       0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000010     0.000010
+BLAS1                         0.026345     0.000401     0.000124     0.000062     0.000043     0.000008     0.000008     0.000009     0.000005     0.000004     0.000133     0.027144
+BLAS3                         0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Boundary Conditions           0.001458     0.000839     0.000511     0.000505     0.000524     0.000290     0.000287     0.000659     0.000705     0.000768     0.000206     0.006750
+Restriction                   0.007100     0.001106     0.000146     0.000093     0.000102     0.000862     0.000589     0.000048     0.000045     0.000051     0.000000     0.010142
+  local restriction           0.007053     0.001054     0.000120     0.000063     0.000069     0.000010     0.000011     0.000011     0.000006     0.000007     0.000000     0.008406
+  shm   restriction           0.000010     0.000011     0.000002     0.000002     0.000002     0.000002     0.000002     0.000003     0.000003     0.000004     0.000000     0.000042
+  pack MPI buffers            0.000001     0.000001     0.000001     0.000002     0.000002     0.000001     0.000002     0.000002     0.000002     0.000002     0.000000     0.000017
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000014     0.000015     0.000000     0.000000     0.000000     0.000029
+  MPI_Isend                   0.000000     0.000001     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000001     0.000001     0.000000     0.000004
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000032     0.000034     0.000020     0.000023     0.000025     0.000845     0.000570     0.000028     0.000028     0.000033     0.000000     0.001639
+Interpolation                 0.015099     0.002342     0.000332     0.000124     0.000114     0.000478     0.000820     0.000054     0.000047     0.000056     0.000000     0.019464
+  local interpolation         0.015056     0.002305     0.000306     0.000098     0.000085     0.000017     0.000019     0.000018     0.000009     0.000012     0.000000     0.017924
+  shm   interpolation         0.000005     0.000002     0.000002     0.000002     0.000002     0.000022     0.000002     0.000002     0.000002     0.000005     0.000000     0.000046
+  pack MPI buffers            0.000001     0.000001     0.000001     0.000001     0.000001     0.000070     0.000094     0.000002     0.000003     0.000003     0.000000     0.000177
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Isend                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000032     0.000037     0.000000     0.000001     0.000000     0.000000     0.000072
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000034     0.000031     0.000019     0.000020     0.000022     0.000333     0.000664     0.000027     0.000029     0.000030     0.000000     0.001209
+Ghost Zone Exchange           0.033661     0.020298     0.008620     0.005476     0.004768     0.003730     0.003032     0.000447     0.000491     0.000548     0.000142     0.081213
+  local exchange              0.003971     0.001504     0.000675     0.000631     0.000608     0.000012     0.000015     0.000013     0.000013     0.000017     0.000004     0.007463
+  shm   exchange              0.000452     0.000492     0.000329     0.000429     0.000294     0.000071     0.000020     0.000019     0.000020     0.000022     0.000006     0.002154
+  pack MPI buffers            0.002039     0.000909     0.000446     0.000428     0.000408     0.000211     0.000286     0.000018     0.000019     0.000022     0.000006     0.004793
+  unpack MPI buffers          0.007518     0.003602     0.001416     0.000457     0.000175     0.000053     0.000072     0.000000     0.000000     0.000000     0.000000     0.013292
+  MPI_Isend                   0.004610     0.001883     0.000989     0.000792     0.000766     0.000737     0.001488     0.000209     0.000229     0.000257     0.000066     0.012028
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.008936     0.004779     0.002408     0.001643     0.001368     0.001520     0.000334     0.000003     0.000004     0.000004     0.000001     0.020999
+MPI_collectives               0.003178     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000173     0.003351
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+Total by level                0.306010     0.075303     0.014889     0.007503     0.006151     0.005482     0.004949     0.001552     0.001420     0.001522     0.000680     0.425460
+
+   Total time in MGBuild UPCXX     0.111329 seconds
+   Total time in MGSolve UPCXX     0.425486 seconds
+      number of v-cycles             1
+Bottom solver iterations            11
+
+            Performance      2.524e+09 DOF/s
+
+
+
+Following are Min timing info
+                                     0            1            2            3            4            5            6            7            8            9           10 
+box dimension                    128^3         64^3         32^3         16^3          8^3          8^3          8^3          8^3          4^3          2^3          1^3        total
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+smooth                        0.182506     0.046688     0.004782     0.001183     0.000649     0.000224     0.000250     0.000281     0.000096     0.000061     0.000000     0.236720
+residual                      0.040201     0.004915     0.000554     0.000104     0.000076     0.000024     0.000027     0.000028     0.000015     0.000005     0.000009     0.045960
+applyOp                       0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000012     0.000012
+BLAS1                         0.026260     0.000396     0.000117     0.000064     0.000046     0.000008     0.000008     0.000010     0.000004     0.000008     0.000152     0.027072
+BLAS3                         0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Boundary Conditions           0.001455     0.000797     0.000501     0.000450     0.000516     0.000262     0.000291     0.000633     0.000712     0.000752     0.000203     0.006571
+Restriction                   0.007149     0.001132     0.000143     0.000095     0.000092     0.000766     0.000414     0.000046     0.000044     0.000051     0.000000     0.009932
+  local restriction           0.007100     0.001074     0.000116     0.000069     0.000063     0.000010     0.000012     0.000011     0.000007     0.000008     0.000000     0.008469
+  shm   restriction           0.000012     0.000016     0.000001     0.000002     0.000004     0.000003     0.000002     0.000003     0.000003     0.000007     0.000000     0.000053
+  pack MPI buffers            0.000002     0.000003     0.000001     0.000000     0.000002     0.000000     0.000005     0.000001     0.000001     0.000001     0.000000     0.000017
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000014     0.000019     0.000000     0.000000     0.000000     0.000032
+  MPI_Isend                   0.000001     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000001     0.000000     0.000000     0.000002
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000030     0.000036     0.000022     0.000019     0.000022     0.000750     0.000392     0.000025     0.000029     0.000032     0.000000     0.001356
+  UPCXX_BAR                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Interpolation                 0.015063     0.002337     0.000321     0.000123     0.000099     0.000476     0.000645     0.000057     0.000045     0.000056     0.000000     0.019222
+  local interpolation         0.015014     0.002303     0.000303     0.000095     0.000073     0.000016     0.000017     0.000018     0.000011     0.000013     0.000000     0.017863
+  shm   interpolation         0.000006     0.000000     0.000002     0.000001     0.000002     0.000020     0.000003     0.000001     0.000002     0.000008     0.000000     0.000044
+  pack MPI buffers            0.000001     0.000003     0.000001     0.000002     0.000002     0.000072     0.000087     0.000001     0.000001     0.000001     0.000000     0.000170
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Isend                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000042     0.000036     0.000001     0.000001     0.000000     0.000000     0.000080
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000039     0.000029     0.000014     0.000021     0.000018     0.000323     0.000499     0.000029     0.000027     0.000028     0.000000     0.001029
+  UPCXX_BAR                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Ghost Zone Exchange           0.034408     0.019116     0.007633     0.004927     0.004166     0.003121     0.002488     0.000443     0.000491     0.000529     0.000140     0.077462
+  local exchange              0.004003     0.001524     0.000652     0.000609     0.000614     0.000011     0.000012     0.000013     0.000012     0.000008     0.000004     0.007463
+  shm   exchange              0.000494     0.000474     0.000374     0.000411     0.000308     0.000072     0.000018     0.000020     0.000021     0.000028     0.000006     0.002226
+  pack MPI buffers            0.002039     0.000971     0.000455     0.000407     0.000371     0.000208     0.000275     0.000021     0.000019     0.000016     0.000007     0.004789
+  unpack MPI buffers          0.006842     0.003583     0.001400     0.000458     0.000175     0.000051     0.000072     0.000000     0.000000     0.000000     0.000000     0.012582
+  MPI_Isend                   0.002288     0.002061     0.000868     0.000739     0.000759     0.000701     0.001350     0.000200     0.000227     0.000244     0.000070     0.009508
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.010990     0.003966     0.002713     0.000940     0.000932     0.000921     0.000188     0.000003     0.000004     0.000002     0.000001     0.020661
+  UPCXX_BAR                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+MPI_collectives               0.002066     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000174     0.002240
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+Total by level                0.305335     0.074223     0.013837     0.006856     0.005633     0.004741     0.004080     0.001505     0.001420     0.001497     0.000691     0.419819
+
+   Min Total time in MGBuild UPCXX     0.111329 Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+seconds
+   Min Total time in MGSolve UPCXX     0.419839 seconds
+
+
+calculating error...  h =  9.765625000000000e-04  ||error|| =  1.234405081058646e-03
+
+Finalizing 3 module(s)
+Finalizing 3 module(s)
+WARNING: THREADS and MYTHREADS are deprecated;
+         use upcxx::ranks() and upcxx::myranks() instead!
+========== VANILLA ==========
+cpu_bind_cores=UNK  - nid00201, task 43  1 [39804]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00201, task 42  0 [39803]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00098, task  1  1 [9925]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00098, task  0  0 [9924]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00100, task  5  1 [14744]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00100, task  4  0 [14743]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00178, task 12  0 [46440]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00178, task 13  1 [46441]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00186, task 29  1 [20014]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00186, task 28  0 [20013]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00204, task 49  1 [7387]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00204, task 48  0 [7386]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00203, task 46  0 [42646]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00203, task 47  1 [42647]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00188, task 32  0 [47844]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00188, task 33  1 [47845]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00190, task 36  0 [8374]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00190, task 37  1 [8375]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00180, task 17  1 [590]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00180, task 16  0 [589]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00102, task  8  0 [28876]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00187, task 30  0 [33961]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00208, task 57  1 [41280]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00206, task 53  1 [46288]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00211, task 62  0 [11694]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00211, task 63  1 [11695]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00200, task 40  0 [2718]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00179, task 15  1 [10524]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00179, task 14  0 [10523]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00202, task 44  0 [31066]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00209, task 58  0 [16417]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00187, task 31  1 [33962]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00102, task  9  1 [28877]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00207, task 55  1 [22645]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00207, task 54  0 [22644]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00208, task 56  0 [41279]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00206, task 52  0 [46287]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00101, task  6  0 [49048]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00182, task 21  1 [13905]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00182, task 20  0 [13904]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00181, task 18  0 [8202]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00177, task 11  1 [4635]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00185, task 27  1 [1526]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00191, task 38  0 [7939]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00099, task  2  0 [32264]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00189, task 34  0 [48771]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00200, task 41  1 [2719]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00205, task 50  0 [34938]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00210, task 61  1 [33518]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00202, task 45  1 [31067]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00184, task 24  0 [18325]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00209, task 59  1 [16418]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00181, task 19  1 [8203]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00101, task  7  1 [49049]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00177, task 10  0 [4634]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00183, task 22  0 [43785]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00191, task 39  1 [7940]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00185, task 26  0 [1525]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00189, task 35  1 [48772]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00099, task  3  1 [32265]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00205, task 51  1 [34939]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00210, task 60  0 [33517]: mask 0xfff000fff set
+cpu_bind_cores=UNK  - nid00184, task 25  1 [18326]: mask 0xfff000fff000 set
+cpu_bind_cores=UNK  - nid00183, task 23  1 [43786]: mask 0xfff000fff000 set
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Registering module mpi
+Using UPCXX P2P SHM: Total 64 processes
+Requested MPI_THREAD_FUNNELED, got MPI_THREAD_FUNNELED
+64 MPI Tasks of 12 threads (OMP_NESTED=FALSE)
+
+PAGE SIZE is 4096
+BOUNDARY: DIRCHLET_BC
+
+attempting to create a 1024^3 level (with Dirichlet BC) using a 8^3 grid of 128^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000602 seconds)
+  Calculating boxes per process... target=8.000, max=8
+  Creating Poisson (a=0.000000, b=1.000000) test problem
+  rebuilding operator for level...  h=9.765625e-04 
+ eigenvalue_max<2.000000e+00
+
+attempting to create a 512^3 level (with Dirichlet BC) using a 8^3 grid of 64^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000720 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 256^3 level (with Dirichlet BC) using a 8^3 grid of 32^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000299 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 128^3 level (with Dirichlet BC) using a 8^3 grid of 16^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000478 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 64^3 level (with Dirichlet BC) using a 8^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000226 seconds)
+  Calculating boxes per process... target=8.000, max=8
+
+attempting to create a 32^3 level (with Dirichlet BC) using a 4^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000229 seconds)
+  Calculating boxes per process... target=1.000, max=1
+
+attempting to create a 16^3 level (with Dirichlet BC) using a 2^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000092 seconds)
+  Calculating boxes per process... target=0.125, max=1
+
+attempting to create a 8^3 level (with Dirichlet BC) using a 1^3 grid of 8^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000950 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+attempting to create a 4^3 level (with Dirichlet BC) using a 1^3 grid of 4^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000091 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+attempting to create a 2^3 level (with Dirichlet BC) using a 1^3 grid of 2^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000562 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+attempting to create a 1^3 level (with Dirichlet BC) using a 1^3 grid of 1^3 boxes and 64 tasks...
+  OMP_NESTED=FALSE OMP_NUM_THREADS=12 ... 1 teams of 12 threads
+  Duplicating MPI_COMM_WORLD...done (0.000139 seconds)
+  Calculating boxes per process... target=0.016, max=1
+
+  Building MPI subcommunicator for level 1...done (0.000549 seconds)
+  Building MPI subcommunicator for level 2...done (0.000353 seconds)
+  Building MPI subcommunicator for level 3...done (0.000354 seconds)
+  Building MPI subcommunicator for level 4...done (0.000349 seconds)
+  Building MPI subcommunicator for level 5...done (0.000353 seconds)
+  Building MPI subcommunicator for level 6...done (0.002747 seconds)
+  Building MPI subcommunicator for level 7...done (0.001266 seconds)
+  Building MPI subcommunicator for level 8...done (0.000545 seconds)
+  Building MPI subcommunicator for level 9...done (0.000367 seconds)
+  Building MPI subcommunicator for level 10...done (0.000346 seconds)
+
+  rebuilding operator for level...  h=1.953125e-03 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=3.906250e-03 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=7.812500e-03 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=1.562500e-02 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=3.125000e-02 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=6.250000e-02 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=1.250000e-01 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=2.500000e-01 
+ eigenvalue_max<2.000000e+00
+  rebuilding operator for level...  h=5.000000e-01 
+ eigenvalue_max<1.286089e+00
+  rebuilding operator for level...  h=1.000000e+00 
+ eigenvalue_max<1.000000e+00
+
+
+
+===== warming up by running 10 solves ===============================
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.482869 seconds)
+NCalls :   1   2   3   4   5   6   7   8   9   10   10 
+
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.477498 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.477960 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476710 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.479818 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476700 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476370 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476365 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.477474 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476399 seconds)
+
+
+===== running 30 solves =============================================
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.482093 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.481283 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.479391 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.477915 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476509 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.479454 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476911 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476375 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.478096 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.481128 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.475663 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.475688 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476783 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.478124 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.481877 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476973 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.478480 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.476869 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.504182 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.504970 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.507355 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.503653 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.506548 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.505424 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.505095 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.502252 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.504003 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.502464 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.502512 seconds)
+FMGSolve... f-cycle     norm=2.362908168922563e-11  done (0.502696 seconds)
+
+
+                                     0            1            2            3            4            5            6            7            8            9           10 
+box dimension                    128^3         64^3         32^3         16^3          8^3          8^3          8^3          8^3          4^3          2^3          1^3        total
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+smooth                        0.175438     0.045708     0.004935     0.000980     0.000236     0.000242     0.000276     0.000288     0.000089     0.000047     0.000000     0.228239
+residual                      0.038590     0.004795     0.000535     0.000084     0.000025     0.000023     0.000027     0.000028     0.000009     0.000006     0.000007     0.044128
+applyOp                       0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000009     0.000009
+BLAS1                         0.026800     0.000408     0.000115     0.000042     0.000012     0.000008     0.000008     0.000011     0.000005     0.000004     0.000059     0.027471
+BLAS3                         0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Boundary Conditions           0.001251     0.000597     0.000252     0.000177     0.000129     0.000130     0.000148     0.000204     0.000147     0.000151     0.000039     0.003226
+Restriction                   0.007226     0.001210     0.000106     0.000048     0.000027     0.000687     0.001155     0.000018     0.000013     0.000014     0.000000     0.010505
+  local restriction           0.007189     0.001149     0.000091     0.000036     0.000016     0.000009     0.000009     0.000008     0.000004     0.000004     0.000000     0.008515
+  shm   restriction           0.000020     0.000031     0.000006     0.000005     0.000004     0.000002     0.000002     0.000002     0.000002     0.000002     0.000000     0.000077
+  pack MPI buffers            0.000001     0.000001     0.000001     0.000001     0.000001     0.000001     0.000001     0.000001     0.000001     0.000002     0.000000     0.000011
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000014     0.000013     0.000000     0.000000     0.000000     0.000027
+  MPI_Isend                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000001     0.000000     0.000000     0.000003
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000014     0.000027     0.000006     0.000005     0.000003     0.000673     0.001140     0.000003     0.000003     0.000003     0.000000     0.001878
+Interpolation                 0.014970     0.002273     0.000323     0.000078     0.000030     0.000272     0.000439     0.000023     0.000015     0.000020     0.000000     0.018442
+  local interpolation         0.014934     0.002256     0.000311     0.000067     0.000021     0.000015     0.000018     0.000015     0.000006     0.000009     0.000000     0.017652
+  shm   interpolation         0.000020     0.000003     0.000004     0.000004     0.000002     0.000020     0.000002     0.000001     0.000002     0.000002     0.000000     0.000061
+  pack MPI buffers            0.000001     0.000001     0.000001     0.000001     0.000001     0.000024     0.000028     0.000001     0.000002     0.000002     0.000000     0.000062
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Isend                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000075     0.000112     0.000000     0.000000     0.000001     0.000000     0.000189
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000014     0.000011     0.000005     0.000004     0.000005     0.000135     0.000277     0.000002     0.000002     0.000003     0.000000     0.000459
+Ghost Zone Exchange           0.062504     0.047370     0.011449     0.005259     0.003870     0.002683     0.001865     0.000089     0.000089     0.000099     0.000028     0.135304
+  local exchange              0.004242     0.001464     0.000383     0.000259     0.000154     0.000009     0.000011     0.000010     0.000012     0.000013     0.000004     0.006561
+  shm   exchange              0.000377     0.000252     0.000142     0.000119     0.000126     0.000086     0.000033     0.000013     0.000015     0.000017     0.000004     0.001185
+  pack MPI buffers            0.001852     0.000782     0.000187     0.000135     0.000097     0.000101     0.000124     0.000014     0.000014     0.000017     0.000005     0.003327
+  unpack MPI buffers          0.006692     0.003372     0.001478     0.000439     0.000166     0.000045     0.000068     0.000000     0.000000     0.000000     0.000000     0.012261
+  MPI_Isend                   0.000166     0.000290     0.000136     0.000161     0.000219     0.000214     0.000383     0.000019     0.000015     0.000016     0.000005     0.001625
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.012956     0.024141     0.006342     0.002901     0.002598     0.001586     0.000300     0.000003     0.000003     0.000004     0.000001     0.050835
+MPI_collectives               0.026871     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000037     0.026908
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+Total by level                0.351107     0.100039     0.017212     0.006584     0.004297     0.003914     0.003895     0.000671     0.000385     0.000364     0.000188     0.488657
+
+   Total time in MGBuild UPCXX     0.111975 seconds
+   Total time in MGSolve UPCXX     0.488679 seconds
+      number of v-cycles             1
+Bottom solver iterations            11
+
+            Performance      2.197e+09 DOF/s
+
+
+
+Following are Min timing info
+                                     0            1            2            3            4            5            6            7            8            9           10 
+box dimension                    128^3         64^3         32^3         16^3          8^3          8^3          8^3          8^3          4^3          2^3          1^3        total
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+smooth                        0.175393     0.045714     0.004939     0.000984     0.000238     0.000241     0.000277     0.000287     0.000089     0.000049     0.000000     0.228211
+residual                      0.038570     0.004793     0.000535     0.000087     0.000024     0.000024     0.000026     0.000027     0.000008     0.000002     0.000005     0.044101
+applyOp                       0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000010     0.000010
+BLAS1                         0.026844     0.000406     0.000115     0.000040     0.000014     0.000007     0.000007     0.000009     0.000005     0.000004     0.000057     0.027509
+BLAS3                         0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Boundary Conditions           0.001255     0.000594     0.000247     0.000181     0.000127     0.000131     0.000157     0.000202     0.000150     0.000170     0.000039     0.003254
+Restriction                   0.007211     0.001199     0.000105     0.000048     0.000028     0.000760     0.000766     0.000018     0.000011     0.000016     0.000000     0.010161
+  local restriction           0.007170     0.001141     0.000091     0.000036     0.000014     0.000008     0.000009     0.000007     0.000006     0.000002     0.000000     0.008484
+  shm   restriction           0.000021     0.000031     0.000006     0.000004     0.000004     0.000004     0.000000     0.000002     0.000000     0.000003     0.000000     0.000076
+  pack MPI buffers            0.000001     0.000000     0.000001     0.000001     0.000002     0.000001     0.000001     0.000002     0.000002     0.000000     0.000000     0.000011
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000013     0.000013     0.000000     0.000000     0.000000     0.000026
+  MPI_Isend                   0.000001     0.000001     0.000000     0.000001     0.000001     0.000000     0.000000     0.000000     0.000000     0.000001     0.000000     0.000005
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000017     0.000024     0.000004     0.000006     0.000005     0.000744     0.000752     0.000003     0.000002     0.000004     0.000000     0.001561
+  UPCXX_BAR                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Interpolation                 0.014995     0.002270     0.000323     0.000078     0.000030     0.000247     0.000318     0.000020     0.000016     0.000021     0.000000     0.018318
+  local interpolation         0.014961     0.002253     0.000312     0.000067     0.000019     0.000016     0.000019     0.000013     0.000006     0.000010     0.000000     0.017676
+  shm   interpolation         0.000020     0.000003     0.000004     0.000003     0.000001     0.000021     0.000001     0.000002     0.000001     0.000002     0.000000     0.000057
+  pack MPI buffers            0.000000     0.000001     0.000000     0.000002     0.000000     0.000025     0.000027     0.000000     0.000002     0.000003     0.000000     0.000060
+  unpack MPI buffers          0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Isend                   0.000000     0.000000     0.000000     0.000000     0.000001     0.000074     0.000112     0.000002     0.000000     0.000000     0.000000     0.000188
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.000014     0.000012     0.000005     0.000005     0.000006     0.000110     0.000158     0.000001     0.000003     0.000001     0.000000     0.000314
+  UPCXX_BAR                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+Ghost Zone Exchange           0.064418     0.041156     0.010724     0.005208     0.003716     0.002499     0.001538     0.000093     0.000092     0.000094     0.000026     0.129564
+  local exchange              0.004248     0.001457     0.000384     0.000264     0.000154     0.000006     0.000013     0.000004     0.000013     0.000014     0.000003     0.006561
+  shm   exchange              0.000372     0.000252     0.000141     0.000114     0.000124     0.000088     0.000036     0.000013     0.000022     0.000016     0.000003     0.001180
+  pack MPI buffers            0.001852     0.000799     0.000185     0.000136     0.000093     0.000099     0.000127     0.000014     0.000017     0.000016     0.000004     0.003341
+  unpack MPI buffers          0.006796     0.003369     0.001478     0.000433     0.000161     0.000049     0.000064     0.000000     0.000000     0.000000     0.000000     0.012351
+  MPI_Isend                   0.000156     0.000288     0.000136     0.000167     0.000211     0.000221     0.000389     0.000023     0.000006     0.000017     0.000008     0.001621
+  MPI_Irecv                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+  MPI_Waitall                 0.013439     0.018454     0.005860     0.002857     0.002654     0.001591     0.000197     0.000005     0.000004     0.000003     0.000000     0.045064
+  UPCXX_BAR                   0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000
+MPI_collectives               0.020030     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000037     0.020066
+------------------        ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ 
+Total by level                0.345846     0.094121     0.016546     0.006548     0.004157     0.003728     0.003070     0.000669     0.000384     0.000373     0.000187     0.475629
+
+   Min Total time in MGBuild UPCXX     0.111975 seconds
+   Min Total time in MGSolve UPCXX     0.475651 seconds
+
+
+calculating error...  h =  9.765625000000000e-04  ||error|| =  3.415729286871880e-10
+
